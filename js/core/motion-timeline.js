@@ -1,4 +1,5 @@
 import { STAGE_PRIMITIVES } from '../views/explainer/stage/index.js';
+import { CUSTOM_SCENES } from '../views/explainer/custom/index.js';
 import { prefersReducedMotion } from './motion.js';
 
 /**
@@ -42,6 +43,15 @@ export function buildChapter(chapter, { doc, root, timings = {} }) {
     container.dataset.sceneId = scene.id;
     root.appendChild(container);
     windows.push({ sceneId: scene.id, container, start: offset, end: offset + duration });
+
+    if (scene.custom) {
+      const custom = CUSTOM_SCENES[scene.custom];
+      if (custom) {
+        const el = custom.build(scene, doc);
+        container.appendChild(el);
+        if (timeline) custom.animate(timeline, el, scene, offset);
+      }
+    }
 
     for (const spec of scene.stage || []) {
       const primitive = STAGE_PRIMITIVES[spec.kind];

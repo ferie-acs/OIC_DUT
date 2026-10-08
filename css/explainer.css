@@ -375,6 +375,138 @@
   inset: 0;
 }
 
+/* Scène 1.2 — départ depuis le port d'Abidjan.
+   Abstraction assumée : aucun contour national n'est dessiné. */
+.sc-carte-littoral {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 180px;
+  height: 10px;
+  background: var(--navy-ink-2);
+  border-radius: var(--r-pill);
+  opacity: 0;
+}
+
+.sc-carte-port {
+  position: absolute;
+  left: 190px;
+  bottom: 220px;
+  padding: 12px 22px;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-on-accent);
+  background: var(--accent);
+  border-radius: var(--r-md);
+  opacity: 0;
+}
+
+.sc-carte-route {
+  position: absolute;
+  left: 320px;
+  top: 470px;
+  width: 1040px;
+  height: 8px;
+  background: var(--navy-2);
+  border-radius: var(--r-pill);
+  opacity: 0;
+}
+
+.sc-carte-camion {
+  position: absolute;
+  left: 320px;
+  top: 408px;
+  width: 96px;
+  height: 56px;
+  background: var(--navy);
+  border-radius: var(--r-md);
+  opacity: 0;
+}
+
+.sc-carte-destination {
+  position: absolute;
+  right: 150px;
+  top: 360px;
+  max-width: 420px;
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  opacity: 0;
+}
+
+/* Scène 3.4 — la copie et le verdict du système. */
+.sc-copie-original,
+.sc-copie-copie {
+  top: 300px;
+  opacity: 0;
+}
+
+.sc-copie-original { margin-left: -420px; }
+
+.sc-copie-copie {
+  margin-left: -420px;
+  border-style: dashed;
+  border-color: var(--border-strong);
+}
+
+.sc-copie-beam {
+  position: absolute;
+  left: 50%;
+  top: 240px;
+  width: 6px;
+  height: 500px;
+  margin-left: 60px;
+  background: var(--accent);
+  transform-origin: top center;
+  opacity: 0;
+}
+
+.sc-copie-verdict {
+  position: absolute;
+  right: 190px;
+  top: 440px;
+  padding: 20px 44px;
+  font-size: 84px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--text-on-accent);
+  background: var(--error);
+  border-radius: var(--r-md);
+  opacity: 0;
+}
+
+/* Scène 5.3 — architecture du système cible. */
+.sc-architecture {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  padding: 220px 150px 150px;
+  align-content: center;
+}
+
+.sc-archi-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 28px 32px;
+  background: var(--surface-2);
+  border: 2px solid var(--navy-ink);
+  border-radius: var(--r-lg);
+  opacity: 0;
+}
+
+.sc-archi-label {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.1;
+}
+
+.sc-archi-role {
+  font-size: 24px;
+  color: var(--text-secondary);
+}
+
 /* --- Lecteur (hors zone capturée) -------------------------------------- */
 
 .explainer-controls {

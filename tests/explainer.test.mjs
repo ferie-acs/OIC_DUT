@@ -288,3 +288,40 @@ assert.deepEqual(readRenderOptions('?chapitre=ch9'), { render: false, chapterId:
   'un chapitre inconnu est ignoré');
 
 console.log('Vue : mise à l’échelle bornée sans débordement ni NaN, mode export lu depuis la query string.');
+
+// ---------------------------------------------------------------------------
+// Tâche 7 — scènes sur mesure
+// ---------------------------------------------------------------------------
+
+const { CUSTOM_SCENES } = await import('../js/views/explainer/custom/index.js');
+
+// Les scènes sur mesure référencées par la donnée sont exactement celles implémentées.
+const referenced = storyboard.chapters.flatMap((c) => c.scenes.map((s) => s.custom)).filter(Boolean);
+assert.deepEqual([...new Set(referenced)].sort(), ['architecture-cible', 'carte-depart', 'copie-retiree']);
+for (const id of referenced) {
+  assert.ok(CUSTOM_SCENES[id], `scène sur mesure « ${id} » non implémentée`);
+  assert.equal(typeof CUSTOM_SCENES[id].build, 'function');
+  assert.equal(typeof CUSTOM_SCENES[id].animate, 'function');
+}
+
+// Aucun module sur mesure orphelin : tout ce qui est implémenté est utilisé.
+assert.deepEqual(Object.keys(CUSTOM_SCENES).sort(), [...new Set(referenced)].sort());
+
+// build() produit un élément marqué comme scène sur mesure, sans style inline.
+for (const [id, scene] of Object.entries(CUSTOM_SCENES)) {
+  const el = scene.build({ id: 'x' }, fakeDoc);
+  assert.ok(el, `${id}.build n'a rien retourné`);
+  assert.ok(String(el.className).includes('sc-custom'), `${id} : classe sc-custom absente`);
+  assert.equal(el.attributes.style, undefined, `${id} : style inline interdit`);
+}
+
+// Le constructeur de timeline monte bien les scènes sur mesure, et pas seulement
+// les primitives : la scène 1.2 du chapitre 1 n'a QUE du custom.
+const withCustom = fakeDoc.createElement('div');
+buildChapter(storyboard.chapters[0], { doc: fakeDoc, root: withCustom, timings: {} });
+const sceneTwo = withCustom.children.find((c) => c.dataset.sceneId === '1.2');
+assert.ok(sceneTwo, 'conteneur de la scène 1.2 absent');
+assert.equal(sceneTwo.children.length, 1, 'la scène 1.2 doit contenir son rendu sur mesure');
+assert.ok(String(sceneTwo.children[0].className).includes('sc-carte-depart'));
+
+console.log('Scènes sur mesure : registre sans orphelin, montées par le constructeur de timeline.');
