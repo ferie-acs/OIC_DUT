@@ -178,3 +178,79 @@ assert.equal(reduced.stepped, true, 'prefers-reduced-motion doit forcer le rendu
 globalThis.window.matchMedia = () => ({ matches: false });
 
 console.log('Timeline : repli par paliers sans anime.js et en reduced-motion, autoplay désactivé, une scène active à la fois.');
+
+// ---------------------------------------------------------------------------
+// Tâche 4 — service de timecodes et repository de progression
+// ---------------------------------------------------------------------------
+
+const store = new Map();
+globalThis.localStorage = {
+  getItem: (k) => store.get(k) ?? null,
+  setItem: (k, v) => store.set(k, v),
+  removeItem: (k) => store.delete(k),
+};
+
+const { resolveTimings, getChapters, createPlaybackState, buildVtt, buildTranscript } =
+  await import('../js/services/explainer.service.js');
+const { getExplainerState, saveExplainerProgress, setExplainerDismissed } =
+  await import('../js/repositories/explainer.repository.js');
+
+// Timings absents : on retombe sur les durées cibles, jamais de NaN.
+// (Couvre Review Focus n°1.)
+const noTimings = resolveTimings(null);
+assert.equal(noTimings.total, TOTAL_DURATION_MS);
+assert.ok(Object.values(noTimings.byScene).every(Number.isFinite));
+
+// Timings partiels : les scènes mesurées utilisent la mesure, les autres la cible.
+const partial = resolveTimings({ '1.2': 13500 });
+assert.equal(partial.byScene['1.2'], 13500);
+assert.equal(partial.byScene['1.3'], 12000);
+assert.equal(partial.total, TOTAL_DURATION_MS + 1500);
+
+// Timings corrompus : valeurs non numériques ou négatives ignorées sans produire NaN.
+const corrupt = resolveTimings({ '1.2': 'douze', '1.3': -4000, '1.4': null });
+assert.equal(corrupt.byScene['1.2'], 12000);
+assert.equal(corrupt.byScene['1.3'], 12000);
+assert.ok(Number.isFinite(corrupt.total));
+
+// Une scène inconnue dans les timings n'invente pas de durée.
+const stale = resolveTimings({ '9.9': 5000 });
+assert.equal(stale.total, TOTAL_DURATION_MS);
+assert.equal(stale.byScene['9.9'], undefined);
+
+// Chapitrage : positions de départ cumulées.
+const chapters = getChapters();
+assert.equal(chapters.length, 5);
+assert.equal(chapters[0].startMs, 0);
+assert.equal(chapters[1].startMs, 55000);
+
+// Saut demandé avant que l'audio soit prêt : mémorisé puis rejoué.
+// (Couvre Review Focus n°4.)
+const playback = createPlaybackState();
+playback.requestSeek(42000);
+assert.equal(playback.isPending(), true);
+assert.equal(playback.flush(), null, 'rien à rejouer tant que la piste n’est pas prête');
+playback.markReady();
+assert.equal(playback.flush(), 42000);
+assert.equal(playback.isPending(), false);
+assert.equal(playback.flush(), null, 'un saut n’est rejoué qu’une fois');
+
+// WebVTT : en-tête valide, un cue par scène parlée, timecodes croissants.
+const vtt = buildVtt('ch1');
+assert.ok(vtt.startsWith('WEBVTT\n'));
+const cues = vtt.split('\n\n').filter((b) => b.includes('-->'));
+assert.equal(cues.length, storyboard.chapters[0].scenes.filter((s) => s.narration).length);
+assert.ok(/^00:00:02\.000 --> 00:00:14\.000$/m.test(vtt));
+
+// Chapitre inconnu : en-tête seul, pas d'exception.
+assert.equal(buildVtt('ch-inexistant'), 'WEBVTT\n');
+
+// Repository : état par défaut, persistance, relecture.
+assert.deepEqual(getExplainerState(), { lastChapterId: null, lastPositionMs: 0, dismissed: false });
+saveExplainerProgress('ch2', 12345);
+assert.deepEqual(getExplainerState(), { lastChapterId: 'ch2', lastPositionMs: 12345, dismissed: false });
+setExplainerDismissed(true);
+assert.equal(getExplainerState().dismissed, true);
+assert.equal(getExplainerState().lastPositionMs, 12345, 'dismissed ne doit pas écraser la progression');
+
+console.log('Service : timings partiels et corrompus, chapitrage, saut différé, WebVTT. Repository : persistance.');

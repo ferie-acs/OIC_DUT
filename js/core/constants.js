@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   CONTROL_LOGS: 'dut_control_logs',
   DOCUMENTS: 'dut_documents',
   DEMO_INITIALIZED: 'dut_demo_initialized',
+  EXPLAINER_STATE: 'dut_explainer_v1',
 };
 
 export const ROLES = {
