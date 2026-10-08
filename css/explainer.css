@@ -45,22 +45,47 @@
 
 /* --- Scènes ------------------------------------------------------------- */
 
+/* Une seule scène est visible à la fois. Le conteneur part masqué : avec
+   timeline c'est elle qui l'ouvre, sans timeline c'est `.is-active`.
+   `visibility` en plus de l'opacité pour que les scènes masquées sortent aussi
+   de l'arbre d'accessibilité et ne soient pas lues en rafale par un lecteur
+   d'écran. */
 .sc-scene {
   position: absolute;
   inset: 0;
   opacity: 0;
+  visibility: hidden;
+}
+
+.scene-stage.is-animated .sc-scene {
+  visibility: visible;
 }
 
 /* Rendu par paliers (anime.js absent ou mouvement refusé) : la scène active
    est simplement révélée, sans interpolation. */
 .sc-scene.is-active {
   opacity: 1;
+  visibility: visible;
 }
 
 /* Quand la timeline pilote la scène, les éléments partent invisibles et c'est
    elle qui les révèle. Sans cette classe, ils restent visibles d'emblée — ce
-   qui est exactement ce qu'il faut en rendu par paliers. */
-.scene-stage.is-animated .sc-scene > * {
+   qui est exactement ce qu'il faut en rendu par paliers.
+
+   Deux règles et non une : l'enveloppe `.sc-custom` d'une scène sur mesure est
+   le SEUL enfant direct de `.sc-scene`, et aucun `animate()` sur mesure ne la
+   cible — la masquer rendait les scènes 1.2, 3.4 et 5.3 définitivement
+   invisibles, l'opacité d'un parent étant multiplicative. On masque donc ses
+   descendants, pas elle.
+
+   Corollaire tenu partout ailleurs dans ce fichier : AUCUNE règle `opacity: 0`
+   ne doit vivre hors de la portée `.is-animated`, sinon le rendu par paliers
+   affiche des scènes vides. */
+.scene-stage.is-animated .sc-scene > *:not(.sc-custom) {
+  opacity: 0;
+}
+
+.scene-stage.is-animated .sc-custom > * {
   opacity: 0;
 }
 
@@ -171,6 +196,12 @@
   gap: 12px;
 }
 
+/* Decalage horizontal issu de `data-x` : mise en page, donc valable aussi en
+   rendu par paliers. Les trois valeurs utilisees par le storyboard. */
+.sc-doc[data-x='-280'] { margin-left: -420px; }
+.sc-doc[data-x='-40'] { margin-left: -180px; }
+.sc-doc[data-x='200'] { margin-left: 60px; }
+
 .sc-doc.is-dimmed {
   border-color: var(--border-strong);
   border-style: dashed;
@@ -210,7 +241,6 @@
   left: 440px;
   width: 400px;
   height: 6px;
-  opacity: 0;
 }
 
 .sc-flow[data-from='transporteur'][data-to='controle'] {
@@ -252,9 +282,12 @@
   text-align: center;
 }
 
-.sc-picto:nth-of-type(2) { left: 120px; }
-.sc-picto:nth-of-type(3) { left: 740px; }
-.sc-picto:nth-of-type(4) { left: 1360px; }
+/* Emplacement porte par la donnee (`slot`), jamais par le rang dans le DOM :
+   la scene 3.5 n'a pas de titre, donc ses pictos sont les enfants 1-2-3 et des
+   selecteurs nth-of-type en superposaient deux. */
+.sc-picto[data-slot='1'] { left: 120px; }
+.sc-picto[data-slot='2'] { left: 740px; }
+.sc-picto[data-slot='3'] { left: 1360px; }
 
 .sc-picto-icon {
   width: 128px;
@@ -325,7 +358,6 @@
   height: 46%;
   border: 5px solid var(--accent);
   border-radius: var(--r-md);
-  opacity: 0;
 }
 
 /* --- Primitive : annotation -------------------------------------------- */
@@ -333,7 +365,7 @@
 .sc-callout {
   position: absolute;
   left: 96px;
-  bottom: 120px;
+  bottom: 190px;
   max-width: 760px;
   padding: 16px 26px;
   font-size: 30px;
@@ -382,8 +414,8 @@
   line-height: 1.35;
   font-weight: 500;
   color: var(--text);
-  background: rgba(255, 255, 255, .92);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: var(--r-md);
 }
 
@@ -409,7 +441,6 @@
   height: 10px;
   background: var(--navy-ink-2);
   border-radius: var(--r-pill);
-  opacity: 0;
 }
 
 .sc-carte-port {
@@ -422,7 +453,6 @@
   color: var(--text-on-accent);
   background: var(--accent);
   border-radius: var(--r-md);
-  opacity: 0;
 }
 
 .sc-carte-route {
@@ -433,7 +463,6 @@
   height: 8px;
   background: var(--navy-2);
   border-radius: var(--r-pill);
-  opacity: 0;
 }
 
 .sc-carte-camion {
@@ -444,7 +473,6 @@
   height: 56px;
   background: var(--navy);
   border-radius: var(--r-md);
-  opacity: 0;
 }
 
 .sc-carte-destination {
@@ -455,20 +483,20 @@
   font-size: 30px;
   font-weight: 600;
   color: var(--text-secondary);
-  opacity: 0;
 }
 
 /* Scène 3.4 — la copie et le verdict du système. */
 .sc-copie-original,
 .sc-copie-copie {
   top: 300px;
-  opacity: 0;
 }
 
 .sc-copie-original { margin-left: -420px; }
 
+/* Decale en CSS et non par un tween translateX, pour que la copie ne soit pas
+   superposee a l'original en rendu par paliers. */
 .sc-copie-copie {
-  margin-left: -420px;
+  margin-left: -140px;
   border-style: dashed;
   border-color: var(--border-strong);
 }
@@ -482,7 +510,6 @@
   margin-left: 60px;
   background: var(--accent);
   transform-origin: top center;
-  opacity: 0;
 }
 
 .sc-copie-verdict {
@@ -496,7 +523,6 @@
   color: var(--text-on-accent);
   background: var(--error);
   border-radius: var(--r-md);
-  opacity: 0;
 }
 
 /* Scène 5.3 — architecture du système cible. */
@@ -516,7 +542,6 @@
   background: var(--surface-2);
   border: 2px solid var(--navy-ink);
   border-radius: var(--r-lg);
-  opacity: 0;
 }
 
 .sc-archi-label {
@@ -570,6 +595,12 @@
 .explainer-seek {
   flex: 1 1 220px;
   min-width: 160px;
+}
+
+.explainer-transcript {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy-2);
 }
 
 .explainer-time {

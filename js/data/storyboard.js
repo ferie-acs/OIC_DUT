@@ -59,9 +59,9 @@ export const storyboard = {
           narration: 'Trois garanties sont donc attendues : qu’un DUT soit authentifiable, que son parcours soit tracé, et que l’ensemble devienne une statistique nationale exploitable.',
           stage: [
             { kind: 'title', title: 'Trois garanties attendues', at: 300 },
-            { kind: 'picto', id: 'auth', icon: 'shield-check', label: 'Authenticité', at: 1600 },
-            { kind: 'picto', id: 'trace', icon: 'route', label: 'Traçabilité', at: 2400 },
-            { kind: 'picto', id: 'stats', icon: 'bar-chart-3', label: 'Statistique nationale', at: 3200 },
+            { kind: 'picto', id: 'auth', icon: 'shield-check', label: 'Authenticité', slot: 1, at: 1600 },
+            { kind: 'picto', id: 'trace', icon: 'route', label: 'Traçabilité', slot: 2, at: 2400 },
+            { kind: 'picto', id: 'stats', icon: 'bar-chart-3', label: 'Statistique nationale', slot: 3, at: 3200 },
           ],
         },
       ],
@@ -144,7 +144,7 @@ export const storyboard = {
           narration: 'Et chaque geste — création, rejet, validation, impression, contrôle — s’inscrit dans un journal d’audit que personne ne peut modifier ni effacer.',
           stage: [
             { kind: 'title', title: 'Journal d’audit', at: 300 },
-            { kind: 'picto', id: 'lock', icon: 'lock', label: 'Ajout seul', at: 900 },
+            { kind: 'picto', id: 'lock', icon: 'lock', label: 'Ajout seul', slot: 2, at: 900 },
             { kind: 'callout', text: 'Création', at: 2200, anchor: 'lock', tone: 'neutral' },
             { kind: 'callout', text: 'Rejet', at: 2700, anchor: 'lock', tone: 'neutral' },
             { kind: 'callout', text: 'Validation', at: 3200, anchor: 'lock', tone: 'neutral' },
@@ -187,9 +187,9 @@ export const storyboard = {
           id: '3.5', at: 42000, duration: 8000,
           narration: 'À cela s’ajoutent les statuts qui pilotent l’impression, le rang de génération, et une empreinte du contenu.',
           stage: [
-            { kind: 'picto', id: 'statuts', icon: 'stamp', label: 'Statuts et filigranes', at: 300 },
-            { kind: 'picto', id: 'rang', icon: 'layers', label: 'Rang de génération', at: 900 },
-            { kind: 'picto', id: 'empreinte', icon: 'fingerprint', label: 'Empreinte SHA-256', at: 1500 },
+            { kind: 'picto', id: 'statuts', icon: 'stamp', label: 'Statuts et filigranes', slot: 1, at: 300 },
+            { kind: 'picto', id: 'rang', icon: 'layers', label: 'Rang de génération', slot: 2, at: 900 },
+            { kind: 'picto', id: 'empreinte', icon: 'fingerprint', label: 'Empreinte SHA-256', slot: 3, at: 1500 },
           ],
         },
       ],
@@ -241,9 +241,9 @@ export const storyboard = {
           narration: 'Soyons clairs sur ce que vous venez de voir : une démonstration qui tourne dans un navigateur, sur des données fictives, sans serveur. Elle montre les concepts, elle ne les sécurise pas.',
           stage: [
             { kind: 'title', title: 'Ce que cette démonstration est', at: 300 },
-            { kind: 'picto', id: 'navigateur', icon: 'monitor', label: 'Navigateur seul', at: 900 },
-            { kind: 'picto', id: 'demo', icon: 'database', label: 'Données de démonstration', at: 1500 },
-            { kind: 'picto', id: 'pas-securite', icon: 'alert-triangle', label: 'Pas un dispositif de sécurité', at: 2100 },
+            { kind: 'picto', id: 'navigateur', icon: 'monitor', label: 'Navigateur seul', slot: 1, at: 900 },
+            { kind: 'picto', id: 'demo', icon: 'database', label: 'Données de démonstration', slot: 2, at: 1500 },
+            { kind: 'picto', id: 'pas-securite', icon: 'alert-triangle', label: 'Pas un dispositif de sécurité', slot: 3, at: 2100 },
           ],
         },
         {

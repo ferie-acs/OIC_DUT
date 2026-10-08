@@ -400,3 +400,123 @@ assert.equal(parseAfinfoDuration(''), null);
 assert.equal(parseAfinfoDuration(null), null);
 
 console.log(`TTS : ${segments.length} segments planifiés, durées mesurées lues depuis afinfo.`);
+
+// ---------------------------------------------------------------------------
+// Revue finale — correctifs
+// ---------------------------------------------------------------------------
+
+const { buildCues, voiceCueFor, createClock } = await import('../js/services/explainer.service.js');
+
+// #12 — les cues sont construits sur les durées RÉSOLUES, pas sur les cibles.
+// Sinon les sous-titres incrustés et les lecteurs externes dérivent de plusieurs
+// secondes sur la moitié du chapitre 2.
+const realTimings = resolveTimings(JSON.parse(
+  readFileSync('js/data/storyboard.timing.json', 'utf8'))).byScene;
+const ch2 = storyboard.chapters.find((c) => c.id === 'ch2');
+const ch2Cues = buildCues(ch2, realTimings);
+const cue26 = ch2Cues.find((c) => c.sceneId === '2.6');
+const target26 = ch2.scenes.find((s) => s.id === '2.6').at;
+assert.ok(cue26.start > target26,
+  'la scène 2.6 commence plus tard que sa cible dès que 2.5 est étirée par la voix');
+assert.equal(cue26.start,
+  ch2.scenes.slice(0, 5).reduce((n, s) => n + realTimings[s.id], 0),
+  'le début d’un cue est la somme des durées résolues qui le précèdent');
+
+// Le VTT généré suit les mêmes durées résolues.
+const vttResolved = buildVtt('ch2', realTimings);
+const vttTarget = buildVtt('ch2');
+assert.notEqual(vttResolved, vttTarget,
+  'buildVtt doit tenir compte des durées résolues quand on les lui donne');
+assert.ok(vttResolved.startsWith('WEBVTT\n'));
+
+// #1 — quelle piste de voix jouer à une position donnée, et à quel décalage.
+const cuesCh1 = buildCues(storyboard.chapters[0], resolveTimings(null).byScene);
+assert.equal(voiceCueFor(cuesCh1, 0), null, 'un carton de titre est muet');
+const at3s = voiceCueFor(cuesCh1, 3000);
+assert.equal(at3s.sceneId, '1.2');
+assert.equal(at3s.offsetMs, 1000, 'décalage relatif au début de la scène');
+assert.equal(voiceCueFor(cuesCh1, 999999), null, 'hors bornes : aucune piste');
+assert.equal(voiceCueFor(cuesCh1, -1), null);
+
+// #5 #7 #15 — horloge de lecture : la pause conserve la position, le saut tient,
+// la fin arrête la lecture. L'état ne vit pas dans un textContent.
+const clock = createClock({ duration: 10000 });
+assert.equal(clock.isPlaying(), false);
+assert.equal(clock.position(), 0);
+
+clock.play();
+assert.equal(clock.isPlaying(), true);
+clock.tick(1000);
+clock.tick(4000);
+assert.equal(clock.position(), 3000, 'la position suit le temps écoulé depuis play()');
+
+clock.pause();
+assert.equal(clock.isPlaying(), false);
+assert.equal(clock.position(), 3000, 'la pause conserve la position');
+clock.play();
+clock.tick(9000);
+assert.equal(clock.position(), 3000, 'la reprise repart de la position, pas de zéro');
+clock.tick(10000);
+assert.equal(clock.position(), 4000);
+
+clock.seek(8000);
+assert.equal(clock.position(), 8000, 'un saut s’applique immédiatement');
+clock.tick(11000);
+assert.equal(clock.position(), 8000,
+  'le premier tick après un saut se ré-ancre : il ne doit pas compter l’intervalle écoulé avant le saut');
+clock.tick(12000);
+assert.equal(clock.position(), 9000, 'le temps reprend ensuite depuis la nouvelle position');
+
+clock.tick(13000);
+assert.equal(clock.position(), 10000, 'la position est bornée par la durée');
+assert.equal(clock.isPlaying(), false, 'atteindre la fin arrête la lecture');
+
+const paused = createClock({ duration: 5000 });
+paused.seek(2000);
+assert.equal(paused.position(), 2000, 'un saut à l’arrêt est conservé');
+assert.equal(paused.isPlaying(), false, 'un saut ne déclenche pas la lecture');
+paused.seek(-500);
+assert.equal(paused.position(), 0, 'saut négatif borné');
+paused.seek(99999);
+assert.equal(paused.position(), 5000, 'saut au-delà de la fin borné');
+
+// #13 — l'emplacement d'un picto est porté par la donnée, pas déduit de son rang
+// dans le DOM : la scène 3.5 n'a pas de titre, donc ses pictos sont les enfants
+// 1-2-3 et les sélecteurs nth-of-type(2|3|4) en superposaient deux.
+for (const chapter of storyboard.chapters) {
+  for (const scene of chapter.scenes) {
+    const pictos = (scene.stage || []).filter((item) => item.kind === 'picto');
+    if (!pictos.length) continue;
+    const slots = pictos.map((p) => p.slot);
+    assert.ok(slots.every((s) => s === 1 || s === 2 || s === 3),
+      `${chapter.id}/${scene.id} : chaque picto doit déclarer slot 1, 2 ou 3 (reçu ${JSON.stringify(slots)})`);
+    assert.equal(new Set(slots).size, slots.length,
+      `${chapter.id}/${scene.id} : deux pictos partagent le même emplacement`);
+  }
+}
+const pictoEl = STAGE_PRIMITIVES.picto.build({ kind: 'picto', icon: 'lock', label: 'x', slot: 3 }, fakeDoc);
+assert.equal(pictoEl.dataset.slot, '3', 'la primitive picto doit exposer son emplacement en data-slot');
+
+// #4 — la mise à l'échelle ne doit pas se nourrir de son propre résultat.
+// Le bug : la hauteur du conteneur valait 1080 * échelle, donc chaque resize
+// faisait décroître l'échelle jusqu'au plancher, sans retour possible.
+const { applyStageScale } = await import('../js/views/decouvrir.view.js');
+const fakeViewport = {
+  clientWidth: 1600,
+  _vars: {},
+  get clientHeight() { return Math.round(1080 * (Number(this._vars['--stage-scale']) || 1)) - 2; },
+  style: { setProperty(name, value) { fakeViewport._vars[name] = value; } },
+};
+const fakeWin = { innerHeight: 2000 };
+const first = applyStageScale(fakeViewport, fakeWin);
+const second = applyStageScale(fakeViewport, fakeWin);
+const third = applyStageScale(fakeViewport, fakeWin);
+assert.equal(second, first, 'deux redimensionnements identiques doivent donner la même échelle');
+assert.equal(third, first, 'et le troisième aussi : aucune dérive');
+assert.ok(first > 0.8, `échelle attendue proche de 1600/1920, obtenue ${first}`);
+
+// Une fenêtre basse borne bien l'échelle par la hauteur disponible.
+assert.ok(applyStageScale({ clientWidth: 1920, style: { setProperty() {} } }, { innerHeight: 600 }) < 0.6,
+  'une fenêtre basse doit réduire l’échelle');
+
+console.log('Correctifs : cues sur durées résolues, piste de voix par scène, horloge avec pause et saut, emplacements de pictos, échelle stable.');

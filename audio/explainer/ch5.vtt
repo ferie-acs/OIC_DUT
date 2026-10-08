@@ -1,13 +1,13 @@
 WEBVTT
 
 5.2
-00:00:02.000 --> 00:00:12.000
+00:00:02.000 --> 00:00:13.213
 Soyons clairs sur ce que vous venez de voir : une démonstration qui tourne dans un navigateur, sur des données fictives, sans serveur. Elle montre les concepts, elle ne les sécurise pas.
 
 5.3
-00:00:12.000 --> 00:00:22.000
+00:00:13.213 --> 00:00:27.085
 Le système réel, lui, reposerait sur une architecture éprouvée : Angular et NestJS, PostgreSQL avec PostGIS, Keycloak pour les identités, un stockage objet pour les pièces, et une signature électronique conforme.
 
 5.4
-00:00:22.000 --> 00:00:25.000
+00:00:27.085 --> 00:00:31.707
 Office Ivoirien des Chargeurs. Document Unique de Transport.

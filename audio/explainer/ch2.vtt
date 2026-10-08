@@ -13,21 +13,21 @@ Quand le dossier est complet, il le soumet.
 L’antenne OIC prend le relais. L’agent vérifie les pièces et la cohérence du dossier. S’il manque quelque chose, il renvoie le dossier avec un motif de rejet obligatoire — le partenaire corrige, puis resoumet.
 
 2.5
-00:00:48.000 --> 00:01:06.000
+00:00:48.000 --> 00:01:09.265
 À la validation, et seulement à ce moment-là, le dossier reçoit son numéro officiel, pris sur une plage allouée à l’antenne. Précisons-le franchement : dans le dispositif actuel de l’OIC, cette vérification par l’antenne n’existe pas — le partenaire consomme directement un numéro de son stock. Ce contrôle est une amélioration proposée pour le futur système.
 
 2.6
-00:01:06.000 --> 00:01:28.000
+00:01:09.265 --> 00:01:31.265
 Le DUT devient alors imprimable, recto-verso, avec son code QR. Chaque impression est enregistrée : à partir de la deuxième, un motif est exigé.
 
 2.7
-00:01:28.000 --> 00:01:40.000
+00:01:31.265 --> 00:01:43.265
 Le transporteur prend la route, le document l’accompagne.
 
 2.8
-00:01:40.000 --> 00:01:58.000
+00:01:43.265 --> 00:02:01.265
 Au contrôle, l’agent scanne le code QR.
 
 2.9
-00:01:58.000 --> 00:02:10.000
+00:02:01.265 --> 00:02:13.265
 Et chaque geste — création, rejet, validation, impression, contrôle — s’inscrit dans un journal d’audit que personne ne peut modifier ni effacer.

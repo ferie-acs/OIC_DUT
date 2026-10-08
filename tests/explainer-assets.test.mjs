@@ -26,13 +26,21 @@ console.log(`Assets : ${checked} captures référencées, toutes présentes, non
 
 // Les artefacts générés par scripts/build-explainer-subtitles.mjs sont présents
 // et à jour : un chapitre ajouté au storyboard sans régénération est détecté ici.
-const { buildVtt, buildTranscript } = await import('../js/services/explainer.service.js');
+const { buildVtt, buildTranscript, resolveTimings } = await import('../js/services/explainer.service.js');
 const { readFileSync } = await import('node:fs');
+
+// Les cues suivent les durees resolues : le fichier sur disque doit etre
+// identique a ce que regenere le generateur avec les memes mesures.
+const byScene = resolveTimings(
+  existsSync('js/data/storyboard.timing.json')
+    ? JSON.parse(readFileSync('js/data/storyboard.timing.json', 'utf8'))
+    : null,
+).byScene;
 
 for (const chapter of storyboard.chapters) {
   const path = `audio/explainer/${chapter.id}.vtt`;
   assert.ok(existsSync(path), `${path} absent — lancer scripts/build-explainer-subtitles.mjs`);
-  assert.equal(readFileSync(path, 'utf8'), buildVtt(chapter.id),
+  assert.equal(readFileSync(path, 'utf8'), buildVtt(chapter.id, byScene),
     `${path} périmé — relancer scripts/build-explainer-subtitles.mjs`);
 }
 

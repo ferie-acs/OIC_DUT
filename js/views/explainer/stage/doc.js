@@ -8,6 +8,10 @@ export function build(spec, doc) {
   const el = doc.createElement('div');
   el.className = `sc-doc${spec.dimmed ? ' is-dimmed' : ''}`;
   el.dataset.stageId = spec.id || '';
+  // Décalage horizontal : c'est de la mise en page, pas du mouvement. Exposé en
+  // `data-x` et positionné par CSS, pour rester juste même en rendu par paliers
+  // où aucun tween ne joue — un `translateX` animé laissait les trois documents
+  // de la scène 1.4 exactement superposés.
   if (Number.isFinite(spec.x)) el.dataset.x = String(spec.x);
 
   const label = doc.createElement('span');
@@ -30,11 +34,9 @@ export function build(spec, doc) {
 }
 
 export function animate(tl, el, spec, offsetMs) {
-  const x = Number.isFinite(spec.x) ? spec.x : 0;
   const fromY = spec.from === 'bottom' ? 60 : 0;
   tl.add(el, {
     opacity: [0, 1],
-    translateX: [x, x],
     translateY: [fromY, 0],
     duration: 600,
     ease: 'out(3)',

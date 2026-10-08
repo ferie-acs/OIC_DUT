@@ -83,13 +83,83 @@ export function createPlaybackState() {
   };
 }
 
-export function buildVtt(chapterId) {
+/**
+ * Fenêtres de narration d'un chapitre, calculées sur les durées RÉSOLUES.
+ *
+ * `scene.at` et `scene.duration` sont les cibles du storyboard ; dès qu'une voix
+ * étire une scène (politique de plancher ci-dessus), toutes les scènes suivantes
+ * glissent. Construire des cues sur les cibles les décalerait de plusieurs
+ * secondes — c'est ce qui rendait les sous-titres incrustés faux.
+ */
+export function buildCues(chapter, byScene = {}) {
+  const cues = [];
+  let offset = 0;
+  for (const scene of chapter.scenes) {
+    const duration = Number(byScene[scene.id]) > 0 ? Number(byScene[scene.id]) : scene.duration;
+    if (scene.narration) {
+      cues.push({ sceneId: scene.id, start: offset, end: offset + duration, text: scene.narration });
+    }
+    offset += duration;
+  }
+  return cues;
+}
+
+/**
+ * Quelle piste de voix jouer à une position donnée, et à quel décalage interne.
+ * Retourne `null` sur un carton de titre, dans le silence de fin d'une scène
+ * non narrée, ou hors bornes.
+ */
+export function voiceCueFor(cues, positionMs) {
+  if (!Number.isFinite(positionMs) || positionMs < 0) return null;
+  const cue = cues.find((c) => positionMs >= c.start && positionMs < c.end);
+  if (!cue) return null;
+  return { sceneId: cue.sceneId, offsetMs: positionMs - cue.start, text: cue.text };
+}
+
+/**
+ * Horloge de lecture. Elle est AUTORITAIRE et la voix la suit, à l'inverse de ce
+ * que prévoyait la spec (« la voix est l'horloge ») : la politique de plancher
+ * garantit que chaque fenêtre de scène est au moins aussi longue que sa voix,
+ * donc une voix maîtresse tronquerait l'animation ; et une piste concaténée par
+ * chapitre, qui aurait permis l'inverse, demanderait ffmpeg (risque R1).
+ *
+ * `tick(now)` reçoit l'horodatage du navigateur ; l'état de lecture vit ici et
+ * jamais dans le texte d'un bouton.
+ */
+export function createClock({ duration }) {
+  const total = Number(duration) > 0 ? Number(duration) : 0;
+  let playing = false;
+  let base = 0;
+  let startedAt = null;
+
+  function clamp(ms) {
+    return Math.min(Math.max(Number.isFinite(ms) ? ms : 0, 0), total);
+  }
+
+  return {
+    isPlaying() { return playing; },
+    position() { return base; },
+    duration() { return total; },
+    play() { if (!playing) { playing = true; startedAt = null; } },
+    pause() { playing = false; startedAt = null; },
+    seek(ms) { base = clamp(ms); startedAt = null; },
+    tick(now) {
+      if (!playing) return base;
+      if (startedAt === null) { startedAt = now; return base; }
+      base = clamp(base + (now - startedAt));
+      startedAt = now;
+      if (base >= total) { playing = false; startedAt = null; }
+      return base;
+    },
+  };
+}
+
+export function buildVtt(chapterId, byScene = {}) {
   const chapter = storyboard.chapters.find((c) => c.id === chapterId);
   if (!chapter) return 'WEBVTT\n';
   const blocks = ['WEBVTT'];
-  for (const scene of chapter.scenes) {
-    if (!scene.narration) continue;
-    blocks.push(`${scene.id}\n${formatVttTime(scene.at)} --> ${formatVttTime(scene.at + scene.duration)}\n${scene.narration}`);
+  for (const cue of buildCues(chapter, byScene)) {
+    blocks.push(`${cue.sceneId}\n${formatVttTime(cue.start)} --> ${formatVttTime(cue.end)}\n${cue.text}`);
   }
   return `${blocks.join('\n\n')}\n`;
 }
