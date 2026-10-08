@@ -1,0 +1,8 @@
+{
+  "name": "dut-video-export",
+  "private": true,
+  "type": "module",
+  "description": "Export MP4 deterministe de la vue #/decouvrir. Outil de developpement, hors application.",
+  "scripts": { "render": "node render.mjs" },
+  "devDependencies": { "playwright": "^1.64.0" }
+}

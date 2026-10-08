@@ -621,6 +621,31 @@
 
 /* --- Mode export : aucun contrôle, scène seule ------------------------- */
 
+/* La scène est extraite de la coquille applicative et posée seule, non mise à
+   l'échelle, pour que la capture fasse exactement 1920x1080 et ne contienne que
+   la vidéo — ni menu, ni en-tête, ni rognage. */
+body.is-explainer-render > #app,
+body.is-explainer-render > .app-shell {
+  display: none;
+}
+
+body.is-explainer-render {
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+body.is-explainer-render > .scene-stage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
+  margin: 0;
+  transform: none;
+}
+
 .explainer.is-render .explainer-controls,
 .explainer.is-render .explainer-notice {
   display: none;

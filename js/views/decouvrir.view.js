@@ -244,7 +244,7 @@ export async function render(container, params = {}) {
     clock.pause();
     voice.stop();
     if (frame !== null) { window.cancelAnimationFrame(frame); frame = null; }
-    window.removeEventListener('resize', onResize);
+    if (!options.render) window.removeEventListener('resize', onResize);
     window.removeEventListener('hashchange', onHashChange);
     delete container.__explainerDispose;
   }
@@ -256,9 +256,19 @@ export async function render(container, params = {}) {
   }
 
   container.__explainerDispose = dispose;
-  window.addEventListener('resize', onResize);
   window.addEventListener('hashchange', onHashChange);
-  applyStageScale(viewport, window);
+
+  if (options.render) {
+    // En mode export, la scene est sortie de la coquille applicative et posee
+    // seule en haut a gauche de la page, a l'echelle 1. Sans cela la capture
+    // emportait le menu lateral et rognait la scene, qui deborde de la zone de
+    // contenu : le MP4 montrait l'interface du POC autour de la video.
+    document.body.classList.add('is-explainer-render');
+    document.body.appendChild(stage);
+  } else {
+    window.addEventListener('resize', onResize);
+    applyStageScale(viewport, window);
+  }
 
   // Reprise : la position enregistrée n'est restituée que pour le chapitre où
   // elle a été prise, et seulement si elle tombe encore dans sa durée.
@@ -324,6 +334,10 @@ export async function render(container, params = {}) {
       seek: (ms) => paint(ms),
       duration: built.duration,
       chapters: chapters.map((c) => c.id),
+      chapterId: startId,
+      // Fenêtres de narration, pour que le moteur d'export assemble la piste
+      // audio du chapitre : les pistes existent par scène, pas par chapitre.
+      cues: cues.map((c) => ({ sceneId: c.sceneId, start: c.start, end: c.end })),
       ready: true,
     };
   }
