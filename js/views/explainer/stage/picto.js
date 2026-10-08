@@ -6,6 +6,8 @@
  * mouvement. Elle vient de la donnee et jamais du rang dans le DOM : la scene
  * 3.5 n'a pas de titre, donc un selecteur nth-of-type en superposait deux.
  */
+import { icon as lucide } from '../../../core/icons.js';
+
 export const kind = 'picto';
 
 export function build(spec, doc) {
@@ -14,10 +16,12 @@ export function build(spec, doc) {
   el.dataset.stageId = spec.id || '';
   el.dataset.slot = String(spec.slot || 1);
 
-  const icon = doc.createElement('span');
-  icon.className = 'sc-picto-icon';
-  icon.dataset.icon = spec.icon || '';
-  el.appendChild(icon);
+  const iconBox = doc.createElement('span');
+  iconBox.className = 'sc-picto-icon';
+  iconBox.dataset.icon = spec.icon || '';
+  // Icone Lucide vendorisee du projet : un carre vide ne dit rien, le glyphe si.
+  iconBox.innerHTML = lucide(spec.icon, { size: 64, cls: 'sc-picto-glyph' });
+  el.appendChild(iconBox);
 
   const label = doc.createElement('span');
   label.className = 'sc-picto-label';

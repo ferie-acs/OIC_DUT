@@ -76,6 +76,43 @@ function formatClock(ms) {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 
+/**
+ * Habillage permanent de la scène : bandeau de progression, pastille de
+ * chapitre, marque OIC. Repris du gabarit de référence pour qu'à n'importe
+ * quelle seconde on sache de quoi on parle et où l'on en est — y compris sur un
+ * extrait repartagé hors contexte.
+ */
+function buildChrome(doc, chapter, chapterCount) {
+  const track = doc.createElement('div');
+  track.className = 'sc-chrome-track';
+
+  const progress = doc.createElement('div');
+  progress.className = 'sc-chrome-progress';
+
+  const step = doc.createElement('div');
+  step.className = 'sc-chrome-step';
+  const stepNumber = doc.createElement('span');
+  stepNumber.className = 'sc-chrome-step-number';
+  stepNumber.textContent = String(chapter.number);
+  const stepLabel = doc.createElement('span');
+  stepLabel.className = 'sc-chrome-step-label';
+  stepLabel.textContent = `Chapitre ${chapter.number} sur ${chapterCount}`;
+  step.appendChild(stepNumber);
+  step.appendChild(stepLabel);
+
+  const brand = doc.createElement('div');
+  brand.className = 'sc-chrome-brand';
+  const logo = doc.createElement('img');
+  logo.setAttribute('src', 'assets/images/logo-oic.jpg');
+  logo.setAttribute('alt', '');
+  const brandName = doc.createElement('span');
+  brandName.textContent = 'DUT · Office Ivoirien des Chargeurs';
+  brand.appendChild(logo);
+  brand.appendChild(brandName);
+
+  return { nodes: [track, progress, step, brand] };
+}
+
 function shell(chapters, options, currentId) {
   const buttons = chapters.map((c) => `
     <button type="button" class="explainer-chapter" data-chapter="${escapeHtml(c.id)}"
@@ -194,6 +231,12 @@ export async function render(container, params = {}) {
   const built = buildChapter(chapter, { doc: document, root: stage, timings: timings.byScene });
   if (!built.stepped) stage.classList.add('is-animated');
 
+  // Habillage permanent : bandeau de progression aux couleurs du drapeau,
+  // pastille de chapitre, marque OIC. Posé hors des `.sc-scene` pour survivre
+  // aux changements de scène, et masqué sur les cartons de chapitre.
+  const chrome = buildChrome(document, chapter, chapters.length);
+  for (const node of chrome.nodes) stage.appendChild(node);
+
   // Sous-titres rendus DANS la scène, donc dans la zone capturée : un <audio>
   // n'a aucune surface d'affichage, une piste <track> y serait inerte.
   const subtitle = document.createElement('p');
@@ -211,6 +254,12 @@ export async function render(container, params = {}) {
     built.seek(ms);
     const cue = voiceCueFor(cues, ms);
     subtitle.textContent = cue ? cue.text : '';
+
+    const progress = built.duration > 0 ? Math.min(Math.max(ms / built.duration, 0), 1) : 0;
+    stage.style.setProperty('--progress', String(progress));
+    const current = built.sceneAt(ms);
+    stage.classList.toggle('is-cover', !!(current && current.isCover));
+
     clockLabel.textContent = `${formatClock(ms)} / ${formatClock(built.duration)}`;
     seekBar.value = String(Math.round((ms / built.duration) * 1000));
   }

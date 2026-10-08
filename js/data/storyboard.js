@@ -59,9 +59,9 @@ export const storyboard = {
           narration: 'Trois garanties sont donc attendues : qu’un DUT soit authentifiable, que son parcours soit tracé, et que l’ensemble devienne une statistique nationale exploitable.',
           stage: [
             { kind: 'title', title: 'Trois garanties attendues', at: 300 },
-            { kind: 'picto', id: 'auth', icon: 'shield-check', label: 'Authenticité', slot: 1, at: 1600 },
-            { kind: 'picto', id: 'trace', icon: 'route', label: 'Traçabilité', slot: 2, at: 2400 },
-            { kind: 'picto', id: 'stats', icon: 'bar-chart-3', label: 'Statistique nationale', slot: 3, at: 3200 },
+            { kind: 'picto', id: 'auth', icon: 'shield', label: 'Authenticité', slot: 1, at: 1600 },
+            { kind: 'picto', id: 'trace', icon: 'map', label: 'Traçabilité', slot: 2, at: 2400 },
+            { kind: 'picto', id: 'stats', icon: 'barChart', label: 'Statistique nationale', slot: 3, at: 3200 },
           ],
         },
       ],
@@ -77,6 +77,8 @@ export const storyboard = {
           stage: [
             { kind: 'title', title: 'Le partenaire ouvre un dossier', at: 300 },
             { kind: 'actor', id: 'partner', label: 'Partenaire', at: 800, live: true, liveAt: 1600 },
+            { kind: 'picto', id: 'b-marchandise', icon: 'package', label: 'Marchandise et véhicule', slot: 1, at: 4200 },
+            { kind: 'picto', id: 'b-trajet', icon: 'map', label: 'Conducteur et itinéraire', slot: 2, at: 5000 },
             { kind: 'screen', src: 'creation.png', alt: 'Formulaire de création d’un DUT côté partenaire', at: 3000, highlight: true, highlightAt: 6000 },
           ],
         },
@@ -136,6 +138,8 @@ export const storyboard = {
           stage: [
             { kind: 'title', title: 'Le contrôle terrain', at: 300 },
             { kind: 'actor', id: 'controle', label: 'Contrôle terrain', at: 700, live: true, liveAt: 1500 },
+            { kind: 'picto', id: 'b-scan', icon: 'scan', label: 'Scan du code QR', slot: 1, at: 4000 },
+            { kind: 'picto', id: 'b-reponse', icon: 'building', label: 'Le système répond, pas le papier', slot: 2, at: 4800 },
             { kind: 'screen', src: 'controle.png', alt: 'Résultat de contrôle d’un DUT après scan du code QR', at: 2800, highlight: true, highlightAt: 6000 },
           ],
         },
@@ -144,7 +148,7 @@ export const storyboard = {
           narration: 'Et chaque geste — création, rejet, validation, impression, contrôle — s’inscrit dans un journal d’audit que personne ne peut modifier ni effacer.',
           stage: [
             { kind: 'title', title: 'Journal d’audit', at: 300 },
-            { kind: 'picto', id: 'lock', icon: 'lock', label: 'Ajout seul', slot: 2, at: 900 },
+            { kind: 'picto', id: 'lock', icon: 'shield', label: 'Ajout seul', slot: 2, at: 900 },
             { kind: 'callout', text: 'Création', at: 2200, anchor: 'lock', tone: 'neutral' },
             { kind: 'callout', text: 'Rejet', at: 2700, anchor: 'lock', tone: 'neutral' },
             { kind: 'callout', text: 'Validation', at: 3200, anchor: 'lock', tone: 'neutral' },
@@ -187,9 +191,9 @@ export const storyboard = {
           id: '3.5', at: 42000, duration: 8000,
           narration: 'À cela s’ajoutent les statuts qui pilotent l’impression, le rang de génération, et une empreinte du contenu.',
           stage: [
-            { kind: 'picto', id: 'statuts', icon: 'stamp', label: 'Statuts et filigranes', slot: 1, at: 300 },
+            { kind: 'picto', id: 'statuts', icon: 'checkCircle', label: 'Statuts et filigranes', slot: 1, at: 300 },
             { kind: 'picto', id: 'rang', icon: 'layers', label: 'Rang de génération', slot: 2, at: 900 },
-            { kind: 'picto', id: 'empreinte', icon: 'fingerprint', label: 'Empreinte SHA-256', slot: 3, at: 1500 },
+            { kind: 'picto', id: 'empreinte', icon: 'target', label: 'Empreinte SHA-256', slot: 3, at: 1500 },
           ],
         },
       ],
@@ -204,6 +208,8 @@ export const storyboard = {
           narration: 'Côté OIC, tout part des plages de numéros : une antenne en demande, l’OIC alloue, et chaque numéro consommé est connu.',
           stage: [
             { kind: 'title', title: 'Les plages de numéros', at: 300 },
+            { kind: 'picto', id: 'b-demande', icon: 'inbox', label: 'Demande par l’antenne', slot: 1, at: 2600 },
+            { kind: 'picto', id: 'b-alloc', icon: 'layers', label: 'Allocation par l’OIC', slot: 2, at: 3400 },
             { kind: 'screen', src: 'plages.png', alt: 'Écran de demande et d’allocation des plages de numéros DUT', at: 1200, highlight: true, highlightAt: 4000 },
           ],
         },
@@ -212,6 +218,8 @@ export const storyboard = {
           narration: 'Les DUT émis deviennent alors une statistique : volumes, délais de traitement, corridors, tonnages.',
           stage: [
             { kind: 'title', title: 'La statistique nationale', at: 300 },
+            { kind: 'picto', id: 'b-volumes', icon: 'barChart', label: 'Volumes et délais', slot: 1, at: 2600 },
+            { kind: 'picto', id: 'b-corridors', icon: 'map', label: 'Corridors et tonnages', slot: 2, at: 3400 },
             { kind: 'screen', src: 'oic.png', alt: 'Tableau de bord national OIC avec volumes et délais de traitement', at: 1200, highlight: true, highlightAt: 4000 },
           ],
         },
@@ -219,6 +227,8 @@ export const storyboard = {
           id: '4.4', at: 26000, duration: 8000,
           narration: 'Le réseau des antennes est cartographié.',
           stage: [
+            { kind: 'title', title: 'Le réseau des antennes', at: 200 },
+            { kind: 'picto', id: 'b-reseau', icon: 'map', label: '23 antennes cartographiées', slot: 1, at: 1400 },
             { kind: 'screen', src: 'antennes.png', alt: 'Carte du réseau des antennes OIC en Côte d’Ivoire', at: 300 },
           ],
         },
@@ -226,6 +236,9 @@ export const storyboard = {
           id: '4.5', at: 34000, duration: 6000,
           narration: 'Et l’administration des utilisateurs et des rôles reste entre les mains de l’OIC.',
           stage: [
+            { kind: 'title', title: 'L’administration reste à l’OIC', at: 200 },
+            { kind: 'picto', id: 'b-roles', icon: 'users', label: 'Utilisateurs et rôles', slot: 1, at: 1200 },
+            { kind: 'picto', id: 'b-audit', icon: 'shield', label: 'Journal d’audit', slot: 2, at: 1800 },
             { kind: 'screen', src: 'actions.png', alt: 'Centre d’actions et administration des rôles côté OIC', at: 300 },
           ],
         },
@@ -241,9 +254,9 @@ export const storyboard = {
           narration: 'Soyons clairs sur ce que vous venez de voir : une démonstration qui tourne dans un navigateur, sur des données fictives, sans serveur. Elle montre les concepts, elle ne les sécurise pas.',
           stage: [
             { kind: 'title', title: 'Ce que cette démonstration est', at: 300 },
-            { kind: 'picto', id: 'navigateur', icon: 'monitor', label: 'Navigateur seul', slot: 1, at: 900 },
-            { kind: 'picto', id: 'demo', icon: 'database', label: 'Données de démonstration', slot: 2, at: 1500 },
-            { kind: 'picto', id: 'pas-securite', icon: 'alert-triangle', label: 'Pas un dispositif de sécurité', slot: 3, at: 2100 },
+            { kind: 'picto', id: 'navigateur', icon: 'dashboard', label: 'Navigateur seul', slot: 1, at: 900 },
+            { kind: 'picto', id: 'demo', icon: 'layers', label: 'Données de démonstration', slot: 2, at: 1500 },
+            { kind: 'picto', id: 'pas-securite', icon: 'alertTriangle', label: 'Pas un dispositif de sécurité', slot: 3, at: 2100 },
           ],
         },
         {

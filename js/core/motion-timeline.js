@@ -38,11 +38,18 @@ export function buildChapter(chapter, { doc, root, timings = {} }) {
 
   for (const scene of chapter.scenes) {
     const duration = effectiveDuration(scene, timings);
+    // `has-screen` bascule la mise en page : les pictos deviennent les puces de
+    // la colonne de gauche quand un ecran occupe la droite du cadre.
+    const hasScreen = (scene.stage || []).some((item) => item.kind === 'screen');
+    const isCover = scene.kindOfScene === 'title-card';
+
     const container = doc.createElement('div');
-    container.className = 'sc-scene';
+    container.className = `sc-scene${hasScreen ? ' has-screen' : ''}`;
     container.dataset.sceneId = scene.id;
     root.appendChild(container);
-    windows.push({ sceneId: scene.id, container, start: offset, end: offset + duration });
+    windows.push({
+      sceneId: scene.id, container, start: offset, end: offset + duration, isCover,
+    });
 
     if (scene.custom) {
       const custom = CUSTOM_SCENES[scene.custom];
@@ -85,5 +92,12 @@ export function buildChapter(chapter, { doc, root, timings = {} }) {
 
   if (!timeline) applyStepped(0);
 
-  return { timeline, seek, stepped: !timeline, duration: offset };
+  /** Fenetre de scene contenant `ms`, pour que la vue sache ce qui est a l'ecran. */
+  function sceneAt(ms) {
+    if (!windows.length) return null;
+    const clamped = Math.min(Math.max(ms, 0), Math.max(offset - 1, 0));
+    return windows.find((w) => clamped >= w.start && clamped < w.end) || windows[windows.length - 1];
+  }
+
+  return { timeline, seek, sceneAt, stepped: !timeline, duration: offset };
 }
