@@ -254,3 +254,37 @@ assert.equal(getExplainerState().dismissed, true);
 assert.equal(getExplainerState().lastPositionMs, 12345, 'dismissed ne doit pas écraser la progression');
 
 console.log('Service : timings partiels et corrompus, chapitrage, saut différé, WebVTT. Repository : persistance.');
+
+// ---------------------------------------------------------------------------
+// Tâche 5 — vue et lecteur
+// ---------------------------------------------------------------------------
+
+const { computeStageScale, readRenderOptions } = await import('../js/views/decouvrir.view.js');
+
+// Mise à l'échelle : jamais de débordement, ratio 16:9 préservé, jamais d'agrandissement.
+// (Couvre Review Focus n°3.)
+assert.equal(computeStageScale(1920, 1080), 1);
+assert.equal(computeStageScale(960, 540), 0.5);
+assert.equal(computeStageScale(3840, 2160), 1, 'pas d’agrandissement au-delà de 1920×1080');
+assert.equal(computeStageScale(960, 2000), 0.5, 'limité par la largeur');
+assert.equal(computeStageScale(3840, 540), 0.5, 'limité par la hauteur');
+
+// Largeur téléphone : la scène tient, l’échelle reste strictement positive.
+const phone = computeStageScale(360, 640);
+assert.ok(phone > 0 && phone <= 1);
+assert.ok(1920 * phone <= 360 + 0.5, 'débordement horizontal');
+
+// Conteneur dégénéré : pas de division par zéro, pas de NaN.
+assert.ok(Number.isFinite(computeStageScale(0, 0)));
+assert.ok(computeStageScale(0, 0) > 0);
+assert.ok(Number.isFinite(computeStageScale(undefined, null)));
+
+// Mode export : lu depuis la vraie query string, pas depuis le hash — le
+// routeur ancre son motif et `#/decouvrir?render=1` ne résoudrait rien.
+assert.deepEqual(readRenderOptions(''), { render: false, chapterId: null });
+assert.deepEqual(readRenderOptions('?render=1'), { render: true, chapterId: null });
+assert.deepEqual(readRenderOptions('?render=1&chapitre=ch3'), { render: true, chapterId: 'ch3' });
+assert.deepEqual(readRenderOptions('?chapitre=ch9'), { render: false, chapterId: null },
+  'un chapitre inconnu est ignoré');
+
+console.log('Vue : mise à l’échelle bornée sans débordement ni NaN, mode export lu depuis la query string.');

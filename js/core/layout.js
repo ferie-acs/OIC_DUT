@@ -61,6 +61,7 @@ export function renderAppShell(user, currentPath, breadcrumbItems = []) {
   const sections = (NAV_SECTIONS_BY_ROLE[user.role] || []).map(section => ({ ...section, items: [...section.items] }));
   if (sections.length) sections[0].items.push({ path: '/planning', label: 'Planning des trajets', icon: 'truck' });
   if (sections.length) sections[0].items.push({ path: '/actions', label: 'Centre d’actions', icon: 'checkCircle' });
+  sections.push({ label: 'Découvrir', items: [{ path: '/decouvrir', label: 'Comment fonctionne le DUT', icon: 'file' }] });
   if (user.role === 'OIC_ADMIN') sections.push({ label: 'Ressources', items: [{ path: '/oic/operations', label: 'Demandes de plages', icon: 'layers' }, { path: '/oic/antennas', label: 'Carte des antennes', icon: 'map' }] });
 
   if(user.role==='OIC_ADMIN') sections.push({label:'Administration',items:[{path:'/admin/users',label:'Utilisateurs',icon:'users'},{path:'/admin/roles',label:'Rôles & accès',icon:'shield'},{path:'/admin/settings',label:'Paramètres',icon:'layers'},{path:'/admin/audit',label:'Journal',icon:'file'}]});

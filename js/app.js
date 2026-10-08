@@ -23,6 +23,7 @@ import * as antennaReviewView from './views/antenna-review.view.js?v=dut-v2';
 import * as controlView from './views/control.view.js?v=dut-v2';
 import * as oicDashboardView from './views/oic-dashboard.view.js?v=oic-blue';
 import * as transporteurDashboardView from './views/transporteur-dashboard.view.js?v=oic-blue';
+import * as decouvrirView from './views/decouvrir.view.js';
 
 if (!isSeeded()) seedDemoData();
 syncAntennaDirectory();
@@ -43,6 +44,9 @@ registerRoute('/login', () => {
 }, { public: true });
 
 for (const section of ['users','roles','settings','audit']) registerRoute('/admin/'+section, withShell({render:root=>adminView.render(root,{section})}, ['OIC','Administration']), {permission:'admin.manage'});
+
+// Aucune permission : l'explication du DUT est accessible à tous les rôles connectés.
+registerRoute('/decouvrir', withShell(decouvrirView, ['Découvrir', 'Comment fonctionne le DUT']));
 
 registerRoute('/planning', withShell(planningView, ['Pilotage', 'Planning des trajets']), { permission: 'dut.view' });
 registerRoute('/actions', withShell(actionCenterView, ['Pilotage', 'Centre d’actions']), { permission: 'dut.view' });
