@@ -19,9 +19,12 @@ export function build(spec, doc) {
 }
 
 export function animate(tl, el, spec, offsetMs) {
+  // scaleX et non width : un `width: 100%` se resout sur le parent (1920 px)
+  // et ecrase la largeur CSS de l'element, faisant traverser le trait d'un
+  // bord a l'autre du cadre.
   tl.add(el, {
     opacity: [0, 1],
-    width: ['0%', '100%'],
+    scaleX: [0, 1],
     duration: 900,
     ease: 'inOut(2)',
   }, offsetMs + (spec.at || 0));

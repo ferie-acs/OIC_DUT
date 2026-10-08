@@ -2,6 +2,17 @@
  * Primitive « acteur » : un intervenant de la chaîne DUT.
  * spec : { id, label, at, live, liveAt }
  */
+import { icon as lucide } from '../../../core/icons.js';
+
+/** Icone par defaut selon l'acteur, pour qu'aucune pastille ne reste vide. */
+const ACTOR_ICONS = {
+  partner: 'building',
+  antenne: 'shield',
+  transporteur: 'truck',
+  controle: 'scan',
+  systeme: 'layers',
+};
+
 export const kind = 'actor';
 
 export function build(spec, doc) {
@@ -11,6 +22,7 @@ export function build(spec, doc) {
 
   const dot = doc.createElement('span');
   dot.className = 'sc-actor-dot';
+  dot.innerHTML = lucide(spec.icon || ACTOR_ICONS[spec.id] || 'users', { size: 52, cls: 'sc-actor-glyph' });
   el.appendChild(dot);
 
   const label = doc.createElement('span');

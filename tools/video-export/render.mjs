@@ -26,12 +26,13 @@ const OUT_DIR = resolvePath(REPO_ROOT, 'output/video');
 const TEASER_PIVOT = { chapterId: 'ch3', sceneId: '3.4' };
 
 function parseArgs(argv) {
-  const args = { chapter: null, all: false, port: 8080, subtitles: true };
+  const args = { chapter: null, all: false, port: 8080, subtitles: true, still: null };
   for (let i = 2; i < argv.length; i += 1) {
     const flag = argv[i];
     if (flag === '--all') args.all = true;
     else if (flag === '--no-subtitles') args.subtitles = false;
     else if (flag === '--chapter') { args.chapter = argv[i + 1]; i += 1; }
+    else if (flag === '--still') { args.still = Number(argv[i + 1]); i += 1; }
     else if (flag === '--port') { args.port = Number(argv[i + 1]); i += 1; }
   }
   return args;
@@ -224,6 +225,21 @@ async function main() {
 
   const browser = await chromium.launch();
   try {
+    // Boucle de controle rapide : une seule image, en quelques secondes, au
+    // lieu d'un chapitre entier. Sert a juger une mise en page sans payer un
+    // rendu complet.
+    if (args.still !== null) {
+      if (!args.chapter) { console.error('--still exige --chapter <id>.'); process.exit(1); }
+      const page = await openChapter(browser, args.chapter, args.port, args.subtitles);
+      await page.evaluate((ms) => window.__explainer.seek(ms), args.still);
+      mkdirSync(OUT_DIR, { recursive: true });
+      const target = resolvePath(OUT_DIR, `still-${args.chapter}-${args.still}.png`);
+      await page.locator('.scene-stage').screenshot({ path: target });
+      await page.close();
+      console.log(target);
+      return;
+    }
+
     if (args.chapter) {
       await renderChapter(browser, args.chapter, args.port, args.subtitles);
     } else {

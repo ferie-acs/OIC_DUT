@@ -48,6 +48,7 @@ export const storyboard = {
           id: '1.4', at: 26000, duration: 16000,
           narration: 'Mais un document sur papier ne porte pas la preuve de sa propre authenticité. Sans référence unique et vérifiable, rien ne permet de trancher au bord de la route entre l’original et une copie. Et personne, au niveau national, ne voit circuler l’ensemble.',
           stage: [
+            { kind: 'title', title: 'Un papier ne prouve pas sa propre authenticité', at: 200 },
             { kind: 'doc', id: 'original', label: 'DUT', at: 0, x: -280 },
             { kind: 'doc', id: 'copie1', label: 'DUT', at: 2200, x: -40, dimmed: true },
             { kind: 'doc', id: 'copie2', label: 'DUT', at: 3200, x: 200, dimmed: true },
@@ -86,6 +87,7 @@ export const storyboard = {
           id: '2.3', at: 18000, duration: 10000,
           narration: 'Quand le dossier est complet, il le soumet.',
           stage: [
+            { kind: 'title', title: 'La soumission du dossier', at: 200 },
             { kind: 'actor', id: 'partner', label: 'Partenaire', at: 0 },
             { kind: 'doc', id: 'dut', label: 'DUT', at: 600 },
             { kind: 'actor', id: 'antenne', label: 'Antenne OIC', at: 1000 },
@@ -126,6 +128,7 @@ export const storyboard = {
           id: '2.7', at: 88000, duration: 12000,
           narration: 'Le transporteur prend la route, le document l’accompagne.',
           stage: [
+            { kind: 'title', title: 'Le document prend la route', at: 200 },
             { kind: 'actor', id: 'transporteur', label: 'Transporteur', at: 400, live: true, liveAt: 1200 },
             { kind: 'doc', id: 'dut', label: 'DUT', qr: true, at: 800 },
             { kind: 'flow', id: 'route', from: 'transporteur', to: 'controle', at: 2000 },
@@ -148,7 +151,7 @@ export const storyboard = {
           narration: 'Et chaque geste — création, rejet, validation, impression, contrôle — s’inscrit dans un journal d’audit que personne ne peut modifier ni effacer.',
           stage: [
             { kind: 'title', title: 'Journal d’audit', at: 300 },
-            { kind: 'picto', id: 'lock', icon: 'shield', label: 'Ajout seul', slot: 2, at: 900 },
+            { kind: 'picto', id: 'lock', icon: 'shield', label: 'Ajout seul', slot: 1, at: 900 },
             { kind: 'callout', text: 'Création', at: 2200, anchor: 'lock', tone: 'neutral' },
             { kind: 'callout', text: 'Rejet', at: 2700, anchor: 'lock', tone: 'neutral' },
             { kind: 'callout', text: 'Validation', at: 3200, anchor: 'lock', tone: 'neutral' },
@@ -177,6 +180,7 @@ export const storyboard = {
           id: '3.3', at: 16000, duration: 14000,
           narration: 'Le scanner ne lit donc pas le document : il interroge le système. Et c’est le système qui répond. Ce qui est imprimé sur le papier n’a aucune autorité.',
           stage: [
+            { kind: 'title', title: 'Le scan interroge le système', at: 200 },
             { kind: 'doc', id: 'dut', label: 'DUT', qr: true, at: 0 },
             { kind: 'actor', id: 'systeme', label: 'Le système', at: 900, live: true, liveAt: 3000 },
             { kind: 'flow', id: 'interrogation', from: 'dut', to: 'systeme', at: 1800 },

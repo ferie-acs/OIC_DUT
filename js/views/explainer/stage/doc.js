@@ -19,6 +19,12 @@ export function build(spec, doc) {
   label.textContent = spec.label || 'DUT';
   el.appendChild(label);
 
+  // Lignes de texte factices : sans elles la carte est une boite blanche vide
+  // et ne se lit pas comme un document.
+  const lines = doc.createElement('span');
+  lines.className = 'sc-doc-lines';
+  el.appendChild(lines);
+
   if (spec.number) {
     const number = doc.createElement('span');
     number.className = 'sc-doc-number';

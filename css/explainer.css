@@ -360,7 +360,7 @@
 
 .sc-actor {
   position: absolute;
-  bottom: 320px;
+  bottom: 200px;
   width: 260px;
   display: flex;
   flex-direction: column;
@@ -376,13 +376,24 @@
 .sc-actor[data-stage-id='systeme'] { left: 1480px; }
 
 .sc-actor-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 116px;
   height: 116px;
   border-radius: var(--r-pill);
   background: var(--surface);
   border: none;
   box-shadow: var(--sc-card-shadow);
+  color: var(--navy-2);
 }
+
+.sc-actor-glyph {
+  width: 46%;
+  height: 46%;
+}
+
+.sc-actor.is-live .sc-actor-dot { color: var(--accent-hover); }
 
 .sc-actor.is-live .sc-actor-dot {
   background: var(--accent-soft);
@@ -400,15 +411,35 @@
   font-weight: 700;
 }
 
+/* Dans une scène à écran, l'acteur descend en bas de la colonne de gauche,
+   en format compact : sinon il se retrouve sous la maquette d'ordinateur. */
+.sc-scene.has-screen .sc-actor {
+  left: 96px;
+  bottom: 230px;
+  width: auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 18px;
+}
+
+.sc-scene.has-screen .sc-actor-dot {
+  width: 72px;
+  height: 72px;
+}
+
+.sc-scene.has-screen .sc-actor-label {
+  font-size: 30px;
+}
+
 /* --- Primitive : document ---------------------------------------------- */
 
 .sc-doc {
   position: absolute;
   left: 50%;
-  top: 320px;
+  top: 380px;
   margin-left: -140px;
   width: 280px;
-  height: 380px;
+  height: 300px;
   background: var(--surface);
   border: none;
   border-radius: var(--sc-card-radius);
@@ -440,6 +471,27 @@
 
 .sc-doc.is-dimmed .sc-doc-label { color: var(--text-muted); }
 
+.sc-doc-lines {
+  display: block;
+  height: 86px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--border) 0 8px,
+    transparent 8px 26px
+  );
+  border-radius: 2px;
+}
+
+.sc-doc-lines::after {
+  content: "";
+  display: block;
+  width: 58%;
+  height: 8px;
+  margin-top: 94px;
+  background: var(--border);
+  border-radius: 2px;
+}
+
 .sc-doc-number {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 19px;
@@ -458,7 +510,8 @@
 
 .sc-flow {
   position: absolute;
-  bottom: 390px;
+  bottom: 305px;
+  transform-origin: left center;
   left: 440px;
   width: 400px;
   height: 6px;
@@ -479,7 +532,7 @@
   );
 }
 
-.sc-flow.is-reverse { bottom: 290px; }
+.sc-flow.is-reverse { bottom: 215px; }
 
 .sc-flow.is-reverse .sc-flow-line {
   background-image: repeating-linear-gradient(
@@ -578,9 +631,12 @@
    colonne chronologique de la reference. */
 .sc-callout[data-anchor='lock'] {
   left: auto;
-  right: 220px;
+  right: 240px;
   bottom: auto;
-  max-width: 620px;
+  /* Largeur FIXE et non max-width : sinon chaque élément se dimensionne sur son
+     texte et les pastilles, ancrées à gauche de l'élément, se décalent les unes
+     par rapport aux autres au lieu de former une colonne. */
+  width: 560px;
   font-size: 27px;
   font-weight: 700;
   color: var(--text);
