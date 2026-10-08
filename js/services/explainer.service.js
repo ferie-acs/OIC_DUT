@@ -9,8 +9,19 @@ function formatVttTime(ms) {
   return `${h}:${m}:${s}.${msPart}`;
 }
 
+/** Silence laissé après la voix pour qu'elle ne bute pas sur le changement de scène. */
+const VOICE_TAIL_MS = 600;
+
 /**
  * Fusionne les durées mesurées avec les durées cibles du storyboard.
+ *
+ * La mesure est un PLANCHER, pas une substitution : une voix plus longue que sa
+ * cible étire la scène (plus VOICE_TAIL_MS de silence), une voix plus courte ne
+ * la raccourcit pas. Une scène n'est pas réductible à sa phrase — elle a un
+ * temps visuel propre, et la durée totale de 5 minutes est une décision de
+ * conception, pas un sous-produit du débit de la voix. Sans ce plancher, une
+ * voix rapide comprimerait la vidéo et précipiterait toutes les scènes.
+ *
  * Une mesure absente, non numérique ou négative est ignorée au profit de la
  * cible : un storyboard.timing.json manquant, partiel ou périmé ne doit jamais
  * produire de NaN dans un seek().
@@ -25,7 +36,8 @@ export function resolveTimings(rawTimings) {
     let chapterTotal = 0;
     for (const scene of chapter.scenes) {
       const candidate = Number(measured[scene.id]);
-      const duration = Number.isFinite(candidate) && candidate > 0 ? candidate : scene.duration;
+      const voice = Number.isFinite(candidate) && candidate > 0 ? candidate + VOICE_TAIL_MS : 0;
+      const duration = Math.max(scene.duration, voice);
       byScene[scene.id] = duration;
       chapterTotal += duration;
     }

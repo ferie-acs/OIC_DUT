@@ -201,11 +201,18 @@ const noTimings = resolveTimings(null);
 assert.equal(noTimings.total, TOTAL_DURATION_MS);
 assert.ok(Object.values(noTimings.byScene).every(Number.isFinite));
 
-// Timings partiels : les scènes mesurées utilisent la mesure, les autres la cible.
+// La mesure est un PLANCHER, pas une substitution : une voix plus longue que la
+// cible étire la scène (plus 600 ms de silence de fin), une voix plus courte ne
+// la raccourcit pas — sinon la vidéo de 5 min tomberait à la durée cumulée de la
+// voix et toutes les scènes seraient précipitées.
 const partial = resolveTimings({ '1.2': 13500 });
-assert.equal(partial.byScene['1.2'], 13500);
-assert.equal(partial.byScene['1.3'], 12000);
-assert.equal(partial.total, TOTAL_DURATION_MS + 1500);
+assert.equal(partial.byScene['1.2'], 14100, 'voix plus longue : la scène s’étire, voix non tronquée');
+assert.equal(partial.byScene['1.3'], 12000, 'scène non mesurée : cible conservée');
+assert.equal(partial.total, TOTAL_DURATION_MS + 2100);
+
+const shorterVoice = resolveTimings({ '1.2': 6612 });
+assert.equal(shorterVoice.byScene['1.2'], 12000, 'voix plus courte : la cible tient');
+assert.equal(shorterVoice.total, TOTAL_DURATION_MS);
 
 // Timings corrompus : valeurs non numériques ou négatives ignorées sans produire NaN.
 const corrupt = resolveTimings({ '1.2': 'douze', '1.3': -4000, '1.4': null });
@@ -365,3 +372,31 @@ assert.ok(transcript.includes('amélioration proposée'),
   'la transcription doit conserver la mention « amélioration proposée » de la scène 2.5');
 
 console.log('Déterminisme : aucune règle de mouvement CSS. Sous-titres et transcription conformes.');
+
+// ---------------------------------------------------------------------------
+// Tâche 9 — voix et durées mesurées
+// ---------------------------------------------------------------------------
+
+const { planTtsSegments, parseAfinfoDuration } = await import('../scripts/tts.mjs');
+
+// Un segment par scène parlée, aucun pour les cartons de titre.
+const segments = planTtsSegments(storyboard);
+const spoken = storyboard.chapters.flatMap((c) => c.scenes).filter((s) => s.narration);
+assert.equal(segments.length, spoken.length);
+assert.equal(segments.filter((s) => s.sceneId.endsWith('.1')).length, 0,
+  'les cartons de titre ne doivent pas être sonorisés');
+for (const segment of segments) {
+  assert.ok(segment.text.length > 0);
+  assert.ok(segment.out.startsWith('audio/explainer/'));
+  assert.ok(segment.out.endsWith('.m4a'));
+  assert.ok(Number.isFinite(segment.target) && segment.target > 0,
+    `${segment.sceneId} : durée cible absente, l'écart ne pourrait pas être calculé`);
+}
+
+// Lecture de la durée réelle depuis la sortie d'afinfo.
+assert.equal(parseAfinfoDuration('estimated duration: 13.482993 sec\n'), 13483);
+assert.equal(parseAfinfoDuration('rien d’exploitable'), null);
+assert.equal(parseAfinfoDuration(''), null);
+assert.equal(parseAfinfoDuration(null), null);
+
+console.log(`TTS : ${segments.length} segments planifiés, durées mesurées lues depuis afinfo.`);
