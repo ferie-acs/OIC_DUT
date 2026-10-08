@@ -410,8 +410,10 @@ const { buildCues, voiceCueFor, createClock } = await import('../js/services/exp
 // #12 — les cues sont construits sur les durées RÉSOLUES, pas sur les cibles.
 // Sinon les sous-titres incrustés et les lecteurs externes dérivent de plusieurs
 // secondes sur la moitié du chapitre 2.
-const realTimings = resolveTimings(JSON.parse(
-  readFileSync('js/data/storyboard.timing.json', 'utf8'))).byScene;
+// Mesures synthétiques plutôt que le fichier généré : un test ne doit pas
+// dépendre d'un artefact que l'on peut écarter (ici, la voix de synthèse).
+// 2.5 vise 18 s ; une prise de 24 s étire la scène et décale tout ce qui suit.
+const realTimings = resolveTimings({ '2.5': 24000 }).byScene;
 const ch2 = storyboard.chapters.find((c) => c.id === 'ch2');
 const ch2Cues = buildCues(ch2, realTimings);
 const cue26 = ch2Cues.find((c) => c.sceneId === '2.6');

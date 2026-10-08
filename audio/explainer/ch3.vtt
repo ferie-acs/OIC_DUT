@@ -2,15 +2,15 @@ WEBVTT
 
 3.2
 00:00:02.000 --> 00:00:16.000
-Le code QR imprimé sur un DUT ne contient aucune donnée de transport. Rien que ceci : un jeton opaque, tiré au hasard, qui ne dit rien de la marchandise ni du transporteur.
+Le code QR imprimé sur un DUT ne contient aucune donnée de transport. Rien que ceci : un jeton opaque, tiré au hasard, qui ne dit rien de la marchandise ni du transporteur.
 
 3.3
 00:00:16.000 --> 00:00:30.000
-Le scanner ne lit donc pas le document : il interroge le système. Et c’est le système qui répond. Ce qui est imprimé sur le papier n’a aucune autorité.
+Le scanner ne lit donc pas le document : il interroge le système. Et c’est le système qui répond. Ce qui est imprimé sur le papier n’a aucune autorité.
 
 3.4
 00:00:30.000 --> 00:00:42.000
-Prenons une copie. Même papier, même QR, même numéro. Le scan interroge le système — et le système répond : retiré.
+Prenons une copie. Même papier, même QR, même numéro. Le scan interroge le système — et le système répond : « retiré ».
 
 3.5
 00:00:42.000 --> 00:00:50.000
