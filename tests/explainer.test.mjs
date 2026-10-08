@@ -110,3 +110,71 @@ assert.ok(fallback.textContent.includes('antenne.png'),
 assert.equal(screenEl.dataset.ratio, '16:9', 'le conteneur doit porter son ratio');
 
 console.log('Primitives : registre complet, contrat build/animate respecté, repli image nommé, aucun style inline.');
+
+// ---------------------------------------------------------------------------
+// Tâche 3 — constructeur de timeline
+// ---------------------------------------------------------------------------
+
+const { buildChapter } = await import('../js/core/motion-timeline.js');
+
+// Sans window.anime, le constructeur bascule en rendu par paliers au lieu d'échouer.
+// (Couvre Review Focus n°2.)
+const tlCalls = [];
+const stageRoot = fakeDoc.createElement('div');
+const built = buildChapter(storyboard.chapters[0], { doc: fakeDoc, root: stageRoot, timings: {} });
+assert.equal(built.stepped, true, 'sans anime.js, le rendu doit être par paliers');
+assert.equal(built.timeline, null);
+assert.equal(typeof built.seek, 'function');
+
+// En paliers, seek() n'active qu'une scène à la fois.
+built.seek(0);
+const activeAtZero = stageRoot.children.filter((c) => String(c.className).includes('is-active'));
+assert.equal(activeAtZero.length, 1);
+assert.equal(activeAtZero[0].dataset.sceneId, '1.1');
+built.seek(30000);
+const activeLater = stageRoot.children.filter((c) => String(c.className).includes('is-active'));
+assert.equal(activeLater.length, 1);
+assert.equal(activeLater[0].dataset.sceneId, '1.4');
+
+// seek() hors bornes ne lève pas et ne laisse pas d'état incohérent.
+built.seek(-5000);
+built.seek(999999);
+assert.equal(stageRoot.children.filter((c) => String(c.className).includes('is-active')).length, 1);
+
+// Un conteneur de scène est créé par scène, porteur de son identifiant.
+assert.equal(stageRoot.children.length, storyboard.chapters[0].scenes.length);
+assert.deepEqual(stageRoot.children.map((c) => c.dataset.sceneId),
+  storyboard.chapters[0].scenes.map((s) => s.id));
+
+// Les durées mesurées, quand elles existent, déplacent les fenêtres de scène.
+const retimed = buildChapter(storyboard.chapters[0], {
+  doc: fakeDoc, root: fakeDoc.createElement('div'), timings: { '1.1': 4000 },
+});
+assert.equal(retimed.duration, 57000, 'la durée du chapitre suit les mesures');
+
+// Avec un faux anime.js, une vraie timeline est construite, en autoplay désactivé.
+globalThis.window = {
+  anime: {
+    createTimeline(options) {
+      tlCalls.push(['createTimeline', options]);
+      return { add(...args) { tlCalls.push(['add', args]); return this; },
+               seek(ms) { tlCalls.push(['seek', ms]); return this; },
+               pause() { tlCalls.push(['pause']); return this; } };
+    },
+    stagger: (n) => n,
+  },
+  matchMedia: () => ({ matches: false }),
+};
+const animated = buildChapter(storyboard.chapters[0], { doc: fakeDoc, root: fakeDoc.createElement('div'), timings: {} });
+assert.equal(animated.stepped, false);
+assert.ok(animated.timeline, 'timeline attendue');
+assert.equal(tlCalls[0][1].autoplay, false, 'la timeline doit être créée en autoplay: false');
+assert.ok(tlCalls.some(([kind]) => kind === 'add'), 'aucun tween ajouté');
+
+// Mouvement refusé par l'utilisateur : repli par paliers même avec anime.js présent.
+globalThis.window.matchMedia = () => ({ matches: true });
+const reduced = buildChapter(storyboard.chapters[0], { doc: fakeDoc, root: fakeDoc.createElement('div'), timings: {} });
+assert.equal(reduced.stepped, true, 'prefers-reduced-motion doit forcer le rendu par paliers');
+globalThis.window.matchMedia = () => ({ matches: false });
+
+console.log('Timeline : repli par paliers sans anime.js et en reduced-motion, autoplay désactivé, une scène active à la fois.');
