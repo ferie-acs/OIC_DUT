@@ -23,3 +23,22 @@ assert.deepEqual(missing, [], `captures référencées mais absentes :\n${missin
 assert.ok(checked > 0, 'aucune capture référencée : le storyboard a-t-il perdu ses scènes « screen » ?');
 
 console.log(`Assets : ${checked} captures référencées, toutes présentes, non vides, avec texte alternatif.`);
+
+// Les artefacts générés par scripts/build-explainer-subtitles.mjs sont présents
+// et à jour : un chapitre ajouté au storyboard sans régénération est détecté ici.
+const { buildVtt, buildTranscript } = await import('../js/services/explainer.service.js');
+const { readFileSync } = await import('node:fs');
+
+for (const chapter of storyboard.chapters) {
+  const path = `audio/explainer/${chapter.id}.vtt`;
+  assert.ok(existsSync(path), `${path} absent — lancer scripts/build-explainer-subtitles.mjs`);
+  assert.equal(readFileSync(path, 'utf8'), buildVtt(chapter.id),
+    `${path} périmé — relancer scripts/build-explainer-subtitles.mjs`);
+}
+
+const transcriptPath = 'docs/explainer-transcription.md';
+assert.ok(existsSync(transcriptPath), `${transcriptPath} absent — lancer le générateur`);
+assert.ok(readFileSync(transcriptPath, 'utf8').includes(buildTranscript()),
+  `${transcriptPath} périmé — relancer le générateur`);
+
+console.log(`Sous-titres : ${storyboard.chapters.length} fichiers WebVTT et la transcription présents et à jour.`);

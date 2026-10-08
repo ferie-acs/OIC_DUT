@@ -368,6 +368,30 @@
 .sc-callout[data-anchor='lock']:nth-of-type(7) { top: 600px; }
 .sc-callout[data-anchor='lock']:nth-of-type(8) { top: 700px; }
 
+/* --- Sous-titres (dans la scène, donc dans le MP4) --------------------- */
+
+.sc-subtitle {
+  position: absolute;
+  left: 180px;
+  right: 180px;
+  bottom: 56px;
+  margin: 0;
+  padding: 18px 28px;
+  text-align: center;
+  font-size: 34px;
+  line-height: 1.35;
+  font-weight: 500;
+  color: var(--text);
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.sc-subtitle:empty,
+.sc-subtitle.is-hidden {
+  display: none;
+}
+
 /* --- Scènes sur mesure ------------------------------------------------- */
 
 .sc-custom {

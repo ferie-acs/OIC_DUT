@@ -325,3 +325,43 @@ assert.equal(sceneTwo.children.length, 1, 'la scène 1.2 doit contenir son rendu
 assert.ok(String(sceneTwo.children[0].className).includes('sc-carte-depart'));
 
 console.log('Scènes sur mesure : registre sans orphelin, montées par le constructeur de timeline.');
+
+// ---------------------------------------------------------------------------
+// Tâche 8 — sous-titres, transcription, garde-fou de déterminisme
+// ---------------------------------------------------------------------------
+
+const { readFileSync } = await import('node:fs');
+
+// Garde-fou de déterminisme : aucune règle de mouvement CSS dans l'explainer.
+// Une seule violation suffirait à faire diverger le MP4 de ce qu'on voit à l'écran.
+for (const sheet of ['css/explainer.css']) {
+  const source = readFileSync(sheet, 'utf8');
+  for (const pattern of [/\btransition\s*:/i, /\banimation\s*:/i, /@keyframes/i]) {
+    assert.ok(!pattern.test(source),
+      `${sheet} contient ${pattern} — interdit par le contrat de déterminisme`);
+  }
+}
+
+// Le WebVTT de chaque chapitre est valide et ses cues sont strictement croissants.
+for (const chapter of storyboard.chapters) {
+  const chapterVtt = buildVtt(chapter.id);
+  assert.ok(chapterVtt.startsWith('WEBVTT\n'), `${chapter.id} : en-tête WEBVTT absent`);
+  const times = [...chapterVtt.matchAll(/^(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})$/gm)];
+  assert.ok(times.length > 0, `${chapter.id} : aucun cue`);
+  for (let i = 1; i < times.length; i += 1) {
+    assert.ok(times[i][1] >= times[i - 1][2], `${chapter.id} : cues non croissants`);
+  }
+  // Un cue par scène parlée, pas un de plus.
+  assert.equal(times.length, chapter.scenes.filter((s) => s.narration).length,
+    `${chapter.id} : nombre de cues incohérent`);
+}
+
+// La transcription couvre les cinq chapitres et porte la mention d'écart assumé.
+const transcript = buildTranscript();
+for (const chapter of storyboard.chapters) {
+  assert.ok(transcript.includes(chapter.title), `transcription : ${chapter.title} absent`);
+}
+assert.ok(transcript.includes('amélioration proposée'),
+  'la transcription doit conserver la mention « amélioration proposée » de la scène 2.5');
+
+console.log('Déterminisme : aucune règle de mouvement CSS. Sous-titres et transcription conformes.');

@@ -92,9 +92,14 @@ export async function render(container, params = {}) {
   } catch { rawTimings = null; }
   const timings = resolveTimings(rawTimings);
 
+  // L'élément audio et sa piste de sous-titres vivent HORS de `.scene-stage`
+  // pour ne jamais entrer dans la zone capturée à l'export.
   const audio = document.createElement('audio');
   audio.preload = 'auto';
   audio.src = `audio/explainer/${startId}.m4a`;
+
+  container.querySelector('.explainer').appendChild(audio);
+
   const playback = createPlaybackState();
 
   const chapter = storyboard.chapters.find((c) => c.id === startId);
@@ -103,6 +108,23 @@ export async function render(container, params = {}) {
   // Sans cette classe, les éléments de scène resteraient à `opacity: 0` alors
   // que plus rien ne les révèle : c'est le contrat posé par css/explainer.css.
   if (!built.stepped) stage.classList.add('is-animated');
+
+  // Les sous-titres sont rendus DANS la scène, par le même seek que la
+  // timeline : un élément <audio> n'a aucune surface d'affichage, donc une
+  // piste <track> y serait inerte. Les fichiers .vtt générés servent à
+  // l'incrustation dans le MP4 et aux lecteurs externes, pas à cette lecture.
+  const subtitle = document.createElement('p');
+  subtitle.className = 'sc-subtitle';
+  stage.appendChild(subtitle);
+
+  // Fenêtres de narration, calculées sur les mêmes durées que la timeline.
+  const cues = [];
+  let cueOffset = 0;
+  for (const scene of chapter.scenes) {
+    const duration = timings.byScene[scene.id] || scene.duration;
+    if (scene.narration) cues.push({ start: cueOffset, end: cueOffset + duration, text: scene.narration });
+    cueOffset += duration;
+  }
 
   built.seek(0);
 
@@ -115,6 +137,8 @@ export async function render(container, params = {}) {
 
   function paint(ms) {
     built.seek(ms);
+    const cue = cues.find((c) => ms >= c.start && ms < c.end);
+    subtitle.textContent = cue ? cue.text : '';
     clock.textContent = `${formatClock(ms)} / ${formatClock(built.duration)}`;
     seekBar.value = String(Math.round((ms / built.duration) * 1000));
   }
@@ -166,6 +190,13 @@ export async function render(container, params = {}) {
   toggle.addEventListener('click', () => {
     const playing = toggle.textContent === 'Pause';
     if (playing) stopPlayback(); else startPlayback();
+  });
+
+  const subtitlesButton = container.querySelector('[data-action="subtitles"]');
+  subtitlesButton.addEventListener('click', () => {
+    const shown = subtitlesButton.getAttribute('aria-pressed') === 'true';
+    subtitlesButton.setAttribute('aria-pressed', String(!shown));
+    subtitle.classList.toggle('is-hidden', shown);
   });
 
   seekBar.addEventListener('input', () => {
