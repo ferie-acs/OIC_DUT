@@ -1,0 +1,453 @@
+/* ===========================================================================
+   Vidéo explicative DUT — scène, primitives et lecteur.
+
+   Contrat de déterminisme : ce fichier ne contient AUCUNE règle de mouvement
+   pilotée par le navigateur. Tout le mouvement vient de l'unique timeline
+   anime.js. Une seule règle de mouvement CSS ici suffirait à faire diverger le
+   MP4 exporté de ce qu'on voit à l'écran, sans message d'erreur. Le test
+   tests/explainer.test.mjs fait échouer la suite si l'une apparaît.
+   =========================================================================== */
+
+/* --- Enveloppe et mise à l'échelle ------------------------------------- */
+
+.explainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* La scène est toujours dessinée en 1920x1080 puis réduite par --stage-scale,
+   afin que le rendu à l'écran soit exactement celui du fichier exporté. */
+.explainer-viewport {
+  --stage-scale: 1;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  height: calc(1080px * var(--stage-scale));
+}
+
+.scene-stage {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
+  background: var(--surface);
+  transform: translateX(-50%) scale(var(--stage-scale));
+  transform-origin: top center;
+  overflow: hidden;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
+  color: var(--text);
+}
+
+/* --- Scènes ------------------------------------------------------------- */
+
+.sc-scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+/* Rendu par paliers (anime.js absent ou mouvement refusé) : la scène active
+   est simplement révélée, sans interpolation. */
+.sc-scene.is-active {
+  opacity: 1;
+}
+
+/* Quand la timeline pilote la scène, les éléments partent invisibles et c'est
+   elle qui les révèle. Sans cette classe, ils restent visibles d'emblée — ce
+   qui est exactement ce qu'il faut en rendu par paliers. */
+.scene-stage.is-animated .sc-scene > * {
+  opacity: 0;
+}
+
+/* --- Primitive : titre -------------------------------------------------- */
+
+.sc-title {
+  position: absolute;
+  left: 96px;
+  top: 150px;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sc-kicker {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.sc-title-text {
+  font-size: 72px;
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -.02em;
+  color: var(--text);
+}
+
+.sc-title.is-card {
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  max-width: none;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--navy);
+}
+
+.sc-title.is-card .sc-title-text {
+  color: var(--text-on-accent);
+  font-size: 88px;
+}
+
+/* --- Primitive : acteur ------------------------------------------------- */
+
+.sc-actor {
+  position: absolute;
+  bottom: 220px;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.sc-actor[data-stage-id='partner'] { left: 180px; }
+.sc-actor[data-stage-id='antenne'] { left: 830px; }
+.sc-actor[data-stage-id='transporteur'] { left: 830px; }
+.sc-actor[data-stage-id='controle'] { left: 1480px; }
+.sc-actor[data-stage-id='systeme'] { left: 1480px; }
+
+.sc-actor-dot {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--r-pill);
+  background: var(--navy-soft);
+  border: 3px solid var(--navy-ink);
+}
+
+.sc-actor.is-live .sc-actor-dot {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  border-width: 5px;
+}
+
+.sc-actor-label {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.sc-actor.is-live .sc-actor-label {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+/* --- Primitive : document ---------------------------------------------- */
+
+.sc-doc {
+  position: absolute;
+  left: 50%;
+  top: 340px;
+  margin-left: -140px;
+  width: 280px;
+  height: 380px;
+  background: var(--surface);
+  border: 3px solid var(--navy);
+  border-radius: var(--r-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sc-doc.is-dimmed {
+  border-color: var(--border-strong);
+  border-style: dashed;
+  color: var(--text-muted);
+}
+
+.sc-doc-label {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--navy);
+}
+
+.sc-doc.is-dimmed .sc-doc-label {
+  color: var(--text-muted);
+}
+
+.sc-doc-number {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.sc-doc-qr {
+  margin-top: auto;
+  align-self: flex-end;
+  width: 92px;
+  height: 92px;
+  background: var(--text);
+}
+
+/* --- Primitive : flux -------------------------------------------------- */
+
+.sc-flow {
+  position: absolute;
+  bottom: 290px;
+  left: 440px;
+  width: 400px;
+  height: 6px;
+  opacity: 0;
+}
+
+.sc-flow[data-from='transporteur'][data-to='controle'] {
+  left: 1090px;
+  width: 400px;
+}
+
+.sc-flow[data-from='dut'][data-to='systeme'] {
+  left: 960px;
+  width: 520px;
+}
+
+.sc-flow-line {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--navy-2);
+  border-radius: var(--r-pill);
+}
+
+.sc-flow.is-reverse {
+  bottom: 210px;
+}
+
+.sc-flow.is-reverse .sc-flow-line {
+  background: var(--warning);
+}
+
+/* --- Primitive : picto ------------------------------------------------- */
+
+.sc-picto {
+  position: absolute;
+  top: 460px;
+  width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.sc-picto:nth-of-type(2) { left: 120px; }
+.sc-picto:nth-of-type(3) { left: 740px; }
+.sc-picto:nth-of-type(4) { left: 1360px; }
+
+.sc-picto-icon {
+  width: 128px;
+  height: 128px;
+  border-radius: var(--r-xl);
+  background: var(--sq-blue-bg);
+  border: 2px solid var(--navy-ink);
+}
+
+.sc-picto-label {
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+/* --- Primitive : écran réel -------------------------------------------- */
+
+.sc-screen {
+  position: absolute;
+  right: 96px;
+  top: 280px;
+  width: 880px;
+  height: 495px;
+  background: var(--surface-2);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.sc-screen-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+}
+
+/* Cadre de remplacement : masqué tant que l'image charge, révélé par la classe
+   is-missing que pose le gestionnaire d'erreur de l'image. */
+.sc-screen-fallback {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--error);
+  background: var(--error-soft);
+}
+
+.sc-screen.is-missing .sc-screen-img {
+  display: none;
+}
+
+.sc-screen.is-missing .sc-screen-fallback {
+  display: flex;
+}
+
+.sc-screen-ring {
+  position: absolute;
+  left: 6%;
+  top: 18%;
+  width: 56%;
+  height: 46%;
+  border: 5px solid var(--accent);
+  border-radius: var(--r-md);
+  opacity: 0;
+}
+
+/* --- Primitive : annotation -------------------------------------------- */
+
+.sc-callout {
+  position: absolute;
+  left: 96px;
+  bottom: 120px;
+  max-width: 760px;
+  padding: 16px 26px;
+  font-size: 30px;
+  font-weight: 600;
+  border-radius: var(--r-md);
+  border: 2px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.sc-callout[data-tone='warning'] {
+  background: var(--warning-soft);
+  border-color: var(--warning);
+}
+
+.sc-callout[data-tone='info'] {
+  background: var(--navy-soft);
+  border-color: var(--navy-2);
+  color: var(--navy);
+}
+
+.sc-callout[data-anchor='lock'] {
+  left: auto;
+  right: 96px;
+  bottom: auto;
+}
+
+.sc-callout[data-anchor='lock']:nth-of-type(3) { top: 240px; }
+.sc-callout[data-anchor='lock']:nth-of-type(4) { top: 330px; }
+.sc-callout[data-anchor='lock']:nth-of-type(5) { top: 420px; }
+.sc-callout[data-anchor='lock']:nth-of-type(6) { top: 510px; }
+.sc-callout[data-anchor='lock']:nth-of-type(7) { top: 600px; }
+.sc-callout[data-anchor='lock']:nth-of-type(8) { top: 700px; }
+
+/* --- Scènes sur mesure ------------------------------------------------- */
+
+.sc-custom {
+  position: absolute;
+  inset: 0;
+}
+
+/* --- Lecteur (hors zone capturée) -------------------------------------- */
+
+.explainer-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.explainer-chapters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.explainer-chapter {
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-control);
+  cursor: pointer;
+}
+
+.explainer-chapter[aria-current='true'] {
+  color: var(--text-on-accent);
+  background: var(--navy);
+  border-color: var(--navy);
+}
+
+.explainer-seek {
+  flex: 1 1 220px;
+  min-width: 160px;
+}
+
+.explainer-time {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.explainer-notice {
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--navy);
+  background: var(--navy-soft);
+  border: 1px solid var(--navy-ink);
+  border-radius: var(--r-md);
+}
+
+/* --- Mode export : aucun contrôle, scène seule ------------------------- */
+
+.explainer.is-render .explainer-controls,
+.explainer.is-render .explainer-notice {
+  display: none;
+}
+
+/* --- Écrans étroits ---------------------------------------------------- */
+
+@media (max-width: 720px) {
+  .explainer-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .explainer-seek {
+    flex: 1 1 auto;
+  }
+}

@@ -58,3 +58,55 @@ assert.deepEqual([...STAGE_KINDS].sort(),
   ['actor', 'callout', 'doc', 'flow', 'picto', 'screen', 'title']);
 
 console.log('Storyboard : structure, cartons, exclusivité stage/custom et règles de validation vérifiés.');
+
+// ---------------------------------------------------------------------------
+// Tâche 2 — primitives visuelles
+// ---------------------------------------------------------------------------
+
+const { STAGE_PRIMITIVES } = await import('../js/views/explainer/stage/index.js');
+
+// Chaque kind déclaré par la donnée a une implémentation, et réciproquement.
+assert.deepEqual(Object.keys(STAGE_PRIMITIVES).sort(), [...STAGE_KINDS].sort());
+
+// Chaque primitive respecte le contrat build/animate.
+for (const [kind, primitive] of Object.entries(STAGE_PRIMITIVES)) {
+  assert.equal(typeof primitive.build, 'function', `${kind}.build manquant`);
+  assert.equal(typeof primitive.animate, 'function', `${kind}.animate manquant`);
+  assert.equal(primitive.build.length, 2, `${kind}.build(spec, doc)`);
+}
+
+// build() produit un élément porteur de son kind, sans style inline.
+const fakeDoc = {
+  createElement(tag) {
+    return {
+      tagName: tag.toUpperCase(), className: '', textContent: '', dataset: {},
+      children: [], attributes: {},
+      setAttribute(k, v) { this.attributes[k] = v; },
+      getAttribute(k) { return this.attributes[k] ?? null; },
+      appendChild(child) { this.children.push(child); return child; },
+      addEventListener() {},
+    };
+  },
+};
+for (const [kind, primitive] of Object.entries(STAGE_PRIMITIVES)) {
+  const el = primitive.build({ kind, label: 'x', title: 'x', text: 'x', icon: 'x', src: 'x' }, fakeDoc);
+  assert.ok(el, `${kind}.build n'a rien retourné`);
+  assert.ok(String(el.className).includes(`sc-${kind}`), `${kind} : classe sc-${kind} absente`);
+  assert.equal(el.attributes.style, undefined, `${kind} : style inline interdit`);
+}
+
+// La primitive `screen` prévoit un repli nommé si l'image ne charge pas.
+// (Couvre Review Focus n°5, versant exécution.)
+const screenEl = STAGE_PRIMITIVES.screen.build(
+  { kind: 'screen', src: 'antenne.png', alt: 'Panneau de revue d’un DUT par l’antenne' }, fakeDoc);
+const img = screenEl.children.find((c) => c.tagName === 'IMG');
+assert.ok(img, 'la primitive screen doit produire une img');
+assert.equal(img.attributes.src, 'assets/explainer/antenne.png');
+assert.ok(img.attributes.alt.length > 10, 'texte alternatif attendu');
+const fallback = screenEl.children.find((c) => String(c.className).includes('sc-screen-fallback'));
+assert.ok(fallback, 'cadre de remplacement absent');
+assert.ok(fallback.textContent.includes('antenne.png'),
+  'le remplacement doit nommer le fichier manquant');
+assert.equal(screenEl.dataset.ratio, '16:9', 'le conteneur doit porter son ratio');
+
+console.log('Primitives : registre complet, contrat build/animate respecté, repli image nommé, aucun style inline.');
