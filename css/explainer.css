@@ -62,6 +62,11 @@
   --sq-blue-bg: #E7F0FA;
   --sq-amber-bg: #FEF3D9;
   --sq-green-bg: #E3F5EA;
+  /* La regle projet « zero ombre » vaut pour l'interface ; la reference video
+     s'appuie sur des cartes flottantes, indispensables pour detacher les objets
+     du fond a grille. */
+  --sc-card-shadow: 0 18px 44px rgba(16, 32, 48, .10);
+  --sc-card-radius: 16px;
 
   position: absolute;
   top: 0;
@@ -330,15 +335,21 @@
 
 .sc-scene.has-screen .sc-picto-icon {
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--r-md);
+  width: 34px;
+  height: 34px;
+  border-radius: 0;
+  background: none;
+  border: none;
+  color: var(--navy);
 }
 
 .sc-scene.has-screen .sc-picto-glyph {
-  width: 62%;
-  height: 62%;
+  width: 100%;
+  height: 100%;
 }
+
+.sc-scene.has-screen .sc-picto[data-slot='2'] .sc-picto-icon,
+.sc-scene.has-screen .sc-picto[data-slot='3'] .sc-picto-icon { color: var(--navy); }
 
 .sc-scene.has-screen .sc-picto-label {
   font-size: 27px;
@@ -365,17 +376,17 @@
 .sc-actor[data-stage-id='systeme'] { left: 1480px; }
 
 .sc-actor-dot {
-  width: 120px;
-  height: 120px;
+  width: 116px;
+  height: 116px;
   border-radius: var(--r-pill);
-  background: var(--navy-soft);
-  border: 3px solid var(--navy-ink);
+  background: var(--surface);
+  border: none;
+  box-shadow: var(--sc-card-shadow);
 }
 
 .sc-actor.is-live .sc-actor-dot {
   background: var(--accent-soft);
-  border-color: var(--accent);
-  border-width: 5px;
+  box-shadow: var(--sc-card-shadow), 0 0 0 5px var(--accent);
 }
 
 .sc-actor-label {
@@ -399,9 +410,10 @@
   width: 280px;
   height: 380px;
   background: var(--surface);
-  border: 3px solid var(--navy);
-  border-radius: var(--r-md);
-  padding: 24px;
+  border: none;
+  border-radius: var(--sc-card-radius);
+  box-shadow: var(--sc-card-shadow);
+  padding: 26px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -414,8 +426,8 @@
 .sc-doc[data-x='200'] { margin-left: 200px; }
 
 .sc-doc.is-dimmed {
-  border-color: var(--border-strong);
-  border-style: dashed;
+  box-shadow: none;
+  border: 2px dashed var(--border-strong);
   color: var(--text-muted);
 }
 
@@ -459,13 +471,23 @@
   display: block;
   width: 100%;
   height: 100%;
-  background: var(--navy-2);
   border-radius: var(--r-pill);
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--navy-2) 0 18px,
+    transparent 18px 34px
+  );
 }
 
 .sc-flow.is-reverse { bottom: 290px; }
 
-.sc-flow.is-reverse .sc-flow-line { background: var(--warning); }
+.sc-flow.is-reverse .sc-flow-line {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--warning) 0 18px,
+    transparent 18px 34px
+  );
+}
 
 /* --- Primitive : écran réel, dans un cadre d'appareil ------------------- */
 
@@ -475,9 +497,10 @@
   top: 240px;
   width: 940px;
   height: 562px;
-  padding: 16px 16px 28px;
+  padding: 14px 14px 26px;
   background: linear-gradient(170deg, #22303E 0%, #16202B 100%);
   border-radius: 18px;
+  box-shadow: var(--sc-card-shadow);
 }
 
 /* Socle de l'appareil. */
@@ -551,14 +574,48 @@
 .sc-callout[data-tone='info'] { background: var(--navy); }
 .sc-callout[data-tone='neutral'] { background: var(--surface); color: var(--text); border: 2px solid var(--border-strong); }
 
+/* Frise verticale : pastille verte, trait de liaison, libelle. Reprend la
+   colonne chronologique de la reference. */
 .sc-callout[data-anchor='lock'] {
   left: auto;
-  right: 96px;
+  right: 220px;
   bottom: auto;
-  max-width: 560px;
-  font-size: 26px;
-  padding: 12px 22px;
+  max-width: 620px;
+  font-size: 27px;
+  font-weight: 700;
+  color: var(--text);
+  background: none;
+  border: none;
+  padding: 0 0 0 44px;
 }
+
+.sc-callout[data-anchor='lock']::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-pill);
+  background: var(--success);
+  box-shadow: 0 0 0 5px rgba(12, 139, 65, .16);
+}
+
+.sc-callout[data-anchor='lock']::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 30px;
+  width: 2px;
+  height: 56px;
+  background: var(--border-strong);
+}
+
+.sc-callout[data-anchor='lock']:nth-of-type(8) {
+  color: var(--navy);
+}
+
+.sc-callout[data-anchor='lock']:nth-of-type(8)::after { display: none; }
 
 .sc-callout[data-anchor='lock']:nth-of-type(3) { top: 250px; }
 .sc-callout[data-anchor='lock']:nth-of-type(4) { top: 326px; }
