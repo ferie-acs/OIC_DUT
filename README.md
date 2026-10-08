@@ -45,11 +45,6 @@ au premier chargement pour les CDN (Chart.js, Leaflet, QRCode.js, html5-qrcode, 
 
 ## Design
 
-Interface inspirée du modèle [NexLink](https://nexlink.layoutdrop.com/demo/index.html) :
-police Instrument Sans, icônes Lucide locales (licence ISC), navigation à deux
-niveaux, cartes à mini-courbes et palette bleue issue du logo OIC. Thèmes clair et sombre, navigation
-repliable et mise en page responsive. Le style commun se trouve dans `css/nexlink.css`.
-
 Le pilotage opérationnel est disponible pour les partenaires, antennes, administrateurs
 OIC et transporteurs : évolution mensuelle, cycle de traitement, délai moyen de
 validation, dossiers prioritaires, corridors par tonnage et export CSV. La recherche
@@ -63,22 +58,6 @@ mensuels montrent six mois ; le total historique peut donc être plus large.
 La plateforme reste une simulation LocalStorage, sans nouveaux services distants.
 
 Vérification des nouveaux calculs et périmètres : `node tests/insights.test.mjs`.
-
-## Comptes de démonstration
-
-Mot de passe unique : **`demo123`**
-
-| Rôle | E-mail |
-|---|---|
-| Partenaire — Admin | `partner.admin@demo.oic.ci` |
-| Partenaire — Éditeur | `partner.editor@demo.oic.ci` |
-| Agent Antenne | `antenne.agent@demo.oic.ci` |
-| Admin OIC | `oic.admin@demo.oic.ci` |
-| Agent Contrôle | `controle.agent@demo.oic.ci` |
-| Transporteur | `transporteur@demo.oic.ci` |
-
-Un bouton **« Réinitialiser la démonstration »** dans la barre latérale efface et
-regénère toutes les données de démonstration.
 
 ## Alignement avec le système réel de l'OIC
 
@@ -163,20 +142,6 @@ avec le document présenté. Le statut affiché est **toujours** celui du systè
 jamais celui imprimé sur le papier : un DUT retiré reste retiré même si le PDF
 affiche encore « Validé ».
 
-## Limites assumées du POC
-
-- **LocalStorage n'est pas un mécanisme de sécurité.** Il simule uniquement les
-  concepts métier (rôles, séparation création/validation, token opaque, audit
-  append-only). Toute personne ayant accès au navigateur peut lire/modifier ces
-  données — inacceptable en production.
-- Les CDN sont chargés sans intégrité Sous-ressource (SRI) pour fiabiliser la
-  démonstration ; à corriger avant tout usage réel.
-- Les pièces jointes PDF/JPEG/PNG sont enregistrées en Data URL dans LocalStorage : 300 Ko par fichier, 1,5 Mo de fichiers au total. Les anciennes annexes de démonstration restent des références sans contenu et sont signalées comme telles.
-- Les coordonnées des antennes sur la carte sont des **données de démonstration**,
-  explicitement signalées comme non officielles.
-- L'empreinte SHA-256 apposée sur le PDF est calculée côté navigateur à titre
-  d'illustration ; elle ne remplace pas une signature électronique.
-
 ## Architecture cible de production
 
 | Domaine | Cible |
@@ -192,90 +157,7 @@ affiche encore « Validé ».
 | Observabilité | Monitoring, journal d'audit **append-only côté serveur** |
 | API | API sécurisée HTTPS, authentification forte, révocation de session |
 
-Principe non négociable : **la clé privée de signature ne réside jamais dans
-une application cliente** (web ou mobile) — seule la clé publique y est
-distribuée.
-
-## Qualité du code
-
-- ES Modules, aucune fonction globale, aucun `onclick` inline, aucun CSS inline.
-- Repositories dédiés par collection LocalStorage, services porteurs de la
-  logique métier, vues sans accès direct au stockage.
-- Erreurs utilisateur explicites (numéro de permis manquant, motif de rejet
-  obligatoire, arrivée antérieure au départ, aucun numéro DUT disponible...).
-- Journal d'audit **append-only** : aucune fonction d'édition/suppression des
-  entrées n'est exposée par l'application.
-
-### Raffinement OIC
-
-La connexion reprend la disposition Login Basic de NexLink avec une illustration
-DUT générée, intégrée localement dans `assets/images/dut-transport-illustration.png`.
-Le thème utilise le bleu OIC `#155A9C`. Les graphiques en colonnes sont remplacés
-par des courbes lissées ; les indicateurs portent une mini-courbe avec un libellé
-explicite de la série. Les variations éventuelles comparent les créations du mois
-en cours (incomplet) avec celles du mois précédent, sans inventer un historique
-de stock. Les animations respectent `prefers-reduced-motion`.
-
-
-## Enrichissement métier local — septembre 2026
-
-- `#/actions` : centre d’actions par périmètre, incidents ouverts, brouillons et retours, suivi des transports, seuil de stock à 10 numéros ; filtres sauvegardés par utilisateur.
-- Dossier DUT : onglets Transport, Incidents & réserves, Documents & preuves, Checklist et audit administratif. Les URL des onglets sont rechargeables.
-- Transport déclaré : À préparer → Chargé → En route → Arrivé → Livré. Le DUT doit être valide pour avancer. Les événements restent distincts du statut administratif et portent un auteur et une date.
-- Incidents : type, priorité, description, responsable, résolution et historique conservé. Le centre d’actions les retire des actions ouvertes après résolution.
-- Checklist : complétude calculée avec les règles existantes de soumission et vérification déclarative des pièces. Disponible aussi au récapitulatif du formulaire, sans ajouter une nouvelle obligation réglementaire.
-- Duplication par le partenaire : nouvelle identité, dates de trajet effacées, aucun numéro/QR, aucune validation, preuve ou incident repris. Les champs métier sont copiés pour préparer un nouveau brouillon.
-- Fichiers réels : ajout et téléchargement depuis le dossier ou l’étape Annexes. Limites explicites pour LocalStorage, erreur visible en cas de quota, aucune écriture partielle du dossier opérationnel.
-- `#/oic/operations` : attribution ou refus motivé des demandes ; plages calculées sans chevauchement avec les plages attribuées et les numéros DUT existants de l’année. La décision est visible côté partenaire.
-
-Les nouvelles données sont conservées sous `dut_workspace_v1`, les vues sous `dut_action_filters_<utilisateur>`, et les demandes sous `dut_operations`. Aucun réensemencement ni migration destructive n’a été ajouté. Fermer ou recharger la page ne supprime pas les données. Effacer les données du navigateur ou réinitialiser la démonstration les supprime. Les comptes de démonstration d’un même navigateur partagent ces collections avec les périmètres d’affichage du POC ; aucun partage réseau ou entre appareils n’est simulé.
-
-Le suivi terrain est déclaratif. GPS, ETA prédictive, notifications externes, signature électronique et synchronisation serveur restent des intégrations futures. LocalStorage ne remplace pas l’authentification et les contrôles d’accès d’un backend.
-
-Vérifications : `node --experimental-default-type=module tests/workspace.test.mjs` et `node --experimental-default-type=module tests/insights.test.mjs`.
 
 ## DUT révisé : recto / verso et contrôle d’impression
 
 Les quatre PDF de `docs/` servent de références de présentation. Le dossier propose maintenant **DUT recto / verso** (téléchargement) et **Aperçu** (lecteur PDF.js local, sans enregistrer une impression).
-
-- Deux pages pour le dossier courant, avec rubriques 1 à 10 : transport et parties, trajet, marchandises, finances, détail facturé, annexes, réserves, quatre visas et trois signatures. Les champs longs et marchandises supplémentaires sont reportés dans des annexes numérotées, avec la même empreinte sur chaque page.
-- Quatre mentions d’exemplaire : transporteur, expéditeur, destinataire et souche OIC. Chaque génération enregistrée a un rang ; à partir de la deuxième, un motif est requis. L’aperçu est sans effet sur ce rang.
-- Statut au moment de la génération : validé, suspendu (filigrane + motif + alerte), retiré (numéro barré + filigrane + mention), ou épreuve non officielle sans numéro et sans QR avant validation. Le jeton existant d’un document suspendu/retiré reste scannable pour signaler son état actuel.
-- Bandeau institutionnel, armoiries existantes, logo OIC, trame fine et micro-texte. Ce sont des marques de présentation, pas des garanties de résistance à la photocopie.
-- La référence au décret n° 2015-270 du 22 avril 2015 a été vérifiée sur https://www.oic.ci/source/fr/includes/dut/fr/index.php ; les montants et taxes restent ceux du dossier, sans reprendre les chiffres illustratifs des maquettes ni ajouter de débours non saisis.
-- La clé LocalStorage `dut_prints_v2` contient le contenu structuré figé utilisé pour chaque impression, l’exemplaire, la date, le rang, l’auteur, le motif et une empreinte SHA-256 complète. Aucun contenu binaire de pièce jointe n’est dupliqué. Un changement de dossier pendant la génération empêche l’enregistrement d’une impression obsolète.
-- Le journal du dossier affiche ces impressions. L’écran de contrôle permet de comparer le rang et les 64 caractères imprimés à l’empreinte recalculée du contenu enregistré. La conformité de cette empreinte ne prouve pas que le papier n’a pas été retouché : l’agent doit également comparer les données visibles. Ce POC n’analyse pas le fichier PDF présenté et ne signe pas cryptographiquement les PDF ; il ne possède pas de registre central sécurisé.
-
-Le PDF marque explicitement **POC LOCAL**. Les anciens fichiers déjà téléchargés ne peuvent pas être modifiés à distance lors d’une suspension ; le contrôle consulte toujours le statut actuel du registre local. Pour un usage officiel : backend sécurisé, signatures et gestion d’impression côté serveur restent nécessaires.
-
-Validation : `node --experimental-default-type=module tests/pdf.test.mjs` vérifie les deux pages, les statuts, les débordements et les empreintes. Ce test de rendu utilise un QR de test fixe dans `tests/fixtures/qr-print.png` ; l’application utilise son encodeur QR navigateur existant. Les bibliothèques jsPDF 2.5.1 et PDF.js 4.10.38 sont locales dans `js/vendor/`.
-
-## Planning des trajets
-
-Le menu Pilotage → Planning des trajets (`#/planning`) affiche un Gantt par dossier/camion, avec périodes de 7, 14 ou 30 jours, recherche, navigation et repère Aujourd’hui. Le bouton Derniers trajets retrouve les données historiques de démonstration.
-Les dates initiales viennent du DUT (journée entière si heures absentes). Les prévisions opérationnelles ajustées sont enregistrées dans `dut_workspace_v1`, avec auteur et historique, sans modifier le DUT émis. Cliquez sur une barre ou un dossier pour ajuster les dates ou ouvrir son suivi. Les couleurs représentent le suivi déclaré ou le blocage administratif, pas un suivi GPS. Les chevauchements du même véhicule sont signalés dans le périmètre visible ; les dossiers rejetés/retirés sont exclus de cette alerte. Les rôles partenaire, antenne, OIC et transporteur conservent leurs périmètres habituels.
-Validation : `node tests/planning.test.mjs` (dates, stockage, chevauchements, intégrité du document et périmètres).
-
-### Voyages fictifs et manuel illustré (21 septembre 2026)
-
-Le planning propose dix voyages fictifs via « Ajouter les voyages de démo » (OIC admin ou partenaire admin). Ils sont conservés dans `dut_planning_demo_v1`, indépendamment des DUT et des stocks de numéros. Chaque exemple est rattaché à un dossier source pour conserver le périmètre de visibilité ; il est identifié DÉMO, sans émission de document. L’ajout est idempotent par périmètre d’administration. Les exemples illustrent différents états déclarés et des chevauchements de prévisions. Leurs dates ne se déplacent pas automatiquement après leur création.
-
-Le manuel débutant de 26 pages est disponible dans [output/pdf/manuel-utilisation-dut-oic.pdf](output/pdf/manuel-utilisation-dut-oic.pdf). Il couvre les six rôles, la saisie, la validation, le planning, le suivi, les contrôles, l’impression, les limites locales, un exercice et un glossaire. Les captures sont dans `docs/manual-assets`. Le générateur reproductible est `scripts/build_user_manual.py` (Python + reportlab et Pillow). Les polices Instrument Sans sont accompagnées de leur licence OFL dans `docs/manual-assets/fonts`.
-
-## Administration locale du POC
-
-Le rôle **Admin OIC** dispose du menu Administration :
-- `#/admin/users` : créer et modifier un compte, attribuer l’un des six rôles et son rattachement, désactiver/réactiver, générer un nouvel accès.
-- `#/admin/roles` : consulter les missions des rôles prédéfinis.
-- `#/admin/settings` : nom, contact d’assistance, seuil d’attente, quantité et tarif proposés pour les nouvelles plages ; remise à zéro de la démonstration après confirmation.
-- `#/admin/audit` : les 500 dernières opérations d’administration.
-
-Compte initial : `oic.admin@demo.oic.ci` / `demo123` (sauf réinitialisation de son accès). Les mots de passe générés ne sont présentés qu’une fois ; leur empreinte PBKDF2 salée est conservée localement. Désactivation, changement de rôle/périmètre et réinitialisation invalident les anciennes sessions. Un administrateur ne peut pas désactiver son propre compte ni changer son propre rôle.
-
-Ces contrôles et données restent ceux d’un POC dans le navigateur (localStorage), pas d’une authentification serveur de production. Les rôles eux-mêmes sont prédéfinis, leurs permissions ne sont pas éditables depuis l’interface. Les manuels précédemment exportés doivent être actualisés pour inclure ce nouvel espace.
-
-Vérification : `node --experimental-default-type=module --test tests/*.test.mjs`.
-
-### Réseau des antennes
-23 contacts repris sans conversion des numéros de `LISTE ANTENNE.pdf` fourni le 21/09/2026. Mise à jour automatique du référentiel local au chargement, sans changement des identifiants existants ni suppression des antennes personnalisées. Carte accessible dans les espaces Partenaire et OIC ; téléphone en infobulle et au clic. Les positions indiquent les localités, pas les bureaux exacts ; adresses et horaires absents du document ne sont pas inventés.
-Repères géographiques complémentaires : Pogo https://mapcarta.com/fr/16910506 ; Noé https://mapcarta.com/fr/16912292 ; Takikro (Gontougo) https://www.artci.ci/images/stories/pdf/qualite_service/qos-2019/rapport_controle_inopine_qos2019_takikro_gontougo.pdf .
