@@ -2,15 +2,10 @@ import { icon } from '../core/icons.js';
 import { escapeHtml } from '../core/utils.js';
 import { listAntennas } from '../services/directory.service.js';
 import { haversineKm } from '../services/verification.service.js';
+import { zoneOf } from '../data/antennas.js';
+import { getCurrentUser } from '../core/auth.js';
 
-/** Zone géographique indicative d'après la position (Sud côtier, Nord, Ouest, Est, Centre). */
-export function zoneOf({ lat, lng }) {
-  if (lat < 6.2) return 'Sud';
-  if (lat > 8.6) return 'Nord';
-  if (lng < -6.3) return 'Ouest';
-  if (lng > -3.9) return 'Est';
-  return 'Centre';
-}
+export { zoneOf };
 const ZONES = ['Toutes', 'Sud', 'Centre', 'Nord', 'Ouest', 'Est'];
 
 let mapInstance = null;
@@ -62,9 +57,9 @@ export function render(container) {
         <span class="ant-body">
           <strong>${escapeHtml(a.name)}</strong>
           <small>${escapeHtml(a.city)}${isHq(a) ? ' · Siège' : ''} · ${zoneOf(a)}${filters.near ? ` · <b>${km(a).toFixed(0)} km</b>` : ''}</small>
-          <span class="ant-meta"><span>${icon('phone', { size: 12 })} ${escapeHtml(a.phone)}</span>${a.hours && a.hours !== 'Non renseignés' ? `<span>${icon('clock', { size: 12 })} ${escapeHtml(a.hours)}</span>` : ''}</span>
+          <span class="ant-meta"><span>${icon('users', { size: 12 })} ${escapeHtml(a.chef?.name || 'Chef non renseigné')}</span><span>${icon('phone', { size: 12 })} ${escapeHtml(a.phone)}</span>${a.hours && a.hours !== 'Non renseignés' ? `<span>${icon('clock', { size: 12 })} ${escapeHtml(a.hours)}</span>` : ''}</span>
         </span>
-        <a class="ant-zone" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${a.lat}&mlon=${a.lng}#map=15/${a.lat}/${a.lng}" title="Ouvrir la zone dans OpenStreetMap">${icon('map', { size: 14 })}</a>
+        ${getCurrentUser()?.role === 'OIC_ADMIN' ? `<a class="ant-zone" href="#/oic/antennas/${a.id}" title="Ouvrir la fiche de l’antenne">${icon('chevronRight', { size: 15 })}</a>` : `<a class="ant-zone" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${a.lat}&mlon=${a.lng}#map=15/${a.lat}/${a.lng}" title="Ouvrir la zone dans OpenStreetMap">${icon('map', { size: 14 })}</a>`}
       </button>`).join('') : '<p class="ant-empty">Aucune antenne ne correspond.</p>';
   }
   renderList();

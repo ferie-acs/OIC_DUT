@@ -707,3 +707,56 @@ canvas{max-width:100%}
 .ant-map-legend{position:absolute;left:18px;bottom:18px;z-index:500;background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:10px;padding:6px 10px;box-shadow:0 4px 12px rgba(11,61,111,.1);backdrop-filter:blur(4px)}
 @media(max-width:1100px){.ant-map{min-height:380px!important}}
 @media(max-width:600px){.ant-map{min-height:300px!important}}
+
+/* ===== Supervision ===== */
+.sup-tabs{margin-bottom:var(--s3)}
+.sup-tabs .tab-count-btn{text-decoration:none}
+.sup-intro{font-size:13px;color:var(--text-secondary);margin-bottom:var(--s3)}
+.sup-kpis{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:var(--s4)}
+.sup-kpis .kpi-card{min-height:0;padding:16px 18px;gap:4px}
+.sup-kpis .kpi-value{font-size:26px;margin-top:4px}
+.kpi-hint{font-size:11.5px;color:var(--text-muted);margin-top:4px}
+.sup-table-card{padding:18px 0 6px}
+.sup-table-card .table-toolbar{padding:0 20px}
+.sup-table-card .table-toolbar .search-input{max-width:360px;flex:1}
+.sup-count{font-size:12px;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.sup-table th.num,.sup-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+.sup-table td small{display:block;font-size:11px;color:var(--text-muted);font-weight:400}
+.sup-table tbody tr{cursor:pointer}
+.sup-table tbody tr:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--accent-ring)}
+.sup-sort{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit}
+.sup-sort:hover{color:var(--navy)}
+th.is-sorted .sup-sort{color:var(--navy)}
+.sup-arrow{font-size:11px;color:var(--accent)}
+.sup-neg{color:var(--error);font-weight:600}
+.sup-verdicts{display:inline-flex;gap:6px}
+.sup-verdicts b,.sup-verdict-strip span{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 8px}
+.sup-verdicts .v,.sup-verdict-strip .v{background:var(--success-soft);color:var(--success)}
+.sup-verdicts .o,.sup-verdict-strip .o{background:var(--warning-soft);color:var(--warning)}
+.sup-verdicts .r,.sup-verdict-strip .r{background:var(--error-soft);color:var(--error)}
+.sup-verdict-strip .g{background:var(--surface-sunken);color:var(--text-secondary)}
+.sup-verdict-strip{display:flex;gap:8px;flex-wrap:wrap;margin:-6px 0 14px}
+.sup-back{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--navy-2);margin-bottom:6px}
+.sup-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.sup-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:var(--s4);align-items:start}
+.sup-main,.sup-side{display:grid;gap:var(--s3);min-width:0}
+.sup-main .card,.sup-side .card{min-width:0}
+.sup-identity{display:grid;gap:10px;margin:0}
+.sup-identity div{display:grid;gap:2px}
+.sup-identity dt{font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted)}
+.sup-identity dd{margin:0;font-size:13px;color:var(--text)}
+.sup-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.sup-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;background:var(--surface-2);border-radius:10px;font-size:13px}
+.sup-list li span{display:grid;min-width:0}
+.sup-list li small{font-size:11px;color:var(--text-muted)}
+.sup-list li b{font-weight:600;color:var(--navy);white-space:nowrap}
+.sup-list li a{color:var(--navy);font-weight:600}
+.sup-journal{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:420px;overflow:auto}
+.sup-journal li{display:grid;grid-template-columns:118px 1fr;gap:12px;padding:8px 10px;border-radius:10px;font-size:12.5px}
+.sup-journal li:hover{background:var(--surface-2)}
+.sup-journal-date{color:var(--text-muted);font-variant-numeric:tabular-nums;font-size:11.5px}
+.sup-journal strong{font-weight:600;color:var(--navy)}
+.sup-journal small{display:block;color:var(--text-secondary);font-size:11.5px}
+.sup-empty{font-size:12.5px;color:var(--text-muted);padding:10px 0}
+@media(max-width:1000px){.sup-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.sup-journal li{grid-template-columns:1fr;gap:2px}}

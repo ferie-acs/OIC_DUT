@@ -36,7 +36,7 @@ const NAV_SECTIONS_BY_ROLE = {
     { label: 'Pilotage', items: [{ path: '/antenna/dashboard', label: 'Tableau de bord', icon: 'dashboard' }] },
   ],
   OIC_ADMIN: [
-    { label: 'Pilotage', items: [{ path: '/oic/dashboard', label: 'Dashboard national', icon: 'dashboard' }] },
+    { label: 'Pilotage', items: [{ path: '/oic/dashboard', label: 'Dashboard national', icon: 'dashboard' }, { path: '/oic/supervision', label: 'Supervision', icon: 'target' }] },
   ],
   TRANSPORTEUR: [
     { label: 'Pilotage', items: [{ path: '/transporteur/dashboard', label: 'Tableau de bord', icon: 'dashboard' }] },
