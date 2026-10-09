@@ -760,3 +760,32 @@ th.is-sorted .sup-sort{color:var(--navy)}
 .sup-empty{font-size:12.5px;color:var(--text-muted);padding:10px 0}
 @media(max-width:1000px){.sup-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.sup-journal li{grid-template-columns:1fr;gap:2px}}
+
+/* ===== Statistiques ===== */
+.st-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-bottom:14px}
+.st-filters .plan-pill{flex:0 1 170px;min-width:140px}
+.st-presets{align-self:center}
+.st-alerts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.st-alert{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;border-radius:999px;padding:6px 12px;background:var(--surface-2);color:var(--text-secondary)}
+.st-alert.is-error{background:var(--error-soft);color:var(--error)}
+.st-alert.is-warning{background:var(--warning-soft);color:var(--warning)}
+.st-alert.is-info{background:var(--navy-soft);color:var(--navy)}
+.st-alert.is-ok{background:var(--success-soft);color:var(--success)}
+.st-period{font-size:12.5px;color:var(--text-secondary);margin:4px 0 14px}
+.st-period strong{color:var(--navy)}
+.st-kpi .kpi-value{font-size:24px}
+.st-charts-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.st-two{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:var(--s3)}
+.st-card{margin-top:var(--s3)}
+.st-pairs{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.st-pairs li{display:flex;justify-content:space-between;gap:10px;padding:7px 10px;background:var(--surface-2);border-radius:8px;font-size:13px}
+.st-pairs b{color:var(--navy);font-weight:600;font-variant-numeric:tabular-nums}
+.st-table th.num,.st-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+.st-map{height:380px;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#EAF1F7}
+.st-map .leaflet-tile-pane{filter:saturate(.7) brightness(1.03)}
+.st-bar{height:6px;background:var(--surface-sunken);border-radius:4px;min-width:90px;overflow:hidden}
+.st-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--navy-2),var(--accent));border-radius:4px}
+#st-tabs{overflow-x:auto;flex-wrap:nowrap}
+#st-tabs .tab-count-btn{white-space:nowrap;background:none;border-top:0;border-left:0;border-right:0;cursor:pointer;font:inherit}
+@media(max-width:1000px){.st-charts-2,.st-two{grid-template-columns:1fr}}
+@media(max-width:700px){.st-filters .plan-pill{flex:1 1 100%}.st-presets{width:100%}.st-map{height:280px}}

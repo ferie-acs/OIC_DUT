@@ -13,6 +13,9 @@ import { zoneOf } from '../data/antennas.js';
 import * as auditService from './audit.service.js';
 import { AUDIT_ACTIONS } from '../core/constants.js';
 
+const LEGACY_VERDICT = { VALID: 'VERT', SUSPENDED: 'ROUGE', WITHDRAWN: 'ROUGE', UNKNOWN: 'ROUGE' };
+/** Verdict normalisé : les contrôles ensemencés avant le lot 1 portent encore VALID / SUSPENDED… */
+export const verdictOf = (c) => c.verdictLevel || LEGACY_VERDICT[c.result] || c.result || 'INCONNU';
 const DAY = 86400000;
 const realDuts = () => getAllDuts().filter((d) => !d.canary);
 const since = (iso, days) => iso && Date.parse(iso) >= Date.now() - days * DAY;
@@ -39,7 +42,7 @@ function reviewStats(duts) {
 }
 function verdictBreakdown(controls) {
   const out = { VERT: 0, ORANGE: 0, ROUGE: 0, INCONNU: 0 };
-  controls.forEach((c) => { const k = c.verdictLevel || c.result; if (k in out) out[k] += 1; });
+  controls.forEach((c) => { const k = verdictOf(c); if (k in out) out[k] += 1; });
   return out;
 }
 function controlStats(controls, derogations) {
@@ -71,7 +74,7 @@ export function antennasOverview() {
       duts: mine.length, dutsMois: mine.filter((d) => since(d.createdAt, 30)).length,
       partenaires: new Set(mine.map((d) => d.partnerId).filter(Boolean)).size,
       aRelire: rv.aRelire, rejetes: rv.rejetes, delaiRelectureH: rv.delaiMoyenH,
-      controles: ctrl.length, refus: ctrl.filter((c) => (c.verdictLevel || c.result) === 'ROUGE').length,
+      controles: ctrl.length, refus: ctrl.filter((c) => verdictOf(c) === 'ROUGE').length,
       derogations: derogs.filter((x) => controlById.get(x.controlId)?.postId === a.id).length,
     };
   });
@@ -203,7 +206,7 @@ export function transportersOverview() {
     return {
       id: t.id, name: t.name, registre: t.registre || '', contact: t.contact || '', duts: mine.length, valides: mine.filter((d) => d.status === DUT_STATUS.VALIDE).length,
       vehicules: vehicles.filter((v) => v.transporterId === t.id).length, controles: ctrl.length,
-      refus: ctrl.filter((c) => (c.verdictLevel || c.result) === 'ROUGE').length,
+      refus: ctrl.filter((c) => verdictOf(c) === 'ROUGE').length,
       voyagesImpossibles: ctrl.filter((c) => (c.findings || []).some((f) => f.code === 'VOYAGE_IMPOSSIBLE')).length,
       dernierDut: [...mine].sort(byDateDesc('createdAt'))[0]?.createdAt || null,
     };

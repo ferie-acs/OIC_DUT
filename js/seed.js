@@ -325,7 +325,7 @@ export async function refreshExpiredDemoSignatures() {
     if (dut.status !== DUT_STATUS.VALIDE || dut.canary || !dut.qrSigned) continue;
     const check = await verifySignedString(dut.qrSigned, key);
     if (!check.ok || !check.payload.exp || check.payload.exp >= today) continue;
-    dut.validatedAt = nowIso();
+    // La date de validation d'origine est conservée : les délais statistiques restent vrais.
     dut.qrSigned = await signPayload(buildQrPayload(dut, key, { nbf: today }), key);
     changed = true;
   }

@@ -7,7 +7,7 @@ import { registerRoute, startRouter, getCurrentPath, setNotFoundHandler, navigat
 import { mountInsights } from './views/insights.view.js?v=oic-blue';
 import { icon } from './core/icons.js';
 import { getCurrentUser } from './core/auth.js';
-import { renderAppShell, renderLoginShell, renderControlShell } from './core/layout.js?v=supervision';
+import { renderAppShell, renderLoginShell, renderControlShell } from './core/layout.js?v=stats';
 import { isSeeded, seedDemoData, ensureSignedDemoData, refreshExpiredDemoSignatures } from './seed.js';
 import { registerServiceWorker, mountInstallButton } from './core/pwa.js';
 
@@ -26,6 +26,7 @@ import * as oicDashboardView from './views/oic-dashboard.view.js?v=charts';
 import * as transporteurDashboardView from './views/transporteur-dashboard.view.js?v=oic-blue';
 import * as decouvrirView from './views/decouvrir.view.js';
 import * as supervisionView from './views/supervision.view.js';
+import * as statisticsView from './views/statistics.view.js';
 
 // Une démo ensemencée avant ce lot est régénérée (données locales uniquement).
 if (!isSeeded()) {
@@ -72,6 +73,8 @@ registerRoute('/partner/operations', withShell(operationsView, ['Partenaire', 'O
 registerRoute('/partner/referentials', withShell(referentialsView, ['Partenaire', 'Référentiels']), { permission: 'referentials.manage' });
 registerRoute('/oic/antennas', withShell(antennasMapView, ['OIC', 'Carte des antennes']), { permission: 'dashboard.oic' });
 registerRoute('/oic/antennas/:id', withShell({ render: (root, p) => supervisionView.render(root, { actor: 'antennes', id: p.id }) }, ['OIC', 'Antennes', 'Fiche']), { permission: 'dashboard.oic' });
+registerRoute('/oic/statistiques', withShell(statisticsView, ['OIC', 'Statistiques']), { permission: 'dashboard.oic' });
+registerRoute('/oic/statistiques/:tab', withShell(statisticsView, ['OIC', 'Statistiques']), { permission: 'dashboard.oic' });
 registerRoute('/oic/supervision', withShell(supervisionView, ['OIC', 'Supervision']), { permission: 'dashboard.oic' });
 registerRoute('/oic/supervision/:actor', withShell(supervisionView, ['OIC', 'Supervision']), { permission: 'dashboard.oic' });
 registerRoute('/oic/supervision/:actor/:id', withShell(supervisionView, ['OIC', 'Supervision', 'Fiche']), { permission: 'dashboard.oic' });
