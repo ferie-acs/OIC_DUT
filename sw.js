@@ -82,8 +82,18 @@ self.addEventListener('fetch', (event) => {
       })());
       return;
     }
-    // Fichiers de l'application : les `?v=` de contournement de cache sont ignorés pour la correspondance.
-    event.respondWith((async () => cacheFirst(request, await shellCacheName(), { ignoreSearch: true }))());
+    // Fichiers de l'application : réseau d'abord (toujours la version publiée), cache en secours hors ligne.
+    // Les `?v=` de contournement de cache sont ignorés pour la correspondance.
+    event.respondWith((async () => {
+      const cache = await caches.open(await shellCacheName());
+      try {
+        const res = await fetch(request);
+        if (res && res.ok) cache.put(request, res.clone());
+        return res;
+      } catch {
+        return (await cache.match(request, { ignoreSearch: true })) || Response.error();
+      }
+    })());
     return;
   }
   if (isLibrary(url)) { event.respondWith(cacheFirst(request, LIB_CACHE, { revalidate: false })); return; }

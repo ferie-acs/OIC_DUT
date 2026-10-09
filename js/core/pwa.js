@@ -8,6 +8,9 @@ let deferredPrompt = null;
 export async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return null;
   try {
+    // Quand un nouveau service worker prend la main, on recharge une fois : plus de mélange de versions.
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloaded) return; reloaded = true; if (navigator.serviceWorker.controller) window.location.reload(); });
     const reg = await navigator.serviceWorker.register('sw.js');
     reg.addEventListener('updatefound', () => {
       const sw = reg.installing;
