@@ -93,9 +93,12 @@ export function render(container) {
   }
 
   if (mapInstance) { mapInstance.remove(); mapInstance = null; }
-  mapInstance = window.L.map('antennas-map', { scrollWheelZoom: false, attributionControl: false }).setView([7.54, -5.55], 7);
+  mapInstance = window.L.map('antennas-map', { scrollWheelZoom: false, attributionControl: false, zoomSnap: 0.25 }).setView([7.54, -5.55], 7);
   window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(mapInstance);
-  if (antennas.length) mapInstance.fitBounds(antennas.map((a) => [a.lat, a.lng]), { padding: [28, 28], maxZoom: 7 });
+  const fitAll = () => { if (antennas.length) mapInstance.fitBounds(antennas.map((a) => [a.lat, a.lng]), { padding: [36, 36], maxZoom: 8.5 }); };
+  fitAll();
+  // La carte prend la hauteur de la colonne : on recale une fois la mise en page stabilisée.
+  requestAnimationFrame(() => { mapInstance.invalidateSize(); fitAll(); });
 
   const markers = new Map();
   let selected = null;

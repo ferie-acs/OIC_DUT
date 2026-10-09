@@ -700,3 +700,10 @@ canvas{max-width:100%}
 .ant-near:disabled{opacity:.6;cursor:wait}
 .ant-count{font-size:11.5px;color:var(--text-muted)}
 .ant-body small b{color:var(--success);font-weight:600}
+
+/* La carte des antennes remplit toute la hauteur de sa carte ; légende posée sur la carte. */
+.ant-map-card{position:relative;padding:8px;gap:0}
+.ant-map{flex:1;height:auto;min-height:520px!important}
+.ant-map-legend{position:absolute;left:18px;bottom:18px;z-index:500;background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:10px;padding:6px 10px;box-shadow:0 4px 12px rgba(11,61,111,.1);backdrop-filter:blur(4px)}
+@media(max-width:1100px){.ant-map{min-height:380px!important}}
+@media(max-width:600px){.ant-map{min-height:300px!important}}
