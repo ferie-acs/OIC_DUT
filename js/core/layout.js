@@ -36,7 +36,7 @@ const NAV_SECTIONS_BY_ROLE = {
     { label: 'Pilotage', items: [{ path: '/antenna/dashboard', label: 'Tableau de bord', icon: 'dashboard' }] },
   ],
   OIC_ADMIN: [
-    { label: 'Pilotage', items: [{ path: '/oic/dashboard', label: 'Dashboard national', icon: 'dashboard' }, { path: '/oic/statistiques', label: 'Statistiques', icon: 'barChart' }, { path: '/oic/supervision', label: 'Supervision', icon: 'target' }] },
+    { label: 'Pilotage', items: [{ path: '/oic/dashboard', label: 'Dashboard national', icon: 'dashboard' }, { path: '/oic/statistiques', label: 'Statistiques', icon: 'barChart' }] },
   ],
   TRANSPORTEUR: [
     { label: 'Pilotage', items: [{ path: '/transporteur/dashboard', label: 'Tableau de bord', icon: 'dashboard' }] },
@@ -62,6 +62,7 @@ export function renderAppShell(user, currentPath, breadcrumbItems = []) {
   if (sections.length) sections[0].items.push({ path: '/planning', label: 'Planning des trajets', icon: 'truck' });
   if (sections.length) sections[0].items.push({ path: '/actions', label: 'Centre d’actions', icon: 'checkCircle' });
   sections.push({ label: 'Découvrir', items: [{ path: '/decouvrir', label: 'Comment fonctionne le DUT', icon: 'file' }] });
+  if (user.role === 'OIC_ADMIN') sections.push({ label: 'Supervision', items: [{ path: '/oic/supervision/antennes', label: 'Antennes', icon: 'map' }, { path: '/oic/supervision/partenaires', label: 'Partenaires', icon: 'layers' }, { path: '/oic/supervision/controleurs', label: 'Agents de contrôle', icon: 'shield' }, { path: '/oic/supervision/transporteurs', label: 'Transporteurs', icon: 'truck' }, { path: '/oic/comparateur', label: 'Comparateur', icon: 'target' }] });
   if (user.role === 'OIC_ADMIN') sections.push({ label: 'Ressources', items: [{ path: '/oic/operations', label: 'Demandes de plages', icon: 'layers' }, { path: '/oic/antennas', label: 'Carte des antennes', icon: 'map' }] });
 
   if(user.role==='OIC_ADMIN') sections.push({label:'Administration',items:[{path:'/admin/users',label:'Utilisateurs',icon:'users'},{path:'/admin/roles',label:'Rôles & accès',icon:'shield'},{path:'/admin/settings',label:'Paramètres',icon:'layers'},{path:'/admin/audit',label:'Journal',icon:'file'}]});

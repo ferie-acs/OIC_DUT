@@ -52,7 +52,7 @@ function applyFilters(duts, f) {
 }
 
 export function computeStatistics(filters = {}) {
-  const f = { from: filters.from || '', to: filters.to || '', antennaId: filters.antennaId || '', partnerId: filters.partnerId || '', transporterId: filters.transporterId || '', transportType: filters.transportType || '' };
+  const f = { from: filters.from || '', to: filters.to || '', antennaId: filters.antennaId || '', partnerId: filters.partnerId || '', transporterId: filters.transporterId || '', transportType: filters.transportType || '', agentId: filters.agentId || '' };
   const today = new Date().toISOString().slice(0, 10);
   const now = Date.now();
   const allDuts = getAllDuts().filter((d) => !d.canary);
@@ -60,7 +60,7 @@ export function computeStatistics(filters = {}) {
   const dutIds = new Set(duts.map((d) => d.id));
   const dutById = new Map(duts.map((d) => [d.id, d]));
   const controlsAll = getAllControlLogs();
-  const controls = controlsAll.filter((c) => (!f.from && !f.to ? true : inRange(c.date, f.from, f.to)) && (!(f.antennaId || f.partnerId || f.transporterId || f.transportType) || (c.dutId && dutIds.has(c.dutId))));
+  const controls = controlsAll.filter((c) => (!f.from && !f.to ? true : inRange(c.date, f.from, f.to)) && (!f.agentId || c.agentId === f.agentId) && (!(f.antennaId || f.partnerId || f.transporterId || f.transportType) || (c.dutId && dutIds.has(c.dutId))));
   const controlIds = new Set(controls.map((c) => c.id));
   const derogations = getAllDerogations().filter((x) => controlIds.has(x.controlId));
   const audit = getAllAuditLogs().filter((e) => (!f.from && !f.to ? true : inRange(e.date, f.from, f.to)));

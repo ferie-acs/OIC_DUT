@@ -60,3 +60,14 @@ export function doughnutChart(canvas, labels, values, { unit = '' } = {}) {
     options: { maintainAspectRatio: false, responsive: true, cutout: '68%', animation: anim(), layout: { padding: 4 }, plugins: { legend: { position: 'right', labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle', padding: 10, font: FONT, color: '#52657C' } }, tooltip: { ...TOOLTIP, callbacks: { label: (c) => `${fmt(c.parsed, unit)} · ${Math.round((c.parsed / total) * 100)} %` } } } },
   });
 }
+
+/** Radar : chaque axe est un indicateur ramené sur 0–100 (100 = meilleure entité), une surface par entité. */
+export function radarChart(canvas, axes, series) {
+  const ctx = typeof canvas === 'string' ? document.getElementById(canvas) : canvas;
+  if (!ctx || !window.Chart) return null;
+  return new window.Chart(ctx, {
+    type: 'radar',
+    data: { labels: axes, datasets: series.map((s, i) => ({ label: s.label, data: s.values, borderColor: PALETTE[i % PALETTE.length], backgroundColor: `${PALETTE[i % PALETTE.length]}26`, borderWidth: 2, pointRadius: 3, pointBackgroundColor: PALETTE[i % PALETTE.length] })) },
+    options: { maintainAspectRatio: false, responsive: true, animation: anim(), plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true, pointStyle: 'circle', font: FONT, color: '#52657C' } }, tooltip: { ...TOOLTIP, callbacks: { label: (c) => `${c.dataset.label} : ${Math.round(c.parsed.r)} / 100` } } }, scales: { r: { min: 0, max: 100, ticks: { display: false, stepSize: 25 }, grid: { color: '#E6EAF1' }, angleLines: { color: '#E6EAF1' }, pointLabels: { font: FONT, color: '#52657C' } } } },
+  });
+}
