@@ -152,6 +152,43 @@ function windows({ x, y, z = 0, w, d, h }, scale, light = false) {
   return cells.join('');
 }
 
+/**
+ * Un panneau plaqué sur une face d'un volume : pare-brise, calandre, phare,
+ * porte. `face` vaut 'front' (la face x+w, visible à droite), 'side' (la face
+ * y+d, visible à gauche) ou 'top'.
+ *
+ * Les coordonnées u et v sont exprimées dans le repère du monde, pas en
+ * fraction : c'est plus verbeux à l'appel mais on sait exactement où l'on
+ * place la pièce.
+ */
+export function panel({
+  face, at, u0, u1, v0, v1, fill, opacity = 1, rx = 0,
+}, scale = ISO_SCALE) {
+  let quad;
+  if (face === 'front') {
+    quad = [[at, u0, v0], [at, u1, v0], [at, u1, v1], [at, u0, v1]];
+  } else if (face === 'side') {
+    quad = [[u0, at, v0], [u1, at, v0], [u1, at, v1], [u0, at, v1]];
+  } else {
+    quad = [[u0, v0, at], [u1, v0, at], [u1, v1, at], [u0, v1, at]];
+  }
+  return `<polygon points="${pts(quad, scale)}" fill="${fill}" opacity="${opacity}"${rx ? ` rx="${rx}"` : ''}/>`;
+}
+
+/**
+ * Une roue : disque vu dans le plan x-z, donc une ellipse inclinée de 30°
+ * à l'écran, avec sa jante plus claire.
+ */
+export function wheel({ x, y, r = 0.3 }, scale = ISO_SCALE) {
+  const [cx, cy] = project(x, y, r, scale);
+  const rx = (r * scale * 1.02).toFixed(1);
+  const ry = (r * scale * 0.82).toFixed(1);
+  return `<g transform="rotate(30 ${cx.toFixed(1)} ${cy.toFixed(1)})">`
+    + `<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${rx}" ry="${ry}" fill="#222C36"/>`
+    + `<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(r * scale * 0.5).toFixed(1)}" ry="${(r * scale * 0.4).toFixed(1)}" fill="#8A97A8"/>`
+    + '</g>';
+}
+
 /** Une dalle plate : un sol, une route, un plan d'eau. */
 export function slab({ x = 0, y = 0, z = 0, w = 1, d = 1, fill = '#F2F6FB', id = '', opacity = 1, stroke = null }, scale = ISO_SCALE) {
   const quad = pts([[x, y, z], [x + w, y, z], [x + w, y + d, z], [x, y + d, z]], scale);

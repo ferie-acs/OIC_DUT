@@ -1,6 +1,7 @@
 import {
   box, slab, path, ribbon, pin, project, defs, ISO_ORIGIN, ISO_SCALE,
 } from '../iso/iso.js';
+import { truck } from '../iso/buildings.js';
 
 /**
  * Scène 1.2 — le port d'Abidjan et le départ vers l'intérieur, en isométrie.
@@ -21,18 +22,6 @@ function alongX(t) {
 /** Un conteneur maritime : volume nervuré, teinte au choix. */
 function container({ x, y, z = 0, tone = 'blue' }) {
   return box({ x, y, z, w: 1.9, d: 0.95, h: 0.85, tone, detail: 'container', shadow: z === 0 }, S);
-}
-
-/** Ensemble routier : tracteur, remorque, roues. */
-function truck({ x, y }) {
-  const wheels = [];
-  for (const [wx, wy] of [[x + 0.55, y + 0.12], [x + 0.55, y + 1.05], [x + 3.1, y + 0.12], [x + 3.1, y + 1.05], [x + 3.7, y + 0.12], [x + 3.7, y + 1.05]]) {
-    const [cx, cy] = project(wx, wy, 0.16, S);
-    wheels.push(`<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="7" ry="4.4" fill="#222C36"/>`);
-  }
-  return box({ x, y, w: 1.25, d: 1.2, h: 1.15, tone: 'blue', shadow: true }, S)
-    + box({ x: x + 1.35, y, w: 3.1, d: 1.2, h: 1.5, tone: 'white', detail: 'container', shadow: true }, S)
-    + wheels.join('');
 }
 
 /** Navire : coque sombre, proue biseautée, pont chargé. */

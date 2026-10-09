@@ -1,4 +1,4 @@
-import { box, slab, project, ISO_SCALE } from './iso.js';
+import { box, slab, panel, wheel, project, ISO_SCALE } from './iso.js';
 
 /**
  * Vocabulaire bâti des acteurs du DUT, en isométrie.
@@ -101,22 +101,76 @@ export function controlPost({ x = 0, y = 0, id = '' }) {
     + '</g>';
 }
 
-/** Ensemble routier : tracteur, remorque, roues. */
+/**
+ * Ensemble routier : tracteur et semi-remorque.
+ *
+ * La cabine est placée du côté des X CROISSANTS : dans cette projection, les
+ * faces visibles sont le dessus, la face x+w (à droite) et la face y+d (à
+ * gauche). Mettre la cabine en tête permet donc de voir sa calandre et son
+ * pare-brise, et c'est aussi le sens de marche du camion.
+ *
+ * Détail repris de la référence : déflecteur de toit, pare-brise sombre,
+ * calandre à lames, deux phares, pare-chocs, jupe de remorque, portes
+ * arrière, roues jumelées à l'essieu arrière.
+ */
 export function truck({ x = 0, y = 0, tone = 'blue', id = '' }) {
-  const wheels = [];
-  for (const [wx, wy] of [
-    [x + 0.55, y + 0.12], [x + 0.55, y + 1.05],
-    [x + 3.1, y + 0.12], [x + 3.1, y + 1.05],
-    [x + 3.7, y + 0.12], [x + 3.7, y + 1.05],
-  ]) {
-    const [cx, cy] = project(wx, wy, 0.16, S);
-    wheels.push(`<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="7" ry="4.4" fill="#222C36"/>`);
+  const L = { // repères longitudinaux
+    remorqueX: x + 0.0, remorqueW: 3.8,
+    cabineX: x + 3.95, cabineW: 1.45,
+  };
+  const yd = y + 1.25; // face latérale visible
+  const front = L.cabineX + L.cabineW; // face avant visible
+
+  const pieces = [];
+
+  // Châssis.
+  pieces.push(box({ x: x + 0.15, y: y + 0.28, z: 0.46, w: 5.1, d: 0.7, h: 0.2, tone: 'slate' }, S));
+
+  // Remorque : caisse, jupe, portes arrière.
+  pieces.push(box({ x: L.remorqueX, y, z: 0.66, w: L.remorqueW, d: 1.25, h: 1.6, tone: 'white', shadow: false }, S));
+  pieces.push(panel({
+    face: 'side', at: yd, u0: L.remorqueX + 0.06, u1: L.remorqueX + L.remorqueW - 0.06,
+    v0: 0.72, v1: 0.8, fill: '#C2CEDF',
+  }, S));
+  // Portes arrière : deux vantaux et leur jointure.
+  pieces.push(panel({
+    face: 'side', at: yd, u0: L.remorqueX + 0.04, u1: L.remorqueX + 0.08, v0: 0.72, v1: 2.2, fill: '#AEBCD1',
+  }, S));
+
+  // Cabine : corps, déflecteur.
+  pieces.push(box({ x: L.cabineX, y, z: 0.52, w: L.cabineW, d: 1.25, h: 1.42, tone, shadow: false }, S));
+  pieces.push(box({
+    x: L.cabineX + 0.18, y: y + 0.1, z: 1.94, w: L.cabineW - 0.3, d: 1.05, h: 0.26, tone, shadow: false,
+  }, S));
+
+  // Pare-brise et vitre latérale, en verre sombre.
+  pieces.push(panel({
+    face: 'front', at: front, u0: y + 0.12, u1: yd - 0.12, v0: 1.14, v1: 1.84, fill: '#1A2B3D', opacity: 0.92,
+  }, S));
+  pieces.push(panel({
+    face: 'side', at: yd, u0: L.cabineX + 0.18, u1: front - 0.12, v0: 1.18, v1: 1.76, fill: '#24364A', opacity: 0.88,
+  }, S));
+
+  // Calandre à lames, phares, pare-chocs.
+  for (let i = 0; i < 4; i += 1) {
+    const v = 0.76 + i * 0.09;
+    pieces.push(panel({
+      face: 'front', at: front, u0: y + 0.28, u1: yd - 0.28, v0: v, v1: v + 0.055, fill: '#DCE4EF',
+    }, S));
   }
-  return `<g${id ? ` id="${id}"` : ''} class="iso-camion">`
-    + box({ x, y, w: 1.25, d: 1.2, h: 1.15, tone }, S)
-    + box({ x: x + 1.35, y, w: 3.1, d: 1.2, h: 1.5, tone: 'white', detail: 'container' }, S)
-    + wheels.join('')
-    + '</g>';
+  pieces.push(panel({ face: 'front', at: front, u0: y + 0.12, u1: y + 0.34, v0: 0.6, v1: 0.72, fill: '#FFF3D6' }, S));
+  pieces.push(panel({ face: 'front', at: front, u0: yd - 0.34, u1: yd - 0.12, v0: 0.6, v1: 0.72, fill: '#FFF3D6' }, S));
+  pieces.push(box({ x: front, y: y + 0.04, z: 0.44, w: 0.14, d: 1.17, h: 0.24, tone: 'white', shadow: false }, S));
+
+  // Roues : une paire avant, deux paires arrière, des deux côtés.
+  // Seulement le flanc visible : les roues de l'autre côté du camion
+  // ressortaient par-dessus la caisse au lieu d'être cachées par elle.
+  const essieux = [L.cabineX + 0.55, L.remorqueX + 0.62, L.remorqueX + 1.28];
+  for (const ex of essieux) {
+    pieces.push(wheel({ x: ex, y: yd - 0.04, r: 0.3 }, S));
+  }
+
+  return `<g${id ? ` id="${id}"` : ''} class="iso-camion">${pieces.join('')}</g>`;
 }
 
 /** Profondeur d'un objet : en isométrie, x + y croît vers l'observateur. */
