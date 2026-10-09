@@ -1,5 +1,5 @@
-// Comparateur (admin OIC) : barre de construction (type, entités, indicateurs, période), puis
-// cartes de score par entité, graphiques comparatifs (barres, évolution, radar) et tableau exportable.
+// Composant comparateur, monté sur chaque page d'acteur : entités, indicateurs, période, puis
+// cartes de score, graphiques comparatifs (barres, évolution, radar) et tableau exportable.
 import { icon } from '../core/icons.js';
 import { escapeHtml as esc, formatNumber } from '../core/utils.js';
 import { barChart, lineChart, radarChart, PALETTE } from '../core/chartjs.js';
@@ -12,24 +12,19 @@ const PRESETS = [[30, '30 jours'], [90, '90 jours'], [365, '12 mois'], [0, 'Tout
 let charts = [];
 const destroyCharts = () => { charts.forEach((c) => c?.destroy()); charts = []; };
 
-export function render(container) {
+export function mountComparator(container, type, { ids = [] } = {}) {
   destroyCharts();
-  const state = { type: 'antennes', ids: [], keys: ['dutCrees', 'dutValides', 'tauxRejet', 'scans'], from: '', to: '', view: 'barres', evo: 'dutCrees', open: null };
-  try { Object.assign(state, JSON.parse(sessionStorage.getItem('dut_compare_state') || '{}')); } catch { /* état par défaut */ }
-  if (!ENTITY_TYPES[state.type]) state.type = 'antennes';
+  const t = ENTITY_TYPES[type]; if (!t) return;
+  const state = { type, ids: [...ids], keys: t.onlyControl ? ['scans', 'tauxRefus', 'derogations', 'horsLigne'] : ['dutCrees', 'dutValides', 'tauxRejet', 'scans'], from: '', to: '', view: 'barres', evo: 'dutCrees', open: null };
+  try { const saved = JSON.parse(sessionStorage.getItem(`dut_compare_${type}`) || '{}'); Object.assign(state, saved, { type }); if (ids.length && !saved.ids?.length) state.ids = [...ids]; } catch { /* état par défaut */ }
   state.open = null;
-  const save = () => { try { sessionStorage.setItem('dut_compare_state', JSON.stringify({ ...state, open: null })); } catch { /* indisponible */ } };
+  const save = () => { try { sessionStorage.setItem(`dut_compare_${type}`, JSON.stringify({ ...state, open: null })); } catch { /* indisponible */ } };
   let last = null;
 
   container.innerHTML = `
-    <div class="page-header">
-      <div><span class="overline">OIC · Supervision</span><h1>Comparateur</h1><div class="subtitle">Mettez côte à côte des antennes, partenaires, agents ou transporteurs sur les indicateurs de votre choix.</div></div>
-      <button type="button" class="btn btn-secondary" id="cmp-export">${icon('download', { size: 15 })} Exporter (CSV)</button>
-    </div>
-    <div class="page-header-rule"></div>
+    <div class="cmp-head"><div><span class="overline">Comparer</span><h2>Comparer des ${esc(t.label.toLowerCase())}</h2><p>Choisissez jusqu’à ${MAX} ${esc(t.label.toLowerCase())}, les indicateurs et la période ; les graphiques et le tableau se mettent à jour.</p></div><button type="button" class="btn btn-secondary btn-sm" id="cmp-export">${icon('download', { size: 14 })} Exporter (CSV)</button></div>
     <div class="card cmp-builder">
       <div class="cmp-builder-row">
-        <div class="cmp-block"><span class="cmp-block-label">${icon('users', { size: 13 })} Type</span><div class="plan-seg cmp-types">${Object.entries(ENTITY_TYPES).map(([k, t]) => `<button type="button" class="plan-seg-btn" data-type="${k}" aria-pressed="${k === state.type}">${esc(t.label)}</button>`).join('')}</div></div>
         <button type="button" class="cmp-block cmp-picker" data-open="entities"><span class="cmp-block-label">${icon('target', { size: 13 })} Entités <b id="cmp-ids-count"></b></span><span class="cmp-chips" id="cmp-ids-chips"></span></button>
         <button type="button" class="cmp-block cmp-picker" data-open="indicators"><span class="cmp-block-label">${icon('barChart', { size: 13 })} Indicateurs <b id="cmp-keys-count"></b></span><span class="cmp-chips" id="cmp-keys-chips"></span></button>
         <button type="button" class="cmp-block cmp-picker" data-open="period"><span class="cmp-block-label">${icon('calendar', { size: 13 })} Période</span><span class="cmp-chips" id="cmp-period-chip"></span></button>
@@ -76,7 +71,6 @@ export function render(container) {
     }
   };
   refreshSummary();
-  container.querySelector('.cmp-types').addEventListener('click', (e) => { const b = e.target.closest('[data-type]'); if (!b) return; state.type = b.dataset.type; state.ids = []; container.querySelectorAll('[data-type]').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); state.open = 'entities'; save(); refreshSummary(); renderPanel(); });
   container.querySelectorAll('.cmp-picker').forEach((b) => b.addEventListener('click', () => { state.open = state.open === b.dataset.open ? null : b.dataset.open; refreshSummary(); renderPanel(); }));
   container.querySelector('#cmp-run').addEventListener('click', () => { state.open = null; refreshSummary(); renderPanel(); run(); });
   container.querySelector('#cmp-export').addEventListener('click', () => { if (!last) return; const rows = last.rows.map((r) => ({ entite: r.name, ...Object.fromEntries(last.indicators.map((i) => [i.label, r.values[i.key]])) })); const blob = new Blob([`﻿${toCsv(rows)}`], { type: 'text/csv;charset=utf-8' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `comparaison-${state.type}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });

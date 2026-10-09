@@ -6,7 +6,10 @@ import { openModal, toast } from '../core/ui.js';
 import { DUT_STATUS_LABELS } from '../core/constants.js';
 import * as S from '../services/supervision.service.js';
 import { verdictOf } from '../services/supervision.service.js';
+import { mountComparator } from './comparator.component.js';
 
+const ACTOR_INTRO = { antennes: ['map', 'Chaque antenne : dossiers de son périmètre, relecture, contrôles à son poste.'], partenaires: ['layers', 'Les émetteurs de DUT : volumes, numéros consommés, taux de rejet, anomalies.'], controleurs: ['shield', 'Les agents de terrain : scans, verdicts, dérogations, poste habituel.'], transporteurs: ['truck', 'Les transporteurs et leurs véhicules : DUT transportés, contrôles subis, incidents.'] };
+const MAIN_METRIC = { antennes: 'duts', partenaires: 'duts', controleurs: 'scans', transporteurs: 'duts' };
 const VERDICT_BADGE = { VERT: 'badge-success', ORANGE: 'badge-warning', ROUGE: 'badge-error', INCONNU: 'badge-neutral' };
 const num = (v, d = 0) => (v == null || Number.isNaN(v) ? '—' : formatNumber(v, d));
 const hours = (h) => (h == null ? '—' : h < 48 ? `${num(h, 1)} h` : `${num(h / 24, 1)} j`);
@@ -60,21 +63,29 @@ function tabsHtml(actor) {
 function renderOverview(container, actor) {
   const cfg = ACTORS[actor];
   const rows = cfg.overview();
+  const main = MAIN_METRIC[actor];
+  const maxOf = Object.fromEntries(cfg.columns.map(([k]) => [k, Math.max(0, ...rows.map((r) => (typeof r[k] === 'number' ? r[k] : 0)))]));
   let sortKey = cfg.defaultSort, sortDir = sortKey === 'rang' ? 1 : -1, query = '';
+  const initials = (name) => String(name || '?').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase();
   container.innerHTML = `
     <div class="page-header">
-      <div><span class="overline">OIC · Supervision</span><h1>Supervision des acteurs</h1><div class="subtitle">Qui fait quoi, et avec quels résultats. Cliquez sur une ligne pour ouvrir la fiche.</div></div>
+      <div><span class="overline">OIC · Supervision</span><h1>${esc(cfg.label)}</h1><div class="subtitle">${esc(ACTOR_INTRO[actor][1])} Cliquez sur une ligne pour ouvrir la fiche.</div></div>
       <button type="button" class="btn btn-secondary" id="sup-export">${icon('download', { size: 15 })} Exporter (CSV)</button>
     </div>
     <div class="page-header-rule"></div>
-    ${tabsHtml(actor)}
-    <p class="sup-intro">${esc(cfg.intro)}</p>
-    <div class="kpi-grid sup-kpis">${cfg.kpis(rows).map(([l, v]) => `<div class="kpi-card"><div class="kpi-label">${esc(l)}</div><div class="kpi-value">${num(v)}</div></div>`).join('')}</div>
-    <div class="card sup-table-card">
-      <div class="table-toolbar"><label class="search-input ant-search">${icon('search', { size: 16 })}<input type="search" id="sup-query" placeholder="Rechercher…" autocomplete="off"></label><span class="sup-count" id="sup-count"></span></div>
+    <div class="kpi-grid sup-kpis">${cfg.kpis(rows).map(([l, v], i) => `<div class="kpi-card sup-kpi-card"><div class="kpi-label">${esc(l)}<span class="kpi-icon" style="background:var(--sq-${['navy', 'blue', 'amber', 'green'][i % 4]}-bg);color:var(--sq-${['navy', 'blue', 'amber', 'green'][i % 4]}-fg)">${icon(ACTOR_INTRO[actor][0], { size: 13 })}</span></div><div class="kpi-value">${num(v)}</div></div>`).join('')}</div>
+    <section class="card sup-table-card">
+      <div class="sup-table-head"><div><h2>Classement</h2><p>Trié par ${esc(cfg.columns.find(([k]) => k === cfg.defaultSort)?.[1] || '')} · cliquez sur un en-tête pour changer le tri.</p></div><div class="sup-table-tools"><label class="search-input ant-search">${icon('search', { size: 16 })}<input type="search" id="sup-query" placeholder="Rechercher…" autocomplete="off"></label><span class="sup-count" id="sup-count"></span></div></div>
       <div class="table-wrap"><table class="data-table sup-table"><thead><tr>${cfg.columns.map(([k, l, , cls]) => `<th scope="col" class="${cls || ''}" data-sort="${k}"><button type="button" class="sup-sort">${esc(l)} <span class="sup-arrow"></span></button></th>`).join('')}<th></th></tr></thead><tbody id="sup-rows"></tbody></table></div>
-    </div>`;
+    </section>
+    <section class="sup-compare" id="sup-compare"></section>`;
   const tbody = container.querySelector('#sup-rows');
+  const cell = (k, fmt, cls, r, idx) => {
+    if (k === 'name') return `<td><div class="sup-who"><span class="sup-avatar" style="--i:${idx % 8}">${esc(initials(r.name))}</span><div>${fmt ? fmt(r) : `<strong>${esc(r.name)}</strong>`}</div></div></td>`;
+    if (k === 'rang') return `<td class="num"><span class="sup-rank ${r.rang <= 3 ? 'is-top' : ''}">${r.rang}</span></td>`;
+    if (cls === 'num' && typeof r[k] === 'number' && maxOf[k] > 0 && !fmt) return `<td class="num"><div class="sup-cell"><b>${num(r[k])}</b><i style="width:${Math.round((r[k] / maxOf[k]) * 100)}%"></i></div></td>`;
+    return `<td class="${cls || ''}">${fmt ? fmt(r) : esc(r[k] ?? '—')}</td>`;
+  };
   const draw = () => {
     const q = query.trim().toLowerCase();
     let shown = rows.filter((r) => !q || Object.values(r).join(' ').toLowerCase().includes(q));
@@ -82,7 +93,7 @@ function renderOverview(container, actor) {
     container.querySelector('#sup-count').textContent = `${shown.length} / ${rows.length}`;
     container.querySelectorAll('th[data-sort]').forEach((th) => th.classList.toggle('is-sorted', th.dataset.sort === sortKey));
     container.querySelectorAll('th[data-sort] .sup-arrow').forEach((a) => { a.textContent = a.closest('th').dataset.sort === sortKey ? (sortDir > 0 ? '↑' : '↓') : ''; });
-    tbody.innerHTML = shown.length ? shown.map((r) => `<tr data-id="${esc(r.id)}" tabindex="0">${cfg.columns.map(([k, , fmt, cls]) => `<td class="${cls || ''}">${fmt ? fmt(r) : esc(r[k] ?? '—')}</td>`).join('')}<td class="text-right">${icon('chevronRight', { size: 15 })}</td></tr>`).join('') : `<tr><td class="table-empty" colspan="${cfg.columns.length + 1}">Aucun résultat</td></tr>`;
+    tbody.innerHTML = shown.length ? shown.map((r, idx) => `<tr data-id="${esc(r.id)}" tabindex="0">${cfg.columns.map(([k, , fmt, cls]) => cell(k, fmt, cls, r, rows.indexOf(r))).join('')}<td class="text-right"><span class="sup-open">${icon('chevronRight', { size: 15 })}</span></td></tr>`).join('') : `<tr><td class="table-empty" colspan="${cfg.columns.length + 1}">Aucun résultat</td></tr>`;
   };
   draw();
   container.querySelector('#sup-query').addEventListener('input', (e) => { query = e.target.value; draw(); });
@@ -91,6 +102,9 @@ function renderOverview(container, actor) {
   tbody.addEventListener('click', (e) => { const tr = e.target.closest('tr[data-id]'); if (tr) open(tr); });
   tbody.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const tr = e.target.closest('tr[data-id]'); if (tr) open(tr); } });
   container.querySelector('#sup-export').addEventListener('click', () => download(`supervision-${actor}-${new Date().toISOString().slice(0, 10)}.csv`, S.toCsv(rows.map((r) => ({ ...r, verdicts: r.verdicts ? `${r.verdicts.VERT}/${r.verdicts.ORANGE}/${r.verdicts.ROUGE}` : undefined })))));
+  // Comparateur intégré : pré-rempli avec les cinq premiers de l'indicateur principal.
+  const top5 = [...rows].sort((a, b) => (b[main] || 0) - (a[main] || 0)).slice(0, 5).map((r) => r.id);
+  mountComparator(container.querySelector('#sup-compare'), actor, { ids: top5 });
 }
 
 // ---------------------------------------------------------------- Fiches
