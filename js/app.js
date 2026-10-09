@@ -10,6 +10,7 @@ import { getCurrentUser } from './core/auth.js';
 import { renderAppShell, renderLoginShell, renderControlShell } from './core/layout.js?v=supervision3';
 import { isSeeded, seedDemoData, ensureSignedDemoData, refreshExpiredDemoSignatures } from './seed.js';
 import { registerServiceWorker, mountInstallButton } from './core/pwa.js';
+import { watchCards } from './core/card-icons.js';
 
 import * as loginView from './views/login.view.js?v=oic-blue';
 import * as partnerDashboardView from './views/partner-dashboard.view.js?v=oic-blue';
@@ -124,6 +125,8 @@ setNotFoundHandler(({ reason }) => {
 });
 
 startRouter();
+// Chaque carte reçoit en fond sa propre icône, en grand et grisée.
+watchCards(document.getElementById('app') || document.body);
 
 // Application installable et utilisable hors ligne (coquille en cache ; les données restent locales).
 mountInstallButton();

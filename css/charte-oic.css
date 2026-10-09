@@ -892,17 +892,16 @@ th.is-sorted .sup-sort{color:var(--navy)}
 @media(max-width:1100px){.cmp-builder-row{grid-template-columns:1fr 1fr}}
 @media(max-width:800px){.cmp-builder-row{grid-template-columns:1fr}.sup-table-tools{width:100%}.sup-table-tools .search-input{min-width:0;flex:1}}
 
-/* ===== Filigrane : le logo OIC, grand et grisé, au fond de chaque carte ; il glisse au survol ===== */
-.card,.kpi-card,.chart-card,.plan-summary>div,.ac-metric,.map-card,.range-progress-card,.action-summary,.sidebar-note,.ac-hero{position:relative;overflow:hidden;isolation:isolate}
-.card::after,.kpi-card::after,.chart-card::after,.plan-summary>div::after,.ac-metric::after,.map-card::after,.range-progress-card::after,.action-summary::after,.sidebar-note::after,.ac-hero::after{content:"";position:absolute;right:-28px;bottom:-34px;width:150px;height:150px;background:url('../assets/images/logo-watermark.png') center/contain no-repeat;opacity:.07;pointer-events:none;z-index:-1;transform:rotate(-8deg);transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .35s ease}
-.card:hover::after,.kpi-card:hover::after,.chart-card:hover::after,.plan-summary>div:hover::after,.ac-metric:hover::after,.map-card:hover::after{transform:rotate(0deg) translate(-10px,-10px) scale(1.06);opacity:.12}
-/* Cartes bleues : filigrane clair ; le cercle décoratif existant laisse la place au logo. */
-.range-progress-card::after,.action-summary::after,.sidebar-note::after,.ac-hero::after{filter:brightness(4);opacity:.14;mix-blend-mode:screen}
-.range-progress-card:hover::after,.action-summary:hover::after,.sidebar-note:hover::after,.ac-hero:hover::after{transform:rotate(0deg) translate(-10px,-10px) scale(1.06);opacity:.22}
-.kpi-card::after,.ac-metric::after,.plan-summary>div::after{width:120px;height:120px;right:-24px;bottom:-30px}
-.sidebar-note::after{width:110px;height:110px}
-.ac-hero::after{width:260px;height:260px;right:auto;left:42%;bottom:-70px}
-/* Le contenu reste au-dessus du filigrane. */
-.card>*,.kpi-card>*,.chart-card>*{position:relative;z-index:1}
+/* ===== Filigrane : l'icône de la carte, en grand et grisée, dans le coin ; elle glisse au survol ===== */
+.card,.kpi-card,.chart-card,.plan-summary>div,.ac-metric,.map-card,.range-progress-card,.action-summary,.sidebar-note,.ac-hero,.cmp-score{position:relative;overflow:hidden;isolation:isolate}
+.card-watermark{position:absolute;right:-22px;bottom:-26px;width:140px;height:140px;color:var(--navy);opacity:.055;pointer-events:none;z-index:0;transform:rotate(-10deg);transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .35s ease;display:grid;place-items:center}
+.card-watermark svg{width:100%!important;height:100%!important;stroke-width:1.4}
+.card:hover>.card-watermark,.kpi-card:hover>.card-watermark,.chart-card:hover>.card-watermark,.plan-summary>div:hover>.card-watermark,.ac-metric:hover>.card-watermark,.map-card:hover>.card-watermark,.cmp-score:hover>.card-watermark{transform:rotate(0deg) translate(-10px,-10px) scale(1.06);opacity:.1}
+.kpi-card>.card-watermark,.ac-metric>.card-watermark,.plan-summary>div>.card-watermark,.cmp-score>.card-watermark{width:110px;height:110px;right:-18px;bottom:-22px}
+.sidebar-note>.card-watermark{width:96px;height:96px}
+.range-progress-card>.card-watermark,.action-summary>.card-watermark,.sidebar-note>.card-watermark,.ac-hero>.card-watermark{color:#fff;opacity:.12}
+.range-progress-card:hover>.card-watermark,.action-summary:hover>.card-watermark,.sidebar-note:hover>.card-watermark,.ac-hero:hover>.card-watermark{transform:rotate(0deg) translate(-10px,-10px) scale(1.06);opacity:.2}
+.ac-hero>.card-watermark{width:240px;height:240px;right:auto;left:44%;bottom:-70px}
+.card>*:not(.card-watermark),.kpi-card>*:not(.card-watermark),.chart-card>*:not(.card-watermark),.cmp-score>*:not(.card-watermark){position:relative;z-index:1}
 .live-recap{overflow:visible}
-@media(prefers-reduced-motion:reduce){.card::after,.kpi-card::after,.chart-card::after{transition:none}}
+@media(prefers-reduced-motion:reduce){.card-watermark{transition:none}}
