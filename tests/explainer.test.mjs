@@ -9,12 +9,14 @@ assert.deepEqual(validateStoryboard(storyboard), []);
 assert.equal(storyboard.fps, 25);
 assert.equal(storyboard.width, 1920);
 assert.equal(storyboard.height, 1080);
-assert.equal(TOTAL_DURATION_MS, 238500);
-assert.equal(storyboard.chapters.length, 5);
-assert.equal(storyboard.chapters.reduce((n, c) => n + c.scenes.length, 0), 27);
+assert.equal(TOTAL_DURATION_MS, 222500);
+assert.equal(storyboard.chapters.length, 4);
+assert.equal(storyboard.chapters.reduce((n, c) => n + c.scenes.length, 0), 25);
 assert.equal(storyboard.chapters.reduce((n, c) => n + c.duration, 0), TOTAL_DURATION_MS);
 
-// Un carton de titre par chapitre, muet, 2 s, en tête.
+// Chaque chapitre s'ouvre sur un carton muet de 2 s. Le film se termine en
+// plus sur une carte de clôture, qui est un carton elle aussi mais porte une
+// narration : on ne contrôle donc que le carton d'ouverture.
 for (const chapter of storyboard.chapters) {
   const first = chapter.scenes[0];
   assert.equal(first.kindOfScene, 'title-card', `${chapter.id} ne commence pas par un carton`);
@@ -22,6 +24,9 @@ for (const chapter of storyboard.chapters) {
   assert.equal(first.duration, 2000);
   assert.equal(first.narration, null);
 }
+const derniere = storyboard.chapters.at(-1).scenes.at(-1);
+assert.equal(derniere.kindOfScene, 'title-card', 'le film doit finir sur une carte de clôture');
+assert.ok(derniere.narration, 'la carte de clôture est annoncée à la voix');
 
 // Le validateur détecte un chevauchement.
 const overlapping = structuredClone(storyboard);
@@ -244,7 +249,7 @@ assert.equal(stale.byScene['9.9'], undefined);
 
 // Chapitrage : positions de départ cumulées.
 const chapters = getChapters();
-assert.equal(chapters.length, 5);
+assert.equal(chapters.length, 4);
 assert.equal(chapters[0].startMs, 0);
 assert.equal(chapters[1].startMs, storyboard.chapters[0].duration,
   'le chapitre 2 démarre exactement là où le chapitre 1 finit');

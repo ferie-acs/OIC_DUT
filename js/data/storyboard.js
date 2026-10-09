@@ -15,7 +15,7 @@
 /** Contrat des primitives visuelles. Toute valeur de `kind` doit figurer ici. */
 export const STAGE_KINDS = ['title', 'actor', 'doc', 'flow', 'picto', 'screen', 'callout'];
 
-export const TOTAL_DURATION_MS = 238500;
+export const TOTAL_DURATION_MS = 222500;
 
 const titleCard = (id, kicker, title) => ({
   id, kindOfScene: 'title-card', at: 0, duration: 2000, narration: null,
@@ -203,7 +203,7 @@ export const storyboard = {
       ],
     },
     {
-      id: 'ch4', number: 4, register: 'ecrans', duration: 30000,
+      id: 'ch4', number: 4, register: 'ecrans', duration: 35000,
       title: 'Piloter le dispositif',
       scenes: [
         titleCard('4.1', 'Chapitre 4', 'Piloter le dispositif'),
@@ -252,32 +252,13 @@ export const storyboard = {
             { kind: 'screen', src: 'actions.png', alt: 'Centre d’actions et administration des rôles côté OIC', at: 300 },
           ],
         },
-      ],
-    },
-    {
-      id: 'ch5', number: 5, register: 'vectoriel', duration: 21000,
-      title: 'Du POC au système réel',
-      scenes: [
-        titleCard('5.1', 'Chapitre 5', 'Du POC au système réel'),
         {
-          id: '5.2', at: 2000, duration: 14000,
-          narration: 'Soyons clairs sur ce que vous venez de voir : une démonstration qui tourne dans un navigateur, sur des données fictives, sans serveur. Elle montre les concepts, elle ne les sécurise pas.',
-          custom: 'iso-socles',
-          customParams: {
-            items: [
-              { icon: 'dashboard', label: 'Navigateur seul' },
-              { icon: 'layers', label: 'Données de démonstration' },
-              { icon: 'alertTriangle', label: 'Pas un dispositif de sécurité' },
-            ],
-          },
-          stage: [{ kind: 'title', title: 'Ce qu’est cette démonstration', at: 300 }],
-        },
-        {
-          id: '5.4', at: 16000, duration: 5000,
+          id: '4.6', kindOfScene: 'title-card', at: 30000, duration: 5000,
           narration: 'Office Ivoirien des Chargeurs. Document Unique de Transport.',
-          stage: [
-            { kind: 'title', title: 'Document Unique de Transport', kicker: 'Office Ivoirien des Chargeurs', variant: 'card', at: 200 },
-          ],
+          stage: [{
+            kind: 'title', kicker: 'Office Ivoirien des Chargeurs',
+            title: 'Document Unique de Transport', variant: 'card', at: 200,
+          }],
         },
       ],
     },

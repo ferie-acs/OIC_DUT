@@ -52,12 +52,6 @@ Un écart de plus de 20 % est signalé par le script de mesure.
 | `4.3.m4a` | 8 s | Les DUT émis deviennent alors une statistique : volumes, délais de traitement, corridors, tonnages. |
 | `4.4.m4a` | 4 s | Le réseau des antennes est cartographié. |
 | `4.5.m4a` | 7 s | Et l’administration des utilisateurs et des rôles reste entre les mains de l’OIC. |
+| `4.6.m4a` | 5 s | Office Ivoirien des Chargeurs. Document Unique de Transport. |
 
-## Chapitre 5 — Du POC au système réel
-
-| Fichier | Durée visée | Texte à dire |
-|---|---|---|
-| `5.2.m4a` | 14 s | Soyons clairs sur ce que vous venez de voir : une démonstration qui tourne dans un navigateur, sur des données fictives, sans serveur. Elle montre les concepts, elle ne les sécurise pas. |
-| `5.4.m4a` | 5 s | Office Ivoirien des Chargeurs. Document Unique de Transport. |
-
-**Total : 22 segments, environ 447 mots.**
+**Total : 21 segments, environ 415 mots.**
