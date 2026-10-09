@@ -323,8 +323,13 @@ for (const id of referenced) {
   assert.equal(typeof CUSTOM_SCENES[id].animate, 'function');
 }
 
-// Aucun module sur mesure orphelin : tout ce qui est implémenté est utilisé.
-assert.deepEqual(Object.keys(CUSTOM_SCENES).sort(), [...new Set(referenced)].sort());
+// Aucun module sur mesure orphelin : tout ce qui est implémenté est utilisé —
+// sauf les planches de référence, explicitement marquées `preview`, qui
+// servent à contrôler le vocabulaire visuel et n'appartiennent à aucun chapitre.
+const jouables = Object.entries(CUSTOM_SCENES)
+  .filter(([, mod]) => !mod.preview)
+  .map(([key]) => key);
+assert.deepEqual(jouables.sort(), [...new Set(referenced)].sort());
 
 // build() produit un élément marqué comme scène sur mesure, sans style inline.
 for (const [id, scene] of Object.entries(CUSTOM_SCENES)) {

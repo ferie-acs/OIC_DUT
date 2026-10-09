@@ -12,6 +12,13 @@ import {
  */
 export const id = 'planche-acteurs';
 
+/**
+ * Planche de référence, pas une scène du film : elle n'est volontairement
+ * référencée par aucun chapitre. On la branche à la main sur une scène pour
+ * en sortir une image quand le vocabulaire visuel évolue.
+ */
+export const preview = true;
+
 const S = ISO_SCALE;
 
 function label({ x, y, text }) {
