@@ -1,5 +1,6 @@
 import { STAGE_PRIMITIVES } from '../views/explainer/stage/index.js';
 import { CUSTOM_SCENES } from '../views/explainer/custom/index.js';
+import { groundPlane, ISO_ORIGIN } from '../views/explainer/iso/iso.js';
 import { prefersReducedMotion } from './motion.js';
 
 /**
@@ -60,12 +61,28 @@ export function buildChapter(chapter, { doc, root, timings = {} }) {
       }
     }
 
+    // Les objets du monde (acteur, document, flux) sont des volumes
+    // isometriques dessines dans un calque SVG commun ; les textes et les
+    // captures restent des panneaux plats par-dessus, comme dans la reference.
+    const needsIso = (scene.stage || []).some((item) => STAGE_PRIMITIVES[item.kind]?.isometric);
+    let isoLayer = null;
+    if (needsIso) {
+      isoLayer = doc.createElementNS
+        ? doc.createElementNS('http://www.w3.org/2000/svg', 'svg')
+        : doc.createElement('svg');
+      isoLayer.setAttribute('class', 'sc-iso-svg');
+      isoLayer.setAttribute('viewBox', '0 0 1920 1080');
+      isoLayer.innerHTML = `<g transform="translate(${ISO_ORIGIN.x} ${ISO_ORIGIN.y})">${groundPlane()}</g>`;
+      container.appendChild(isoLayer);
+    }
+    const isoRoot = isoLayer && isoLayer.querySelector ? isoLayer.querySelector('g') : null;
+
     for (const spec of scene.stage || []) {
       const primitive = STAGE_PRIMITIVES[spec.kind];
       if (!primitive) continue;
-      const el = primitive.build(spec, doc);
-      container.appendChild(el);
-      if (timeline) primitive.animate(timeline, el, spec, offset);
+      const el = primitive.build(spec, doc, isoRoot);
+      if (el && !primitive.isometric) container.appendChild(el);
+      if (timeline && el) primitive.animate(timeline, el, spec, offset);
     }
 
     if (timeline) {
