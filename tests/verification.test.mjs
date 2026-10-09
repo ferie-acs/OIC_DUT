@@ -180,3 +180,44 @@ assert.equal(bad.level, 'INCONNU');
 assert.ok(bad.findings.some((x) => x.code === 'QR_INVALIDE'));
 
 console.log('Pipeline : six vérificateurs, Haversine, repli, verify() en ligne, hors ligne, liste absente, QR malformé.');
+
+// ---------------------------------------------------------------------------
+// Tâche 4 — liste de révocation, réglages de contrôle, horloge de démonstration
+// ---------------------------------------------------------------------------
+
+const { getControlSettings, saveControlSettings } = await import('../js/repositories/control-settings.repository.js');
+const { getCrl } = await import('../js/repositories/revocations.repository.js');
+const { addDut } = await import('../js/repositories/dut.repository.js');
+const R = await import('../js/services/revocation.service.js');
+
+// Réglages : valeurs par défaut, puis fusion.
+assert.deepEqual(getControlSettings(), { offlineSimulated: false, clockOffsetHours: 0, postId: null });
+saveControlSettings({ clockOffsetHours: 48 });
+assert.equal(getControlSettings().clockOffsetHours, 48);
+assert.equal(getControlSettings().offlineSimulated, false, 'une fusion ne perd pas les autres champs');
+
+// Review Focus n°1 : l'horloge de démonstration décale demoNow(), pas l'heure réelle.
+const realNow = Date.now();
+const shifted = R.demoNow().getTime();
+assert.ok(Math.abs(shifted - (realNow + 48 * 3600e3)) < 5000, 'demoNow suit le décalage');
+saveControlSettings({ clockOffsetHours: 0 });
+
+// Hors-ligne simulé prime sur navigator.onLine.
+// Node 22 expose `navigator` en lecture seule : on le redéfinit, on ne l'assigne pas.
+Object.defineProperty(globalThis, 'navigator', { value: { onLine: true }, configurable: true, writable: true });
+assert.equal(R.isOnline(), true);
+saveControlSettings({ offlineSimulated: true });
+assert.equal(R.isOnline(), false);
+saveControlSettings({ offlineSimulated: false });
+
+// Synchronisation : seuls les suspendus et retirés entrent dans la liste.
+addDut({ id: 'r1', qrToken: 'rev-1', status: 'RETIRE', dutNumber: 'DUT-CI-2026-000900', validatedAt: new Date().toISOString() });
+addDut({ id: 'r2', qrToken: 'sus-1', status: 'SUSPENDU', dutNumber: 'DUT-CI-2026-000901', validatedAt: new Date().toISOString() });
+addDut({ id: 'r3', qrToken: 'val-1', status: 'VALIDE', dutNumber: 'DUT-CI-2026-000902', validatedAt: new Date().toISOString() });
+assert.equal(getCrl(), null, 'aucune liste avant synchronisation');
+const crl = R.sync();
+assert.deepEqual(crl.entries.map((e) => e.uid).sort(), ['rev-1', 'sus-1']);
+assert.ok(crl.syncedAt);
+assert.ok(R.ageHours() < 0.01);
+
+console.log('Révocation : réglages fusionnés, horloge de démonstration isolée, hors-ligne simulé, liste construite depuis les statuts.');
