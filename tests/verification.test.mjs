@@ -221,3 +221,50 @@ assert.ok(crl.syncedAt);
 assert.ok(R.ageHours() < 0.01);
 
 console.log('Révocation : réglages fusionnés, horloge de démonstration isolée, hors-ligne simulé, liste construite depuis les statuts.');
+
+// ---------------------------------------------------------------------------
+// Tâche 5 — verifyScan asynchrone et dérogation
+// ---------------------------------------------------------------------------
+
+const C = await import('../js/services/control.service.js');
+const { getAllControlLogs, getAllDerogations } = await import('../js/repositories/controls.repository.js');
+const { getAllAuditLogs } = await import('../js/repositories/audit.repository.js');
+
+// Un vrai DUT signé en base, un scan en ligne → VERT, entrée enrichie.
+const { saveSigningKey } = await import('../js/repositories/signing-key.repository.js');
+saveSigningKey(otherKey);
+const liveSigned = await signPayload({ v: 2, kid: otherKey.kid, uid: 'live-1', num: 'DUT-CI-2026-000950', plq: 'CI-0950-AA', nbf: '2000-01-01', exp: '2099-12-31' }, otherKey);
+addDut({ id: 'live', qrToken: 'live-1', qrSigned: liveSigned, status: 'VALIDE', dutNumber: 'DUT-CI-2026-000950', validatedAt: new Date().toISOString(), general: { immatriculation: 'CI-0950-AA' } });
+saveControlSettings({ offlineSimulated: false, clockOffsetHours: 0, postId: null });
+
+const scan = await C.verifyScan(buildSignedUri(liveSigned), { geo: { lat: 5.345, lng: -4.024 } });
+assert.equal(scan.verdict.level, 'VERT');
+const logged = getAllControlLogs().find((c) => c.dutId === 'live');
+assert.ok(logged, 'le contrôle est journalisé');
+assert.equal(logged.verdictLevel, 'VERT');
+assert.equal(logged.mode, 'EN_LIGNE');
+assert.equal(logged.lat, 5.345);
+assert.ok(Array.isArray(logged.findings) && logged.findings.length > 0);
+
+// Review Focus n°1 : avec l'horloge décalée de 48 h, l'heure JOURNALISÉE reste réelle.
+saveControlSettings({ clockOffsetHours: 48 });
+const before = Date.now();
+await C.verifyScan(buildSignedUri(liveSigned), {});
+const logged2 = getAllControlLogs().filter((c) => c.dutId === 'live').at(-1);
+assert.ok(Math.abs(new Date(logged2.date).getTime() - before) < 5000, 'horodatage réel, pas décalé');
+saveControlSettings({ clockOffsetHours: 0 });
+
+// Dérogation : motif obligatoire ; AUTRE exige une note ; enregistrée et auditée.
+assert.throws(() => C.recordDerogation({ controlId: logged.id, reason: '', note: '' }), /motif/i);
+assert.throws(() => C.recordDerogation({ controlId: logged.id, reason: 'AUTRE', note: '' }), /préciser/i);
+assert.throws(() => C.recordDerogation({ controlId: 'inexistant', reason: 'PANNE_VEHICULE', note: '' }), /contrôle/i);
+const dero = C.recordDerogation({ controlId: logged.id, reason: 'PANNE_VEHICULE', note: 'Remorquage' });
+assert.equal(dero.dutId, 'live');
+assert.equal(getAllDerogations().length, 1);
+assert.ok(getAllAuditLogs().some((a) => a.action === 'DUT_DEROGATION' && a.dutId === 'live'));
+
+// Un QR inconnu ne lève pas et journalise INCONNU.
+const unknown = await C.verifyScan('n-importe-quoi', {});
+assert.equal(unknown.verdict.level, 'INCONNU');
+
+console.log('Contrôle : verifyScan asynchrone enrichi, horodatage réel sous horloge décalée, dérogation validée et auditée.');
