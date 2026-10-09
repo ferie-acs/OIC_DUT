@@ -3,6 +3,10 @@
    Rôle : boutons colorés, cartes et graphiques dans le bleu du logo, cartes mises en avant,
    barre latérale, badges, tableaux. Aucune règle de comportement. */
 
+/* ===== Liens et actions : jamais de soulignement au survol ===== */
+a:hover,.btn:hover,.nav-link:hover,.rail-link:hover,.card-header a:hover,.priority-link:hover,.data-table a:hover,.search-results a:hover,.breadcrumb a:hover,.sidebar a:hover{text-decoration:none}
+a:hover{color:var(--navy-2)}
+
 /* ===== Typographie et repères ===== */
 .overline{color:var(--navy-2)}
 h1,h2{color:var(--navy);letter-spacing:-.4px}
@@ -82,7 +86,7 @@ h1,h2{color:var(--navy);letter-spacing:-.4px}
 .range-progress-card,.action-summary{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);color:#fff;border:0;border-radius:16px;padding:22px;box-shadow:0 14px 34px rgba(11,61,111,.24);position:relative;overflow:hidden}
 .range-progress-card::after,.action-summary::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}
 .range-progress-card .card-header h3,.action-summary h3,.range-progress-card .range-code,.range-progress-card .range-meta strong{color:#fff}
-.range-progress-card .card-header a{color:#fff;opacity:.85;text-decoration:underline;text-underline-offset:3px}
+.range-progress-card .card-header a{color:#fff;opacity:.85}
 .range-progress-card .card-header a:hover{opacity:1}
 .range-progress-card .range-meta,.action-summary p,.action-summary .overline{color:var(--navy-ink)}
 .action-summary .overline{color:#FFD8B0}
