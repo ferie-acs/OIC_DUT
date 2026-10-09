@@ -3,7 +3,7 @@ import { planningRows, overlaps, savePlanningSchedule, demoRows, addPlanningExam
 import { STAGES } from '../services/workspace.service.js';
 import { escapeHtml as esc } from '../core/utils.js';
 import { openModal, toast } from '../core/ui.js';
-import { mountTripMap } from './planning-map.view.js';
+import { mountTripMap } from './planning-map.view.js?v=2';
 const DAY = 86400000;
 const localDay = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const dateText = s => new Date(s).toLocaleString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
