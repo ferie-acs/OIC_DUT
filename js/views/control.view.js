@@ -55,19 +55,16 @@ function headerHtml() {
   const posts = listAntennas().map((a) => `<option value="${escapeHtml(a.id)}" ${a.id === settings.postId ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('');
   return `
     <div class="card control-context">
-      <div class="field">
-        <label for="control-post">Poste de contrôle</label>
-        <select class="input" id="control-post"><option value="">— choisir —</option>${posts}</select>
-        <button type="button" class="btn btn-secondary btn-block" id="btn-geo" style="margin-top:var(--s2)">${icon('pin', { size: 15 })} Utiliser ma position</button>
+      <div class="control-context-head"><span class="overline">Réglages du poste</span><span class="control-pill ${online ? 'is-online' : 'is-offline'}"><i></i>${online ? 'En ligne' : `Hors ligne · liste à jour il y a ${ageLabel}`}</span></div>
+      <div class="control-context-grid">
+        <label class="plan-pill"><span>${icon('map', { size: 14 })} Poste de contrôle</span><select class="plan-pill-select" id="control-post"><option value="">— choisir —</option>${posts}</select></label>
+        <button type="button" class="btn btn-secondary" id="btn-geo">${icon('pin', { size: 15 })} Utiliser ma position</button>
       </div>
-      <div class="control-network ${online ? 'is-online' : 'is-offline'}">
-        <label class="switch"><input type="checkbox" id="toggle-offline" ${settings.offlineSimulated ? 'checked' : ''}> Simuler : réseau coupé</label>
-        <span class="text-muted">${online ? 'En ligne — le statut du système fait foi' : `Hors ligne — liste de révocation à jour il y a ${ageLabel}`}</span>
-      </div>
-      <div class="control-clock">
-        <span class="text-muted">Horloge de démonstration : ${settings.clockOffsetHours ? `+${settings.clockOffsetHours} h` : 'à l’heure'}</span>
-        <button type="button" class="btn btn-secondary" id="btn-clock-age">Vieillir la liste de 24 h</button>
-        <button type="button" class="btn btn-secondary" id="btn-clock-reset">Remettre à l’heure</button>
+      <div class="control-demo">
+        <span class="control-demo-label">Démonstration</span>
+        <label class="switch control-switch"><input type="checkbox" id="toggle-offline" ${settings.offlineSimulated ? 'checked' : ''}><span class="control-switch-track"></span>Simuler : réseau coupé</label>
+        <span class="control-clock-state">${icon('clock', { size: 14 })} Horloge : ${settings.clockOffsetHours ? `+${settings.clockOffsetHours} h` : 'à l’heure'}</span>
+        <div class="plan-nav"><button type="button" class="plan-nav-btn" id="btn-clock-age">Vieillir la liste de 24 h</button><button type="button" class="plan-nav-btn" id="btn-clock-reset">Remettre à l’heure</button></div>
       </div>
     </div>`;
 }
@@ -99,13 +96,13 @@ function bindHeader(container) {
 
 function renderScan(container) {
   container.innerHTML = `
-    <div class="text-center" style="margin-bottom:var(--s4)">
-      <h1 style="font-size:1.3rem">Contrôle DUT</h1>
-      <p class="text-muted" style="font-size:.85rem">Scannez le QR signé du document ou saisissez-le manuellement.</p>
+    <div class="control-intro">
+      <h1>Contrôle DUT</h1>
+      <p>Scannez le tampon du document ou saisissez-le manuellement. Le téléphone répond en trois secondes.</p>
     </div>
     ${headerHtml()}
-    <div class="card">
-      <div class="scan-box" id="scan-box">${icon('camera', { size: 40 })}</div>
+    <div class="card control-scan-card">
+      <div class="scan-box" id="scan-box">${icon('camera', { size: 40 })}<span class="scan-hint">Cadrez le QR du DUT</span></div>
       <button type="button" class="btn btn-primary btn-block btn-lg" id="btn-start-scan" style="margin-top:var(--s3)">
         ${icon('scan', { size: 17 })} Scanner un DUT
       </button>
@@ -119,7 +116,8 @@ function renderScan(container) {
       <button type="button" class="btn btn-secondary btn-block" id="btn-manual-verify">Vérifier</button>
     </div>
     <div class="card" style="margin-top:var(--s3)">
-      <h3 style="margin-bottom:var(--s2)">Simulation (démonstration)</h3>
+      <h3 style="margin-bottom:var(--s1)">Simulation (démonstration)</h3>
+      <p class="text-muted control-sim-hint">Sans caméra : jouez les cas typiques pour voir la réponse de l’agent.</p>
       <div class="stack gap-2">
         <button type="button" class="btn btn-success btn-block" id="btn-sim-valid">${icon('checkCircle', { size: 15 })} Scanner un DUT valide</button>
         <button type="button" class="btn btn-warning btn-block" id="btn-sim-canary">${icon('alertTriangle', { size: 15 })} Scanner le DUT piège</button>
