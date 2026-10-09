@@ -935,3 +935,12 @@ th.is-sorted .sup-sort{color:var(--navy)}
 .cmp-entity input{accent-color:var(--navy-2)}
 .cmp-chip{background:var(--surface-2);border-color:transparent}
 .cmp-picker.is-open .cmp-chip{background:var(--surface)}
+
+/* Pilules de date : pas de chevron (le sélecteur natif a déjà son icône) ; cartes de score à largeur bornée, sans filigrane. */
+.plan-pill:has(input[type="date"])::after{display:none}
+.plan-pill:has(input[type="date"]){padding-right:14px}
+.cmp-scores{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.cmp-score>.card-watermark{display:none}
+.cmp-score-body div{padding:6px 10px}
+.cmp-panel-head .plan-seg{padding:4px}
+.cmp-panel-head .plan-pill{min-width:170px;flex:0 1 190px}
