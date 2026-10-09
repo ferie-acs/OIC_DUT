@@ -60,3 +60,29 @@ assert.equal((await verifySignedString('pas-un-qr', otherKey)).ok, false);
 assert.equal((await verifySignedString('', otherKey)).ok, false);
 
 console.log('Signature : base64url, clé de démonstration stable, aller-retour, altération et mauvaise clé refusées.');
+
+// ---------------------------------------------------------------------------
+// Tâche 2 — format du QR v2
+// ---------------------------------------------------------------------------
+
+const { parseQr, buildSignedUri } = await import('../js/services/qr.service.js');
+
+const uri = buildSignedUri(signed);
+assert.ok(uri.startsWith('oicdut://v2/'));
+const parsed = parseQr(uri);
+assert.equal(parsed.format, 'v2');
+assert.equal(parsed.token, 'u-1', 'le jeton est le uid de la charge');
+assert.equal(parsed.signed, signed);
+assert.equal(parsed.payload.num, 'DUT-CI-2026-000401');
+
+// Entrées rejetées : ancien schéma, préfixe seul, charge indécodable, vide.
+for (const bad of ['oicdut://verify/u-1', 'oicdut://v2/', 'oicdut://v2/%%%.%%%', '', null, 'DUT-CI-2026-000401']) {
+  const p = parseQr(bad);
+  assert.equal(p.format, 'invalid', `doit être invalide : ${JSON.stringify(bad)}`);
+  assert.equal(p.token, null);
+}
+
+// Espaces autour : tolérés.
+assert.equal(parseQr(`  ${uri}  `).format, 'v2');
+
+console.log('QR v2 : construction, lecture, rejet de tout autre format.');
