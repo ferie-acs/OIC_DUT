@@ -134,7 +134,7 @@ function renderProfile(container, actor, id) {
         </div>
         <aside class="sup-side">
           <div class="card sup-card-id"><div class="card-header"><h3>Fiche de l’antenne</h3><button type="button" class="btn btn-ghost btn-sm" id="sup-edit">${icon('edit', { size: 13 })} Modifier</button></div>
-            ${identity([['Chef d’antenne', `<strong>${esc(a.chef?.name || '—')}</strong>`], ['Téléphone du chef', esc(a.chef?.phone || '')], ['E-mail', esc(a.chef?.email || '')], ['Adjoint', esc(a.adjoint?.name || '')], ['Effectif', a.effectif ? `${a.effectif} agents` : ''], ['Comptes plateforme', p.equipe.length ? p.equipe.map((u) => esc(u.name)).join(', ') : 'Aucun compte rattaché'], ['Standard', esc(a.phone)], ['Horaires', esc(a.hours || '')], ['Adresse', esc(a.address || '')]])}
+            ${identity([['Chef d’antenne', `<strong>${esc(a.chef?.name || '—')}</strong>`], ['Téléphone du chef', esc(a.chef?.phone || '')], ['E-mail', esc(a.chef?.email || '')], ['Adjoint', esc(a.adjoint?.name || '')], ['Effectif', Number(a.effectif) > 0 ? `${num(Number(a.effectif))} agents` : ''], ['Comptes plateforme', p.equipe.length ? p.equipe.map((u) => esc(u.name)).join(', ') : 'Aucun compte rattaché'], ['Standard', esc(a.phone)], ['Horaires', esc(a.hours || '')], ['Adresse', esc(a.address || '')]])}
           </div>
           <div class="card"><div class="card-header"><h3>Partenaires rattachés</h3></div>${p.partenaires.length ? `<ul class="sup-list">${p.partenaires.map((x) => `<li><a href="#/oic/supervision/partenaires/${esc(x.id)}">${esc(x.name)}</a><b>${x.duts} DUT</b></li>`).join('')}</ul>` : '<p class="sup-empty">Aucun partenaire.</p>'}</div>
           <div class="card"><div class="card-header"><h3>Dérogations accordées</h3></div>${p.derogations.length ? `<ul class="sup-list">${p.derogations.map((d) => `<li><span>${formatDateTime(d.date)} · ${esc(d.dutNumber || '')}</span><b>${esc(d.reason)}</b></li>`).join('')}</ul>` : '<p class="sup-empty">Aucune.</p>'}</div>
@@ -201,7 +201,7 @@ function renderProfile(container, actor, id) {
           <div class="card"><div class="card-header"><h3>Journal d’audit</h3></div>${journalHtml(p.journal)}</div>
         </div>
         <aside class="sup-side">
-          <div class="card"><div class="card-header"><h3>Véhicules</h3></div>${p.vehicules.length ? `<ul class="sup-list">${p.vehicules.map((v) => `<li><span>${esc(v.immatriculation)}<small>${esc(v.type || '')}${v.capaciteTonnes ? ` · ${v.capaciteTonnes} t` : ''}</small></span></li>`).join('')}</ul>` : '<p class="sup-empty">Aucun véhicule.</p>'}</div>
+          <div class="card"><div class="card-header"><h3>Véhicules</h3></div>${p.vehicules.length ? `<ul class="sup-list">${p.vehicules.map((v) => `<li><span>${esc(v.immatriculation)}<small>${esc(v.type || '')}${Number(v.capaciteTonnes) > 0 ? ` · ${num(Number(v.capaciteTonnes), 1)} t` : ''}</small></span></li>`).join('')}</ul>` : '<p class="sup-empty">Aucun véhicule.</p>'}</div>
         </aside>
       </div>`, exportBtn);
   }
@@ -214,7 +214,7 @@ function editAntenna(a, onSaved) {
     bodyHtml: `<form id="antenna-form" class="workspace-form">
       <div class="field"><label>Chef d’antenne <span class="req">*</span></label><input class="input" name="chefName" required value="${esc(a.chef?.name || '')}"></div>
       <div class="field-row"><div class="field"><label>Téléphone du chef</label><input class="input" name="chefPhone" value="${esc(a.chef?.phone || '')}"></div><div class="field"><label>E-mail</label><input class="input" name="chefEmail" type="email" value="${esc(a.chef?.email || '')}"></div></div>
-      <div class="field-row"><div class="field"><label>Adjoint</label><input class="input" name="adjointName" value="${esc(a.adjoint?.name || '')}"></div><div class="field"><label>Effectif</label><input class="input" name="effectif" type="number" min="0" value="${a.effectif ?? ''}"></div></div>
+      <div class="field-row"><div class="field"><label>Adjoint</label><input class="input" name="adjointName" value="${esc(a.adjoint?.name || '')}"></div><div class="field"><label>Effectif</label><input class="input" name="effectif" type="number" min="0" value="${Number(a.effectif) > 0 ? Number(a.effectif) : ''}"></div></div>
       <div class="field"><label>Horaires</label><input class="input" name="hours" value="${esc(a.hours || '')}"></div>
       <div class="field"><label>Adresse</label><input class="input" name="address" value="${esc(a.address || '')}"></div>
       <p role="alert" id="antenna-error" class="error-msg"></p></form>`,
