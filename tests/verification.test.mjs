@@ -312,3 +312,22 @@ await ensureSignedDemoData();
 assert.equal(JSON.stringify(getAllDuts()), snapshot);
 
 console.log('Ensemencement : charge sans donnée commerciale, tout DUT numéroté signé, un canari, idempotent.');
+
+// --- Tâche 7 : vue de contrôle ---
+const { badgeClassFor } = await import('../js/views/control.view.js');
+assert.equal(badgeClassFor('VERT'), 'valid');
+assert.equal(badgeClassFor('ORANGE'), 'orange');
+assert.equal(badgeClassFor('ROUGE'), 'withdrawn');
+assert.equal(badgeClassFor('INCONNU'), 'unknown');
+assert.equal(badgeClassFor('n-importe'), 'unknown');
+console.log('Vue de contrôle : classe de bandeau par niveau.');
+
+// --- Tâche 7 (ruling) : la démo contient au moins un DUT validé encore dans sa période de validité ---
+{
+  const today = new Date().toISOString().slice(0, 10);
+  const { CONTROL_POLICY } = await import('../js/core/constants.js');
+  const fresh = getAllDuts().filter((d) => d.status === 'VALIDE' && !d.canary && d.qrSigned)
+    .filter((d) => { const exp = new Date(`${d.validatedAt.slice(0, 10)}T00:00:00Z`); exp.setUTCDate(exp.getUTCDate() + CONTROL_POLICY.validityDays); return exp.toISOString().slice(0, 10) >= today; });
+  assert.ok(fresh.length >= 1, 'aucun DUT validé non expiré dans la démo');
+  console.log('Ensemencement : au moins un DUT validé encore valable pour le scénario VERT.');
+}

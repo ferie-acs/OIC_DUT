@@ -150,12 +150,16 @@ export function seedDemoData() {
   const natures = merchandiseTypes.map((m) => m.nom);
   const villesOrigine = ['Abidjan', 'San-Pédro', 'Bouaké'];
   const villesDestination = ['Bouaké', 'Korhogo', 'Yamoussoukro', 'Man', 'Abidjan'];
+  // Du plus ancien au plus récent : les derniers dossiers sont des DUT validés récemment
+  // (encore valables au contrôle) et des dossiers terminés en attente.
   const statutsHisto = [
-    ...Array(12).fill(DUT_STATUS.VALIDE),
-    ...Array(2).fill(DUT_STATUS.TERMINE),
-    ...Array(3).fill(DUT_STATUS.REJETE),
+    ...Array(8).fill(DUT_STATUS.VALIDE),
     ...Array(2).fill(DUT_STATUS.SUSPENDU),
     ...Array(1).fill(DUT_STATUS.RETIRE),
+    ...Array(3).fill(DUT_STATUS.REJETE),
+    ...Array(2).fill(DUT_STATUS.VALIDE),
+    ...Array(2).fill(DUT_STATUS.TERMINE),
+    ...Array(2).fill(DUT_STATUS.VALIDE),
   ];
 
   const duts = [];
@@ -167,7 +171,9 @@ export function seedDemoData() {
     const antenna = partner.id === partnerStfa.id ? antennaAbidjan : antennaBouake;
     const fakeUser = { id: 'SEED', name: 'Démo', partnerId: partner.id, partnerName: partner.name, antennaId: antenna.id, antennaName: antenna.name };
     const dut = blankDut(fakeUser);
-    const createdDaysAgo = 90 - i * 3;
+    // Du plus ancien au plus récent, tous les 3 jours ; le dernier dossier date de 2 jours,
+    // donc les derniers DUT validés sont encore dans leur période de validité (scénario VERT).
+    const createdDaysAgo = (statutsHisto.length - 1 - i) * 3 + 2;
     dut.createdAt = daysAgoIso(createdDaysAgo);
     dut.updatedAt = dut.createdAt;
     dut.general.transporterId = transporters[i % transporters.length].id;

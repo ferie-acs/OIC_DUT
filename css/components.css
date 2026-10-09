@@ -267,3 +267,18 @@
 }
 .chip-btn:hover{border-color:var(--text-secondary);color:var(--text)}
 .chip-btn.active{border-color:var(--accent);color:var(--accent-hover);background:var(--accent-soft)}
+
+/* Lot 1 — contrôle sécurisé : verdict, constats, contexte de poste */
+.control-result-badge.orange { background: var(--warning-soft); color: var(--text); border: 1px solid var(--warning); }
+.control-mode { font-size: .8rem; margin-top: var(--s1); opacity: .85; }
+.findings { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.finding { display: flex; align-items: flex-start; gap: 8px; font-size: .85rem; }
+.finding.is-ok { color: var(--success); }
+.finding.is-info { color: var(--text-secondary); }
+.finding.is-warn { color: var(--warning); }
+.finding.is-block { color: var(--error); font-weight: 600; }
+.control-context { display: grid; gap: var(--s2); }
+.control-network, .control-clock { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); font-size: .85rem; }
+.control-network.is-offline { color: var(--warning); }
+.qr-demo-note { font-size: .7rem; color: var(--text-muted); margin-top: 4px; text-align: center; }
+.qr-reader { width: 100%; height: 100%; }

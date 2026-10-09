@@ -123,7 +123,7 @@ export const TVA_RATE = 0.18;
 /** Un seul schéma : charge signée. L'ancien `oicdut://verify/` est abandonné. */
 export const QR_SCHEME = 'oicdut://v2/';
 export const DEMO_KID = 'demo-2026-10';
-export const DEMO_SEED_VERSION = 2;
+export const DEMO_SEED_VERSION = 3;
 
 export const VERDICT_LEVELS = { VERT: 'VERT', ORANGE: 'ORANGE', ROUGE: 'ROUGE', INCONNU: 'INCONNU' };
 
