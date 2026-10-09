@@ -84,15 +84,9 @@ export const storyboard = {
           ],
         },
         {
-          id: '2.3', at: 18000, duration: 10000,
+          id: '2.3', at: 18000, duration: 10000, custom: 'chaine-acteurs',
           narration: 'Quand le dossier est complet, il le soumet.',
-          stage: [
-            { kind: 'title', title: 'La soumission du dossier', at: 200 },
-            { kind: 'actor', id: 'partner', label: 'Partenaire', at: 0 },
-            { kind: 'doc', id: 'dut', label: 'DUT', at: 600 },
-            { kind: 'actor', id: 'antenne', label: 'Antenne OIC', at: 1000 },
-            { kind: 'flow', id: 'soumission', from: 'partner', to: 'antenne', at: 1800 },
-          ],
+          stage: [{ kind: 'title', title: 'La soumission du dossier', at: 200 }],
         },
         {
           id: '2.4', at: 28000, duration: 20000,
