@@ -52,7 +52,7 @@ export function render(container, params) {
     </div>
     <div class="page-header-rule"></div>
 
-    <div class="stepper-h">
+    <div class="stepper-h" aria-label="Étapes du dossier">
       ${STEPS.map((s, i) => {
         const cls = i < currentIdx ? 'done' : i === currentIdx ? 'current' : '';
         return `
@@ -68,7 +68,13 @@ export function render(container, params) {
     <div class="wizard">
       <div class="card wizard-content" id="wizard-content"></div>
       <div class="card live-recap">
-        <h3 style="margin-bottom:var(--s3)">Récapitulatif en cours</h3>
+        <div class="live-recap-head">
+          <div class="live-recap-ring" style="--p:${Math.round((currentIdx / (STEPS.length - 1)) * 100)}%" aria-hidden="true"><span>${currentIdx + 1}/${STEPS.length}</span></div>
+          <div>
+            <h3>Récapitulatif en cours</h3>
+            <p class="live-recap-step">Étape ${currentIdx + 1} sur ${STEPS.length} · ${STEPS[currentIdx]?.label || ''}</p>
+          </div>
+        </div>
         <div id="live-recap-body"></div>
       </div>
     </div>
