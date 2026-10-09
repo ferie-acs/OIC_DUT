@@ -21,7 +21,7 @@ import * as dutDetailView from './views/dut-detail.view.js?v=dut-v2';
 import * as antennaDashboardView from './views/antenna-dashboard.view.js';
 import * as antennaReviewView from './views/antenna-review.view.js?v=dut-v2';
 import * as controlView from './views/control.view.js?v=charte';
-import * as oicDashboardView from './views/oic-dashboard.view.js?v=oic-blue';
+import * as oicDashboardView from './views/oic-dashboard.view.js?v=charts';
 import * as transporteurDashboardView from './views/transporteur-dashboard.view.js?v=oic-blue';
 import * as decouvrirView from './views/decouvrir.view.js';
 
