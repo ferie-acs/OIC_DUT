@@ -1,7 +1,7 @@
 import { syncAntennaDirectory } from './services/antenna-directory.service.js';
 import * as adminView from './views/admin.view.js';
 import * as planningView from './views/planning.view.js?v=finder2';
-import * as actionCenterView from './views/action-center.view.js';
+import * as actionCenterView from './views/action-center.view.js?v=charte';
 import { decorateKpis } from './views/kpi-trends.view.js';
 import { registerRoute, startRouter, getCurrentPath, setNotFoundHandler, navigate } from './core/router.js';
 import { mountInsights } from './views/insights.view.js?v=oic-blue';
