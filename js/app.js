@@ -9,6 +9,7 @@ import { icon } from './core/icons.js';
 import { getCurrentUser } from './core/auth.js';
 import { renderAppShell, renderLoginShell, renderControlShell } from './core/layout.js?v=planning';
 import { isSeeded, seedDemoData, ensureSignedDemoData, refreshExpiredDemoSignatures } from './seed.js';
+import { registerServiceWorker, mountInstallButton } from './core/pwa.js';
 
 import * as loginView from './views/login.view.js?v=oic-blue';
 import * as partnerDashboardView from './views/partner-dashboard.view.js?v=oic-blue';
@@ -114,3 +115,7 @@ setNotFoundHandler(({ reason }) => {
 });
 
 startRouter();
+
+// Application installable et utilisable hors ligne (coquille en cache ; les données restent locales).
+mountInstallButton();
+registerServiceWorker();

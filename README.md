@@ -161,3 +161,11 @@ affiche encore « Validé ».
 ## DUT révisé : recto / verso et contrôle d’impression
 
 Les quatre PDF de `docs/` servent de références de présentation. Le dossier propose maintenant **DUT recto / verso** (téléchargement) et **Aperçu** (lecteur PDF.js local, sans enregistrer une impression).
+## Application installable (PWA)
+
+L'application s'installe sur ordinateur et téléphone (bouton « Installer l'application » dans la barre latérale quand le navigateur le propose) et fonctionne hors ligne : la coquille (pages, styles, scripts, images, icônes) est pré-cachée par `sw.js` ; les bibliothèques externes et les polices sont gardées en cache après la première visite ; le fond de carte OpenStreetMap est servi depuis le cache quand le réseau manque. Les données restent dans le navigateur (LocalStorage).
+
+- `manifest.webmanifest` — nom, icônes (`assets/icons/`), couleur de thème, raccourcis (Contrôle, Nouveau DUT).
+- `sw.js` — service worker ; la liste des fichiers et leur version viennent de `precache.json`.
+- **Avant chaque livraison** : `node tools/pwa/precache.mjs` régénère `precache.json` (le test `tests/pwa.test.mjs` échoue s'il est périmé).
+- Nécessite un contexte sécurisé : `localhost` ou HTTPS (pas d'installation via une adresse IP en HTTP).
