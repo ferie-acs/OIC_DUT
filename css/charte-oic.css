@@ -302,8 +302,8 @@ h1,h2{color:var(--navy)}
 
 /* ===== Planning : en-tête, note, recherche multicritère ===== */
 .plan-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.plan-demo-line{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);margin:-8px 0 20px}
-.plan-demo-line svg{color:var(--navy-2);flex:none}
+.plan-demo-line{display:block;font-size:12.5px;color:var(--text-secondary);margin:-8px 0 20px;line-height:1.6}
+.plan-demo-line svg{color:var(--navy-2);vertical-align:-2px;margin-right:6px}
 .plan-finder{display:grid;gap:12px;margin-top:18px}
 .plan-finder-row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
 .plan-finder-search{display:flex;align-items:center;gap:10px;flex:1 1 320px;min-width:0;background:var(--surface);border:1px solid var(--border-strong);border-radius:12px;padding:0 14px;min-height:46px;color:var(--text-muted);box-shadow:0 2px 8px rgba(11,61,111,.05)}
@@ -588,3 +588,48 @@ input.plan-pill-select::-webkit-calendar-picker-indicator{opacity:.55;cursor:poi
 :root[data-theme="dark"] h1,:root[data-theme="dark"] h2,:root[data-theme="dark"] .card-header h3{color:var(--text)}
 
 @media(prefers-reduced-motion:reduce){.btn{transition:none}}
+
+/* ===== Responsive : corrections relevées par l'audit (390 px) ===== */
+.card,.chart-card,.dash-grid>*,.kpi-card,.ops-grid>*{min-width:0}
+canvas{max-width:100%}
+.row-between{flex-wrap:wrap;gap:6px}
+#dut-actions.row{flex-wrap:wrap}
+@media(max-width:700px){
+  .plan-finder-row{flex-direction:column;align-items:stretch}
+  .plan-finder-search,.plan-pill{flex:none;width:100%;min-width:0}
+  .plan-finder-row-2{flex-direction:column;align-items:stretch}
+  .plan-seg{width:100%;justify-content:flex-start}
+  .plan-controls{flex-direction:column;align-items:stretch}
+  .plan-controls .plan-pill{width:100%}
+  .table-toolbar{flex-direction:column;align-items:stretch}
+  .search-input{width:100%;max-width:100%;min-width:0}
+  .search-input input{width:100%;min-width:0}
+  .select-wrap,.select-wrap .select{width:100%}
+  #dut-actions.row .btn{flex:1 1 auto}
+  .page-header{flex-direction:column;align-items:stretch;gap:12px}
+  .page-header .btn,.page-header .row{align-self:stretch}
+  .btn-sm,.explainer-chapter,#save-action-filter,#reset-action-filter{min-height:38px}
+  .btn{min-height:40px}
+  .plan-header-actions{align-items:stretch;flex-direction:column}
+  .plan-header-actions .badge{align-self:flex-start}
+  .plan-map-list{max-height:none}
+  .ac-toolbar{flex-direction:column;align-items:stretch}
+  .ac-search{width:100%}
+  .data-table th,.data-table td{padding:10px 8px;font-size:12px}
+  .modal-footer .btn{min-height:46px}
+}
+
+/* Les grilles et barres d'outils ne doivent jamais s'élargir à la largeur intrinsèque d'un champ. */
+.plan-finder{grid-template-columns:minmax(0,1fr)}
+.plan-finder-row,.plan-finder-search,.plan-pill{min-width:0;max-width:100%}
+.plan-finder-search input,.search-input input,.ac-search input{width:100%;min-width:0}
+.table-toolbar>*{min-width:0;max-width:100%}
+.main-content>*,.main-content .card{max-width:100%}
+@media(max-width:700px){.plan-finder-row{width:100%}}
+
+/* Tableaux sur mobile : lignes sur une seule hauteur, défilement horizontal doux. */
+@media(max-width:700px){
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+  .data-table th,.data-table td{white-space:nowrap}
+  .data-table td.cell-2line,.data-table td.cell-wrap{white-space:normal;min-width:160px}
+}
