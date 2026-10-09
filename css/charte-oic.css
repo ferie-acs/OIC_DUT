@@ -7,10 +7,87 @@
 a:hover,.btn:hover,.nav-link:hover,.rail-link:hover,.card-header a:hover,.priority-link:hover,.data-table a:hover,.search-results a:hover,.breadcrumb a:hover,.sidebar a:hover{text-decoration:none}
 a:hover{color:var(--navy-2)}
 
-/* ===== Typographie et repères ===== */
-.overline{color:var(--navy-2)}
-h1,h2{color:var(--navy);letter-spacing:-.4px}
-.page-header .subtitle{color:var(--text-secondary)}
+/* ===== Typographie : plus fine, plus petite, plus raffinée ===== */
+body{font-size:13.5px;font-weight:400;line-height:1.55;letter-spacing:.005em}
+h1,h2,h3,h4{font-weight:600}
+h1{font-size:24px;letter-spacing:-.5px;line-height:1.15}
+h2{font-size:18px;letter-spacing:-.3px}
+h3,.card-header h3,.ops-grid .card h3{font-size:15px;font-weight:600;letter-spacing:-.1px}
+h1,h2{color:var(--navy)}
+.overline{color:var(--navy-2);font-size:10px;font-weight:600;letter-spacing:1.1px}
+.page-header .subtitle{font-size:13px;font-weight:400;color:var(--text-secondary);max-width:70ch}
+.card-header .subtitle{font-size:12.5px}
+.text-muted{font-weight:400}
+.nav-link{font-size:13px;font-weight:500}
+.nav-link.active{font-weight:600}
+.sidebar-section-label{font-size:10px;letter-spacing:1px}
+.sidebar-brand-text strong{font-size:15px;font-weight:600}
+.sidebar-user strong{font-size:12.5px;font-weight:600}
+.sidebar-user span{font-size:11px}
+.sidebar-note strong{font-size:12.5px;font-weight:600}
+.sidebar-note p{font-size:11px;font-weight:400}
+.breadcrumb{font-size:12px;font-weight:400}
+.topbar-profile strong{font-size:12.5px;font-weight:600}
+.topbar-profile small{font-size:11px}
+.header-search input{font-size:12.5px;font-weight:400}
+.role-chip{font-size:11px;font-weight:600}
+.btn{font-size:13px;font-weight:600}
+.btn-sm{font-size:12px}
+.btn-lg{font-size:14px}
+.badge{font-size:11px;font-weight:600;letter-spacing:.1px}
+.kpi-label{font-size:12.5px;font-weight:500;color:var(--text-secondary)}
+.kpi-value{font-size:clamp(22px,1.8vw,30px);font-weight:650;letter-spacing:-.8px}
+.kpi-change{font-size:10.5px;font-weight:600}
+.kpi-card .badge{font-size:11px;font-weight:400}
+.kpi-chart-caption{font-size:10.5px;font-weight:500}
+.data-table th{font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted)}
+.data-table td{font-size:13px;font-weight:400}
+.data-table td strong{font-weight:600}
+.field label{font-size:12px;font-weight:600;color:var(--navy)}
+.input,.select,textarea.textarea{font-size:13.5px;font-weight:400;padding:10px 12px}
+.activity-text{font-size:13px;font-weight:500}
+.activity-time{font-size:11.5px;font-weight:400}
+.priority-link strong{font-size:13px;font-weight:600}
+.priority-link small{font-size:11.5px;font-weight:400}
+.ops-heading h2{font-size:17px}
+.ops-heading p,.ops-footnote{font-size:11.5px;font-weight:400}
+.ops-metric strong{font-size:28px;font-weight:650;letter-spacing:-.8px}
+.ops-metric span{font-size:12px;font-weight:400}
+.flow-legend>div,.corridor-label,.ops-summary-line{font-size:12.5px;font-weight:400}
+.corridor-label strong,.ops-summary-line strong,.flow-legend b{font-weight:600}
+.flow-donut strong{font-size:20px;font-weight:650}
+.volume-labels span{font-size:11px;font-weight:500}
+.action-summary h3{font-size:18px;font-weight:600}
+.action-summary p{font-size:13px;font-weight:400}
+.range-progress-card .range-code{font-size:20px;font-weight:600;letter-spacing:-.3px}
+.range-progress-card .range-meta{font-size:12px}
+.plan-header h1{font-size:24px}
+.plan-summary strong{font-size:28px;font-weight:650}
+.plan-summary span{font-size:13px;font-weight:500}
+.plan-label strong{font-size:13.5px;font-weight:600}
+.plan-label span{font-size:12.5px}
+.plan-label small{font-size:11px}
+.plan-bar span{font-size:11px;font-weight:600}
+.wizard-content h2{font-size:17px}
+.stepper-h-step .label{font-size:12px}
+.live-recap-head h3{font-size:14px}
+.live-recap-item{font-size:12.5px}
+.modal-title{font-size:19px;font-weight:600}
+.modal-text{font-size:13.5px}
+.modal-footer .btn{font-size:13.5px}
+.recap-section h3{font-size:15px;font-weight:600}
+.recap-item strong{font-weight:600}
+.toast strong{font-weight:600}
+.app-footer{font-size:10.5px}
+.auth-visual h1{font-size:clamp(28px,2.6vw,40px);font-weight:600;letter-spacing:-1px}
+.auth-visual p{font-size:15px;font-weight:400}
+.auth-blue .auth-brand h2{font-size:21px;font-weight:600}
+.auth-blue .auth-brand p{font-size:13px}
+.auth-blue .field label{font-size:12.5px}
+.auth-blue .input{font-size:14px}
+.auth-blue .btn-primary{font-size:14px}
+.auth-assurance{font-size:11.5px;font-weight:500}
+@media(max-width:700px){h1{font-size:21px}.kpi-value{font-size:24px}.btn{font-size:12.5px}}
 
 /* ===== Boutons ===== */
 .btn{border-radius:var(--r-control);font-weight:650;letter-spacing:0;gap:8px;transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .12s ease}
