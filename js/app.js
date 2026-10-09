@@ -1,5 +1,5 @@
 import { syncAntennaDirectory } from './services/antenna-directory.service.js';
-import * as adminView from './views/admin.view.js?v=settings';
+import * as adminView from './views/admin.view.js?v=settings2';
 import * as planningView from './views/planning.view.js?v=finder2';
 import * as actionCenterView from './views/action-center.view.js?v=charte';
 import { decorateKpis } from './views/kpi-trends.view.js';
