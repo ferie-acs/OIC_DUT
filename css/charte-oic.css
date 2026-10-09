@@ -223,6 +223,36 @@ h1,h2{color:var(--navy);letter-spacing:-.4px}
 .plan-directory-item strong{color:var(--navy)}
 .plan-empty{border:1px dashed var(--border-strong);border-radius:12px;background:var(--surface-2)}
 
+/* ===== Fenêtres modales : panneau gris doux, blocs blancs en relief, boutons ronds ===== */
+.modal-overlay{background:rgba(11,61,111,.32);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.modal-card{background:var(--surface-2);border:1px solid rgba(255,255,255,.8);border-radius:26px;padding:26px;box-shadow:0 30px 80px rgba(11,61,111,.28),0 2px 0 rgba(255,255,255,.6) inset;animation:modal-pop .22s cubic-bezier(.2,.9,.3,1.1)}
+@keyframes modal-pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.modal-icon{width:54px;height:54px;border-radius:17px;border:0;margin-bottom:var(--s4);box-shadow:0 8px 20px rgba(11,61,111,.12),0 1px 0 rgba(255,255,255,.9) inset}
+.modal-icon svg{width:22px;height:22px}
+.modal-close{top:22px;right:22px;width:42px;height:42px;padding:0;align-items:center;justify-content:center;background:var(--surface);color:var(--navy);box-shadow:0 6px 16px rgba(11,61,111,.14);transition:transform .15s,box-shadow .15s}
+.modal-close:hover{color:var(--navy);transform:scale(1.04);box-shadow:0 8px 20px rgba(11,61,111,.2)}
+.modal-title{font-size:22px;font-weight:700;color:var(--navy);letter-spacing:-.3px;margin-bottom:4px;padding-right:56px}
+.modal-text{font-size:14px;color:var(--text-secondary);margin-bottom:var(--s4)}
+.modal-body{background:var(--surface);border:1px solid var(--border-hairline);border-radius:18px;padding:18px;box-shadow:0 6px 18px rgba(11,61,111,.06)}
+.modal-body:empty{display:none}
+.modal-body .field{margin-bottom:var(--s3)}
+.modal-body .field:last-child{margin-bottom:0}
+.modal-body .field label{color:var(--navy);font-weight:650}
+.modal-body .input,.modal-body .select,.modal-body textarea.textarea{min-height:46px;border-radius:12px;background:var(--surface-2);border-color:var(--border)}
+.modal-body .input:focus,.modal-body .select:focus,.modal-body textarea.textarea:focus{background:var(--surface);border-color:var(--navy-2);box-shadow:0 0 0 3px rgba(14,86,164,.14)}
+.modal-body .text-muted,.modal-body p{color:var(--text-secondary)}
+.modal-divider{border-top:1px solid var(--border);margin:var(--s3) 0}
+.modal-footer{margin-top:var(--s4);gap:10px}
+.modal-footer .btn{min-height:48px;border-radius:14px;padding-inline:22px;font-size:14.5px}
+.modal-footer .btn[data-action="confirm"]{flex:1;box-shadow:0 10px 24px rgba(241,125,12,.32)}
+.modal-footer .btn-danger[data-action="confirm"]{box-shadow:0 10px 24px rgba(225,29,46,.26)}
+.modal-footer .btn-secondary{background:var(--surface);border-color:var(--border);box-shadow:0 4px 12px rgba(11,61,111,.08)}
+.modal-footer .btn-secondary:hover:not(:disabled){border-color:var(--navy-ink);background:var(--surface)}
+:root[data-theme="dark"] .modal-card{background:var(--surface);border-color:var(--border)}
+:root[data-theme="dark"] .modal-body{background:var(--surface-2)}
+@media(max-width:600px){.modal-card{border-radius:20px;padding:20px}.modal-footer .btn[data-action="confirm"]{flex:none}}
+@media(prefers-reduced-motion:reduce){.modal-card{animation:none}.modal-close{transition:none}}
+
 /* ===== Pied de page ===== */
 .app-footer{color:var(--text-muted)}
 
