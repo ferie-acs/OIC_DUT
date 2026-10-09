@@ -55,18 +55,22 @@ export function render(container) {
     <section class="card plan-card plan-map-card">
       <div class="plan-toolbar"><div><h2>Carte des trajets</h2><p>Cherchez un camion, un transporteur ou une ville : la carte, la chronologie et l’annuaire se filtrent ensemble.</p></div><span class="plan-map-hint">Tracé indicatif à vol d’oiseau</span></div>
       <div class="plan-finder" role="search" aria-label="Rechercher un trajet">
-        <label class="plan-finder-search">${icon('search', { size: 16 })}<input type="search" id="pf-q" placeholder="Plaque, n° DUT, transporteur, ville…" value="${esc(filters.query)}" autocomplete="off"></label>
-        <div class="plan-finder-chips" role="group" aria-label="Statut">${STATUS_FILTERS.map(([v,l])=>`<button type="button" class="plan-chip" data-status="${v}" aria-pressed="${filters.status===v}">${v!=='ALL'?`<i class="plan-dot ${v==='blue'?'':v}"></i>`:''}${l}</button>`).join('')}</div>
-        <label class="plan-finder-field">Départ<select class="select" id="pf-from"><option value="">Toutes les villes</option>${options(cities.from, filters.from, normalizeCity)}</select></label>
-        <label class="plan-finder-field">Arrivée<select class="select" id="pf-to"><option value="">Toutes les villes</option>${options(cities.to, filters.to, normalizeCity)}</select></label>
-        <label class="plan-finder-field">Transporteur<select class="select" id="pf-carrier"><option value="">Tous</option>${options(carriers, filters.carrier, v=>v)}</select></label>
-        <div class="plan-finder-foot"><span class="plan-finder-count"><strong>${rows.length}</strong> trajet${rows.length>1?'s':''} sur la période${activeFilters?` · ${activeFilters} filtre${activeFilters>1?'s':''} actif${activeFilters>1?'s':''}`:''}</span>${activeFilters?`<button type="button" class="btn btn-ghost btn-sm" id="pf-reset">${icon('x', { size: 13 })} Effacer les filtres</button>`:''}</div>
+        <div class="plan-finder-row">
+          <label class="plan-finder-search">${icon('search', { size: 17 })}<input type="search" id="pf-q" placeholder="Rechercher une plaque, un n° DUT, un transporteur, une ville…" value="${esc(filters.query)}" autocomplete="off"></label>
+          <label class="plan-pill ${filters.from?'is-set':''}"><span>${icon('pin', { size: 14 })} Départ</span><select class="plan-pill-select" id="pf-from"><option value="">Toutes</option>${options(cities.from, filters.from, normalizeCity)}</select></label>
+          <label class="plan-pill ${filters.to?'is-set':''}"><span>${icon('map', { size: 14 })} Arrivée</span><select class="plan-pill-select" id="pf-to"><option value="">Toutes</option>${options(cities.to, filters.to, normalizeCity)}</select></label>
+          <label class="plan-pill ${filters.carrier?'is-set':''}"><span>${icon('truck', { size: 14 })} Transporteur</span><select class="plan-pill-select" id="pf-carrier"><option value="">Tous</option>${options(carriers, filters.carrier, v=>v)}</select></label>
+        </div>
+        <div class="plan-finder-row plan-finder-row-2">
+          <div class="plan-seg" role="group" aria-label="Statut">${STATUS_FILTERS.map(([v,l])=>`<button type="button" class="plan-seg-btn" data-status="${v}" aria-pressed="${filters.status===v}">${v!=='ALL'?`<i class="plan-dot ${v==='blue'?'':v}"></i>`:''}${l}</button>`).join('')}</div>
+          <span class="plan-finder-count"><strong>${rows.length}</strong> trajet${rows.length>1?'s':''} sur la période${activeFilters?` · <em>${activeFilters} filtre${activeFilters>1?'s':''} actif${activeFilters>1?'s':''}</em>`:''}${activeFilters?`<button type="button" class="plan-finder-reset" id="pf-reset">${icon('x', { size: 12 })} Effacer</button>`:''}</span>
+        </div>
       </div>
       <div class="plan-map-layout"><div id="plan-map" class="plan-map" role="region" aria-label="Carte de la Côte d'Ivoire avec les trajets"></div><div class="plan-map-list" id="plan-map-list"></div></div>
     </section>
 
-    <section class="card plan-card"><div class="plan-toolbar"><div><h2>Chronologie des transports</h2><p>Horaires locaux · barres = prévisions · statuts = déclarations</p></div><div class="plan-controls"><button class="btn btn-secondary" id="plan-prev" aria-label="Période précédente">←</button><button class="btn btn-secondary" id="plan-today">Aujourd’hui</button><button class="btn btn-secondary" id="plan-existing">Derniers trajets</button><button class="btn btn-secondary" id="plan-next" aria-label="Période suivante">→</button><label>Début<input class="input" type="date" id="plan-date" value="${anchor}" required></label><label>Période<select class="select" id="plan-days">${[7,14,30].map(n=>`<option value="${n}" ${days===n?'selected':''}>${n} jours</option>`).join('')}</select></label></div></div>
-    <div class="plan-search"><span class="plan-legend"><i class="plan-dot"></i> Prévu <i class="plan-dot green"></i> En route / arrivé <i class="plan-dot gray"></i> Livré <i class="plan-dot orange"></i> Suspendu / retiré</span></div>
+    <section class="card plan-card"><div class="plan-toolbar plan-toolbar-chrono"><div><h2>Chronologie des transports</h2><p>Horaires locaux · barres = prévisions · statuts = déclarations</p><span class="plan-legend"><i class="plan-dot"></i> Prévu <i class="plan-dot green"></i> En route / arrivé <i class="plan-dot gray"></i> Livré <i class="plan-dot orange"></i> Suspendu / retiré</span></div>
+    <div class="plan-controls"><div class="plan-nav" role="group" aria-label="Période"><button class="plan-nav-btn" id="plan-prev" aria-label="Période précédente" title="Période précédente">${icon('chevronLeft', { size: 16 })}</button><button class="plan-nav-btn" id="plan-today">Aujourd’hui</button><button class="plan-nav-btn" id="plan-existing">Derniers trajets</button><button class="plan-nav-btn" id="plan-next" aria-label="Période suivante" title="Période suivante">${icon('chevronRight', { size: 16 })}</button></div><label class="plan-pill"><span>${icon('calendar', { size: 14 })} Début</span><input class="plan-pill-select" type="date" id="plan-date" value="${anchor}" required></label><label class="plan-pill"><span>${icon('clock', { size: 14 })} Période</span><select class="plan-pill-select" id="plan-days">${[7,14,30].map(n=>`<option value="${n}" ${days===n?'selected':''}>${n} jours</option>`).join('')}</select></label></div></div>
     <div class="plan-scroll"><div class="plan-grid" style="--days:${days}"><div class="plan-grid-head"><strong>Camion · trajet · dates</strong><div class="plan-scale">${Array.from({length:days},(_,i)=>`<span>${new Date(start+i*DAY).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</span>`).join('')}</div></div>
     <div class="plan-body">${today>=0&&today<=100?`<div class="plan-today-track"><div class="plan-today" style="left:${today}%"><span>Aujourd’hui</span></div></div>`:''}
     ${rows.map(r=>{
@@ -87,7 +91,7 @@ export function render(container) {
     // Module de recherche : texte libre en direct (anti-rebond), chips de statut, listes déroulantes.
     const q=container.querySelector('#pf-q');
     q.oninput=e=>{clearTimeout(debounce);debounce=setTimeout(()=>{filters.query=e.target.value.trim();draw(true);},220);};
-    container.querySelectorAll('.plan-chip').forEach(b=>b.onclick=()=>{filters.status=b.dataset.status;draw();});
+    container.querySelectorAll('.plan-seg-btn').forEach(b=>b.onclick=()=>{filters.status=b.dataset.status;draw();});
     container.querySelector('#pf-from').onchange=e=>{filters.from=e.target.value;draw();};
     container.querySelector('#pf-to').onchange=e=>{filters.to=e.target.value;draw();};
     container.querySelector('#pf-carrier').onchange=e=>{filters.carrier=e.target.value;draw();};
