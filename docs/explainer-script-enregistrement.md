@@ -58,7 +58,6 @@ Un écart de plus de 20 % est signalé par le script de mesure.
 | Fichier | Durée visée | Texte à dire |
 |---|---|---|
 | `5.2.m4a` | 10 s | Soyons clairs sur ce que vous venez de voir : une démonstration qui tourne dans un navigateur, sur des données fictives, sans serveur. Elle montre les concepts, elle ne les sécurise pas. |
-| `5.3.m4a` | 10 s | Le système réel, lui, reposerait sur une architecture éprouvée : Angular et NestJS, PostgreSQL avec PostGIS, Keycloak pour les identités, un stockage objet pour les pièces, et une signature électronique conforme. |
 | `5.4.m4a` | 3 s | Office Ivoirien des Chargeurs. Document Unique de Transport. |
 
-**Total : 23 segments, environ 519 mots.**
+**Total : 22 segments, environ 488 mots.**

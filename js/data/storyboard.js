@@ -15,7 +15,7 @@
 /** Contrat des primitives visuelles. Toute valeur de `kind` doit figurer ici. */
 export const STAGE_KINDS = ['title', 'actor', 'doc', 'flow', 'picto', 'screen', 'callout'];
 
-export const TOTAL_DURATION_MS = 300000;
+export const TOTAL_DURATION_MS = 290000;
 
 const titleCard = (id, kicker, title) => ({
   id, kindOfScene: 'title-card', at: 0, duration: 2000, narration: null,
@@ -39,31 +39,38 @@ export const storyboard = {
         {
           id: '1.3', at: 14000, duration: 12000,
           narration: 'Chacun de ces transports doit être accompagné d’un document. Ce document, c’est le Document Unique de Transport : le DUT.',
-          stage: [
-            { kind: 'title', title: 'Le Document Unique de Transport', at: 400 },
-            { kind: 'doc', id: 'dut', label: 'DUT', at: 1200, from: 'bottom' },
-          ],
+          custom: 'iso-documents',
+          customParams: { docs: [{ label: 'Le DUT' }] },
+          stage: [{ kind: 'title', title: 'Le Document Unique de Transport', at: 400 }],
         },
         {
           id: '1.4', at: 26000, duration: 16000,
           narration: 'Mais un document sur papier ne porte pas la preuve de sa propre authenticité. Sans référence unique et vérifiable, rien ne permet de trancher au bord de la route entre l’original et une copie. Et personne, au niveau national, ne voit circuler l’ensemble.',
+          custom: 'iso-documents',
+          customParams: {
+            docs: [
+              { label: 'Original' },
+              { dashed: true, label: 'Copie' },
+              { dashed: true, label: 'Copie' },
+            ],
+          },
           stage: [
             { kind: 'title', title: 'Un papier ne prouve pas sa propre authenticité', at: 200 },
-            { kind: 'doc', id: 'original', label: 'DUT', at: 0, x: -280 },
-            { kind: 'doc', id: 'copie1', label: 'DUT', at: 2200, x: -40, dimmed: true },
-            { kind: 'doc', id: 'copie2', label: 'DUT', at: 3200, x: 200, dimmed: true },
-            { kind: 'callout', text: 'Lequel est l’original ?', at: 6000, anchor: 'original', tone: 'warning' },
+            { kind: 'callout', text: 'Lequel est l’original\u00a0?', at: 6000, anchor: 'original', tone: 'warning' },
           ],
         },
         {
           id: '1.5', at: 42000, duration: 13000,
           narration: 'Trois garanties sont donc attendues : qu’un DUT soit authentifiable, que son parcours soit tracé, et que l’ensemble devienne une statistique nationale exploitable.',
-          stage: [
-            { kind: 'title', title: 'Trois garanties attendues', at: 300 },
-            { kind: 'picto', id: 'auth', icon: 'shield', label: 'Authenticité', slot: 1, at: 1600 },
-            { kind: 'picto', id: 'trace', icon: 'map', label: 'Traçabilité', slot: 2, at: 2400 },
-            { kind: 'picto', id: 'stats', icon: 'barChart', label: 'Statistique nationale', slot: 3, at: 3200 },
-          ],
+          custom: 'iso-socles',
+          customParams: {
+            items: [
+              { icon: 'shield', label: 'Authenticité' },
+              { icon: 'map', label: 'Traçabilité' },
+              { icon: 'barChart', label: 'Statistique nationale' },
+            ],
+          },
+          stage: [{ kind: 'title', title: 'Trois garanties attendues', at: 300 }],
         },
       ],
     },
@@ -75,9 +82,10 @@ export const storyboard = {
         {
           id: '2.2', at: 2000, duration: 16000,
           narration: 'Tout commence chez le partenaire : un commissionnaire, un transporteur, un chargeur. Il ouvre un dossier et décrit le transport — la marchandise, le véhicule, le conducteur, l’itinéraire.',
+          custom: 'iso-acteur',
+          customParams: { acteur: 'partenaire' },
           stage: [
             { kind: 'title', title: 'Le partenaire ouvre un dossier', at: 300 },
-            { kind: 'actor', id: 'partner', label: 'Partenaire', at: 800, live: true, liveAt: 1600 },
             { kind: 'picto', id: 'b-marchandise', icon: 'package', label: 'Marchandise et véhicule', slot: 1, at: 4200 },
             { kind: 'picto', id: 'b-trajet', icon: 'map', label: 'Conducteur et itinéraire', slot: 2, at: 5000 },
             { kind: 'screen', src: 'creation.png', alt: 'Formulaire de création d’un DUT côté partenaire', at: 3000, highlight: true, highlightAt: 6000 },
@@ -91,29 +99,31 @@ export const storyboard = {
         {
           id: '2.4', at: 28000, duration: 20000,
           narration: 'L’antenne OIC prend le relais. L’agent vérifie les pièces et la cohérence du dossier. S’il manque quelque chose, il renvoie le dossier avec un motif de rejet obligatoire — le partenaire corrige, puis soumet à nouveau.',
+          custom: 'iso-acteur',
+          customParams: { acteur: 'antenne' },
           stage: [
             { kind: 'title', title: 'L’antenne vérifie', at: 300 },
-            { kind: 'actor', id: 'antenne', label: 'Antenne OIC', at: 700, live: true, liveAt: 1400 },
             { kind: 'screen', src: 'antenne.png', alt: 'Panneau de revue d’un DUT par un agent d’antenne', at: 2600, highlight: true, highlightAt: 5000 },
-            { kind: 'flow', id: 'rejet', from: 'antenne', to: 'partner', at: 9000, reverse: true },
             { kind: 'callout', text: 'Motif de rejet obligatoire', at: 10500, anchor: 'rejet', tone: 'warning' },
           ],
         },
         {
           id: '2.5', at: 48000, duration: 18000,
           narration: 'À la validation, et seulement à ce moment-là, le dossier reçoit son numéro officiel, pris sur une plage allouée à l’antenne. Précisons-le franchement : dans le dispositif actuel de l’OIC, cette vérification par l’antenne n’existe pas — le partenaire consomme directement un numéro de son stock. Ce contrôle est une amélioration proposée pour le futur système.',
+          custom: 'iso-documents',
+          customParams: { docs: [{ numero: 'CI-2026-004812', label: 'Numéro officiel' }] },
           stage: [
             { kind: 'title', title: 'Le numéro officiel', at: 300 },
-            { kind: 'doc', id: 'dut', label: 'DUT', number: 'CI-2026-004812', at: 1200 },
             { kind: 'callout', text: 'Amélioration proposée, pas l’existant', at: 9000, anchor: 'dut', tone: 'info' },
           ],
         },
         {
           id: '2.6', at: 66000, duration: 22000,
           narration: 'Le DUT devient alors imprimable, recto-verso, avec son code QR. Chaque impression est enregistrée : à partir de la deuxième, un motif est exigé.',
+          custom: 'iso-documents',
+          customParams: { docs: [{ numero: 'CI-2026-004812', qr: true, label: 'Recto-verso et code QR' }] },
           stage: [
             { kind: 'title', title: 'Impression et code QR', at: 300 },
-            { kind: 'doc', id: 'dut', label: 'DUT', number: 'CI-2026-004812', qr: true, at: 900 },
             { kind: 'screen', src: 'impression.png', alt: 'Aperçu d’impression recto-verso d’un DUT', at: 3000, highlight: true, highlightAt: 7000 },
             { kind: 'callout', text: 'Motif exigé dès la 2e impression', at: 14000, anchor: 'dut', tone: 'info' },
           ],
@@ -121,20 +131,17 @@ export const storyboard = {
         {
           id: '2.7', at: 88000, duration: 12000,
           narration: 'Le transporteur prend la route, le document l’accompagne.',
-          stage: [
-            { kind: 'title', title: 'Le document prend la route', at: 200 },
-            { kind: 'actor', id: 'transporteur', label: 'Transporteur', at: 400, live: true, liveAt: 1200 },
-            { kind: 'doc', id: 'dut', label: 'DUT', qr: true, at: 800 },
-            { kind: 'flow', id: 'route', from: 'transporteur', to: 'controle', at: 2000 },
-            { kind: 'actor', id: 'controle', label: 'Contrôle terrain', at: 1600 },
-          ],
+          custom: 'iso-acteur',
+          customParams: { acteur: 'controle', camion: true },
+          stage: [{ kind: 'title', title: 'Le document prend la route', at: 200 }],
         },
         {
           id: '2.8', at: 100000, duration: 18000,
           narration: 'Au contrôle, l’agent scanne le code QR.',
+          custom: 'iso-acteur',
+          customParams: { acteur: 'controle' },
           stage: [
             { kind: 'title', title: 'Le contrôle terrain', at: 300 },
-            { kind: 'actor', id: 'controle', label: 'Contrôle terrain', at: 700, live: true, liveAt: 1500 },
             { kind: 'picto', id: 'b-scan', icon: 'scan', label: 'Scan du code QR', slot: 1, at: 4000 },
             { kind: 'picto', id: 'b-reponse', icon: 'building', label: 'Le système répond, pas le papier', slot: 2, at: 4800 },
             { kind: 'screen', src: 'controle.png', alt: 'Résultat de contrôle d’un DUT après scan du code QR', at: 2800, highlight: true, highlightAt: 6000 },
@@ -143,16 +150,11 @@ export const storyboard = {
         {
           id: '2.9', at: 118000, duration: 12000,
           narration: 'Et chaque geste — création, rejet, validation, impression, contrôle — s’inscrit dans un journal d’audit que personne ne peut modifier ni effacer.',
-          stage: [
-            { kind: 'title', title: 'Journal d’audit', at: 300 },
-            { kind: 'picto', id: 'lock', icon: 'shield', label: 'Ajout seul', slot: 1, at: 900 },
-            { kind: 'callout', text: 'Création', at: 2200, anchor: 'lock', tone: 'neutral' },
-            { kind: 'callout', text: 'Rejet', at: 2700, anchor: 'lock', tone: 'neutral' },
-            { kind: 'callout', text: 'Validation', at: 3200, anchor: 'lock', tone: 'neutral' },
-            { kind: 'callout', text: 'Impression', at: 3700, anchor: 'lock', tone: 'neutral' },
-            { kind: 'callout', text: 'Contrôle', at: 4200, anchor: 'lock', tone: 'neutral' },
-            { kind: 'callout', text: 'Ni modification ni suppression', at: 5200, anchor: 'lock', tone: 'info' },
-          ],
+          custom: 'iso-journal',
+          customParams: {
+            entrees: ['Création', 'Rejet', 'Validation', 'Impression', 'Contrôle', 'Ni modification ni suppression'],
+          },
+          stage: [{ kind: 'title', title: 'Journal d’audit', at: 300 }],
         },
       ],
     },
@@ -164,20 +166,20 @@ export const storyboard = {
         {
           id: '3.2', at: 2000, duration: 14000,
           narration: 'Le code QR imprimé sur un DUT ne contient aucune donnée de transport. Rien que ceci : un jeton opaque, tiré au hasard, qui ne dit rien de la marchandise ni du transporteur.',
+          custom: 'iso-documents',
+          customParams: { docs: [{ qr: true, label: 'Un jeton, rien d’autre' }] },
           stage: [
             { kind: 'title', title: 'Ce que contient le code QR', at: 300 },
-            { kind: 'doc', id: 'dut', label: 'DUT', qr: true, at: 900 },
             { kind: 'callout', text: 'oicdut://verify/<jeton>', at: 3000, anchor: 'dut', tone: 'info' },
           ],
         },
         {
           id: '3.3', at: 16000, duration: 14000,
           narration: 'Le scanner ne lit donc pas le document : il interroge le système. Et c’est le système qui répond. Ce qui est imprimé sur le papier n’a aucune autorité.',
+          custom: 'iso-acteur',
+          customParams: { acteur: 'siege' },
           stage: [
             { kind: 'title', title: 'Le scan interroge le système', at: 200 },
-            { kind: 'doc', id: 'dut', label: 'DUT', qr: true, at: 0 },
-            { kind: 'actor', id: 'systeme', label: 'Le système', at: 900, live: true, liveAt: 3000 },
-            { kind: 'flow', id: 'interrogation', from: 'dut', to: 'systeme', at: 1800 },
             { kind: 'callout', text: 'Le papier ne fait pas autorité', at: 6000, anchor: 'systeme', tone: 'warning' },
           ],
         },
@@ -188,12 +190,15 @@ export const storyboard = {
         {
           id: '3.5', at: 42000, duration: 8000,
           narration: 'À cela s’ajoutent les statuts qui pilotent l’impression, le rang de génération, et une empreinte du contenu.',
-          stage: [
-            { kind: 'title', title: 'Trois garde-fous de plus', at: 150 },
-            { kind: 'picto', id: 'statuts', icon: 'checkCircle', label: 'Statuts et filigranes', slot: 1, at: 300 },
-            { kind: 'picto', id: 'rang', icon: 'layers', label: 'Rang de génération', slot: 2, at: 900 },
-            { kind: 'picto', id: 'empreinte', icon: 'target', label: 'Empreinte SHA-256', slot: 3, at: 1500 },
-          ],
+          custom: 'iso-socles',
+          customParams: {
+            items: [
+              { icon: 'checkCircle', label: 'Statuts et filigranes' },
+              { icon: 'layers', label: 'Rang de génération' },
+              { icon: 'target', label: 'Empreinte SHA-256' },
+            ],
+          },
+          stage: [{ kind: 'title', title: 'Trois garde-fous de plus', at: 150 }],
         },
       ],
     },
@@ -205,6 +210,8 @@ export const storyboard = {
         {
           id: '4.2', at: 2000, duration: 12000,
           narration: 'Côté OIC, tout part des plages de numéros : une antenne en demande, l’OIC alloue, et chaque numéro consommé est connu.',
+          custom: 'iso-acteur',
+          customParams: { acteur: 'antenne' },
           stage: [
             { kind: 'title', title: 'Les plages de numéros', at: 300 },
             { kind: 'picto', id: 'b-demande', icon: 'inbox', label: 'Demande par l’antenne', slot: 1, at: 2600 },
@@ -215,6 +222,8 @@ export const storyboard = {
         {
           id: '4.3', at: 14000, duration: 12000,
           narration: 'Les DUT émis deviennent alors une statistique : volumes, délais de traitement, corridors, tonnages.',
+          custom: 'iso-acteur',
+          customParams: { acteur: 'siege' },
           stage: [
             { kind: 'title', title: 'La statistique nationale', at: 300 },
             { kind: 'picto', id: 'b-volumes', icon: 'barChart', label: 'Volumes et délais', slot: 1, at: 2600 },
@@ -225,15 +234,17 @@ export const storyboard = {
         {
           id: '4.4', at: 26000, duration: 8000,
           narration: 'Le réseau des antennes est cartographié.',
+          custom: 'iso-reseau',
           stage: [
             { kind: 'title', title: 'Le réseau des antennes', at: 200 },
             { kind: 'picto', id: 'b-reseau', icon: 'map', label: '23 antennes cartographiées', slot: 1, at: 1400 },
-            { kind: 'screen', src: 'antennes.png', alt: 'Carte du réseau des antennes OIC en Côte d’Ivoire', at: 300 },
           ],
         },
         {
           id: '4.5', at: 34000, duration: 6000,
           narration: 'Et l’administration des utilisateurs et des rôles reste entre les mains de l’OIC.',
+          custom: 'iso-acteur',
+          customParams: { acteur: 'siege' },
           stage: [
             { kind: 'title', title: 'L’administration reste à l’OIC', at: 200 },
             { kind: 'picto', id: 'b-roles', icon: 'users', label: 'Utilisateurs et rôles', slot: 1, at: 1200 },
@@ -244,26 +255,25 @@ export const storyboard = {
       ],
     },
     {
-      id: 'ch5', number: 5, register: 'vectoriel', duration: 25000,
+      id: 'ch5', number: 5, register: 'vectoriel', duration: 15000,
       title: 'Du POC au système réel',
       scenes: [
         titleCard('5.1', 'Chapitre 5', 'Du POC au système réel'),
         {
           id: '5.2', at: 2000, duration: 10000,
           narration: 'Soyons clairs sur ce que vous venez de voir : une démonstration qui tourne dans un navigateur, sur des données fictives, sans serveur. Elle montre les concepts, elle ne les sécurise pas.',
-          stage: [
-            { kind: 'title', title: 'Ce qu’est cette démonstration', at: 300 },
-            { kind: 'picto', id: 'navigateur', icon: 'dashboard', label: 'Navigateur seul', slot: 1, at: 900 },
-            { kind: 'picto', id: 'demo', icon: 'layers', label: 'Données de démonstration', slot: 2, at: 1500 },
-            { kind: 'picto', id: 'pas-securite', icon: 'alertTriangle', label: 'Pas un dispositif de sécurité', slot: 3, at: 2100 },
-          ],
+          custom: 'iso-socles',
+          customParams: {
+            items: [
+              { icon: 'dashboard', label: 'Navigateur seul' },
+              { icon: 'layers', label: 'Données de démonstration' },
+              { icon: 'alertTriangle', label: 'Pas un dispositif de sécurité' },
+            ],
+          },
+          stage: [{ kind: 'title', title: 'Ce qu’est cette démonstration', at: 300 }],
         },
         {
-          id: '5.3', at: 12000, duration: 10000, custom: 'architecture-cible',
-          narration: 'Le système réel, lui, reposerait sur une architecture éprouvée : Angular et NestJS, PostgreSQL avec PostGIS, Keycloak pour les identités, un stockage objet pour les pièces, et une signature électronique conforme.',
-        },
-        {
-          id: '5.4', at: 22000, duration: 3000,
+          id: '5.4', at: 12000, duration: 3000,
           narration: 'Office Ivoirien des Chargeurs. Document Unique de Transport.',
           stage: [
             { kind: 'title', title: 'Document Unique de Transport', kicker: 'Office Ivoirien des Chargeurs', variant: 'card', at: 200 },

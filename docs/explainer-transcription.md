@@ -54,6 +54,4 @@ Et l’administration des utilisateurs et des rôles reste entre les mains de l�
 
 Soyons clairs sur ce que vous venez de voir : une démonstration qui tourne dans un navigateur, sur des données fictives, sans serveur. Elle montre les concepts, elle ne les sécurise pas.
 
-Le système réel, lui, reposerait sur une architecture éprouvée : Angular et NestJS, PostgreSQL avec PostGIS, Keycloak pour les identités, un stockage objet pour les pièces, et une signature électronique conforme.
-
 Office Ivoirien des Chargeurs. Document Unique de Transport.

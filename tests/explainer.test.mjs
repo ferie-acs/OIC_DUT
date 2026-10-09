@@ -9,9 +9,9 @@ assert.deepEqual(validateStoryboard(storyboard), []);
 assert.equal(storyboard.fps, 25);
 assert.equal(storyboard.width, 1920);
 assert.equal(storyboard.height, 1080);
-assert.equal(TOTAL_DURATION_MS, 300000);
+assert.equal(TOTAL_DURATION_MS, 290000);
 assert.equal(storyboard.chapters.length, 5);
-assert.equal(storyboard.chapters.reduce((n, c) => n + c.scenes.length, 0), 28);
+assert.equal(storyboard.chapters.reduce((n, c) => n + c.scenes.length, 0), 27);
 assert.equal(storyboard.chapters.reduce((n, c) => n + c.duration, 0), TOTAL_DURATION_MS);
 
 // Un carton de titre par chapitre, muet, 2 s, en tête.
