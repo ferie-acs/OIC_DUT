@@ -19,7 +19,7 @@ Faire du POC une **démonstration de conception de sécurité**, pas seulement d
 |---|---|
 | Structure du code | Un **pipeline de vérificateurs** : six fonctions pures, une par vérification, enchaînées par `verification.service.js` qui replie leurs constats en verdict. La vue n'appelle que le verdict. |
 | Clé de signature | ECDSA P-256 (Web Crypto, aucune dépendance), générée à l'ensemencement si absente, stockée en LocalStorage, marquée `demo: true`. Pas de rotation dans ce lot. |
-| Format du QR | Nouveau schéma `oicdut://v2/<charge>.<signature>` ; l'ancien `oicdut://verify/<uuid>` reste lu. La charge est un JSON compact en base64url ; la signature porte sur les octets de la charge encodée. COSE/CWT serait le format cible en production ; le JSON signé démontre le même principe sans bibliothèque. |
+| Format du QR | Un seul schéma, `oicdut://v2/<charge>.<signature>`. **L'ancien format `oicdut://verify/<uuid>` est abandonné** : la démo est locale et ses données sont ensemencées, on les régénère. La charge est un JSON compact en base64url ; la signature porte sur les octets de la charge encodée. COSE/CWT serait le format cible en production ; le JSON signé démontre le même principe sans bibliothèque. |
 | Hors ligne | Simulé par un interrupteur dans l'écran de contrôle, en plus de `navigator.onLine`. Jamais de vert hors ligne. |
 | Position du contrôle | Sélecteur « poste de contrôle » (les antennes, qui ont des coordonnées) + géolocalisation navigateur en option. |
 | Validation par antenne | Hors périmètre ici ; remplacée par la validation par seuil au lot 2 (décision produit prise). |
@@ -43,12 +43,12 @@ Faire du POC une **démonstration de conception de sécurité**, pas seulement d
 - Moment : à la **validation** du DUT, quand le numéro est attribué (`dut.service`), par le « serveur » — ici le navigateur de l'antenne, ce que le POC assume.
 - Algorithme : ECDSA P-256 avec SHA-256, `crypto.subtle`.
 - Stockage : `dut.qrSigned = "<charge_b64url>.<signature_b64url>"` à côté de `dut.qrToken` (champ additif).
-- Rendu : `qr.service` dessine `oicdut://v2/<qrSigned>` si présent, sinon l'ancien format.
+- Rendu : `qr.service` dessine `oicdut://v2/<qrSigned>`. Un DUT validé sans `qrSigned` est une erreur de données, pas un cas à tolérer.
 - Clé : `signing-key.repository` ↔ LocalStorage `dut_signing_key_v1` : `{ kid, publicJwk, privateJwk, createdAt, demo: true }`.
 
 ### 3.3 Lecture
 
-`parseQr(raw)` → `{ format: 'v2' | 'legacy' | 'invalid', token, payload?, signature? }`. Pour `v2`, `token = payload.uid`. Tout ce qui ne commence par aucun des deux préfixes est `invalid`.
+`parseQr(raw)` → `{ format: 'v2' | 'invalid', token, payload?, signature? }`. Pour `v2`, `token = payload.uid`. Tout ce qui ne commence pas par `oicdut://v2/`, ou dont la charge ne se décode pas, est `invalid`.
 
 ## 4. Le pipeline de vérification
 
@@ -76,8 +76,8 @@ Chacun est une fonction `(ctx) => finding | null` (ou promesse), exportée pour 
 
 | Ordre | Vérificateur | Source | Résultat |
 |---|---|---|---|
-| 1 | `checkSignature` | clé publique | `v2` signature invalide → **block** « faux document » ; `legacy` → **warn** « ancien format, vérification en ligne obligatoire » ; crypto indisponible → **warn** « signature non vérifiable ». |
-| 2 | `checkValidity` | charge | `now < nbf` ou `now > exp` → **block** « hors période de validité ». Legacy : ignoré. |
+| 1 | `checkSignature` | clé publique | signature invalide → **block** « faux document » ; crypto indisponible → **warn** « signature non vérifiable ». |
+| 2 | `checkValidity` | charge | `now < nbf` ou `now > exp` → **block** « hors période de validité ». |
 | 3 | `checkStatus` | dépôt des DUT (en ligne seulement) | SUSPENDU → **block**, RETIRÉ → **block**, VALIDÉ → ok, introuvable → **block** « non reconnu ». Hors ligne → **info** « statut non consultable ». |
 | 4 | `checkRevocation` | liste locale (hors ligne seulement) | `uid` dans la liste → **block** ; âge > `crlWarnHours` (24) → **warn** ; âge > `crlMaxHours` (72) → **block** spécial `NON_OPPOSABLE`. |
 | 5 | `checkTravel` | journal des contrôles | dernier contrôle du même DUT : vitesse = distance / heures ; > `maxSpeedKmh` (90) → **block** « voyage impossible : vu à X il y a Y h, à Z km ». |
@@ -122,9 +122,9 @@ Distance : formule de Haversine sur les coordonnées du poste (ou de la géoloca
 ## 8. Ensemencement (additif, jamais destructif)
 
 - Génère la clé si absente.
-- Signe les DUT déjà VALIDÉS qui n'ont pas de `qrSigned`.
-- Ajoute le DUT canari si absent.
-- Ne réécrit rien d'autre.
+- Signe **tous** les DUT VALIDÉS, SUSPENDUS ou RETIRÉS de la démo (ils ont un numéro) et pose `qrSigned`. Les données ensemencées avant ce lot sont **régénérées** au prochain chargement (version d'ensemencement incrémentée) — autorisé explicitement : démo locale, aucune donnée réelle.
+- Ajoute le DUT canari.
+- La constante `QR_SCHEME` devient `oicdut://v2/` ; `extractToken` disparaît au profit de `parseQr`.
 
 ## 9. Erreurs et dégradations
 
@@ -147,7 +147,7 @@ Distance : formule de Haversine sur les coordonnées du poste (ou de la géoloca
 6. Voyage : Abidjan→Bouaké (~300 km) en 1 h → block ; en 6 h → ok ; sans position → info.
 7. Canari : block + action d'audit.
 8. Dérogation : motif absent → erreur explicite ; `AUTRE` sans note → erreur ; valide → enregistrée et auditée.
-9. Non-régression : un jeton legacy ensemencé reste reconnu en ligne.
+9. Ensemencement : tout DUT numéroté de la démo porte un `qrSigned` dont la signature se vérifie avec la clé ensemencée ; aucun QR au format `oicdut://verify/` ne subsiste dans les données.
 10. Garde-fou : `verifyScan` sans réseau et sans liste rend `INCONNU`, pas d'exception.
 
 ## 11. Hors périmètre
@@ -160,7 +160,7 @@ Validation par seuil, quatre yeux, plafonds, révocation par plage (lot 2). Jour
 |---|---|
 | `js/services/signing.service.js` (nouveau) | génération, chargement, signature, vérification |
 | `js/repositories/signing-key.repository.js` (nouveau) | clé en LocalStorage |
-| `js/services/qr.service.js` (modifié) | `parseQr`, `buildSignedUri`, mention « clé de démonstration » |
+| `js/services/qr.service.js` (modifié) | `parseQr`, `buildSignedUri`, suppression de `extractToken`, mention « clé de démonstration » |
 | `js/services/verification.service.js` (nouveau) | pipeline, six vérificateurs, repli, Haversine |
 | `js/services/revocation.service.js` + `js/repositories/revocations.repository.js` (nouveaux) | liste locale |
 | `js/repositories/control-settings.repository.js` (nouveau) | hors-ligne simulé, horloge, poste |
