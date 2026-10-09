@@ -3,7 +3,7 @@ import { escapeHtml, formatDateTime, formatNumber } from '../core/utils.js';
 import * as dashboardService from '../services/dashboard.service.js';
 import { animateCountUps, staggerIn } from '../core/motion.js?v=oic-blue';
 
-const PALETTE = ['#155a9c', '#5893cb', '#56b69b', '#e5b96e', '#de7895', '#abcce9', '#75a6c9', '#42658c'];
+const PALETTE = ['#0E56A4', '#F17D0C', '#0C8B41', '#3B7FC4', '#F59E0B', '#E11D2E', '#6FA0CE', '#0B3D6F'];
 const charts = [];
 
 function paletteShades(count) {
@@ -114,7 +114,7 @@ function lineChart(canvasId, labels, data, color) {
       plugins: { legend: { display: false } },
       scales: {
         x: { grid: { display: false }, ticks: { font: { family: 'Instrument Sans', size: 12, weight: '500' } } },
-        y: { grid: { color: '#e9ebf2' }, beginAtZero: true, ticks: { font: { family: 'Instrument Sans', size: 12, weight: '500' } } },
+        y: { grid: { color: '#E6EAF1' }, beginAtZero: true, ticks: { font: { family: 'Instrument Sans', size: 12, weight: '500' } } },
       },
     },
   });

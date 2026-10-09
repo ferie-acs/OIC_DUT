@@ -1,0 +1,145 @@
+/* Charte OIC — couche finale de cohérence visuelle.
+   Couleurs : uniquement les tokens de nexlink.css (bleu et orange du logo).
+   Rôle : boutons colorés, cartes et graphiques dans le bleu du logo, cartes mises en avant,
+   barre latérale, badges, tableaux. Aucune règle de comportement. */
+
+/* ===== Typographie et repères ===== */
+.overline{color:var(--navy-2)}
+h1,h2{color:var(--navy);letter-spacing:-.4px}
+.page-header .subtitle{color:var(--text-secondary)}
+
+/* ===== Boutons ===== */
+.btn{border-radius:var(--r-control);font-weight:650;letter-spacing:0;gap:8px;transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .12s ease}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:focus-visible{box-shadow:0 0 0 3px var(--accent-ring)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(241,125,12,.28)}
+.btn-primary:hover:not(:disabled){background:var(--accent-hover);border-color:var(--accent-hover);color:#fff;box-shadow:0 8px 20px rgba(241,125,12,.34)}
+.btn-navy{background:var(--navy-2);border-color:var(--navy-2);color:#fff;box-shadow:0 6px 16px rgba(14,86,164,.22)}
+.btn-navy:hover:not(:disabled){background:var(--navy);border-color:var(--navy);color:#fff}
+.btn-secondary{background:var(--surface);border-color:var(--border-strong);color:var(--navy)}
+.btn-secondary:hover:not(:disabled){border-color:var(--navy-2);background:var(--navy-soft);color:var(--navy)}
+.btn-ghost{color:var(--navy-2);background:transparent;border-color:transparent}
+.btn-ghost:hover:not(:disabled){background:var(--navy-soft);color:var(--navy)}
+.btn-success{background:var(--success);border-color:var(--success);color:#fff;box-shadow:0 6px 16px rgba(12,139,65,.22)}
+.btn-success:hover:not(:disabled){filter:brightness(.94);color:#fff}
+.btn-danger{background:var(--error);border-color:var(--error);color:#fff;box-shadow:0 6px 16px rgba(225,29,46,.2)}
+.btn-warning{background:var(--warning-soft);border-color:#F2CD8A;color:var(--warning)}
+.btn-warning:hover:not(:disabled){background:#FBE6B8;color:var(--warning)}
+.btn-block{width:100%}
+.icon-btn-ghost:hover{color:var(--navy-2);background:var(--navy-soft)}
+
+/* ===== Barre latérale et rail ===== */
+.sidebar{background:var(--surface)}
+.sidebar-section-label{color:var(--navy-label);font-weight:700}
+.nav-link{position:relative;border-radius:10px;color:var(--text-secondary)}
+.nav-link svg{color:var(--text-muted);transition:color .18s ease}
+.nav-link:hover{background:var(--surface-2);color:var(--navy)}
+.nav-link:hover svg{color:var(--navy-2)}
+.nav-link.active{background:var(--navy-soft);color:var(--navy);font-weight:650}
+.nav-link.active svg{color:var(--navy-2)}
+.nav-link.active::before{content:"";position:absolute;left:-6px;top:9px;bottom:9px;width:4px;border-radius:4px;background:var(--accent)}
+.rail-link:hover,.rail-link.active{background:var(--navy-soft);color:var(--navy-2)}
+.rail-link.active{box-shadow:inset 3px 0 0 var(--accent)}
+.sidebar-note{background:linear-gradient(140deg,var(--navy) 0%,var(--navy-2) 100%);border:0;color:#fff;border-radius:14px;box-shadow:0 10px 26px rgba(11,61,111,.22)}
+.sidebar-note svg{color:var(--accent)}
+.sidebar-note strong{color:#fff}
+.sidebar-note p{color:var(--navy-ink)}
+.sidebar-note .badge{background:rgba(255,255,255,.14);color:#fff}
+.avatar-round{background:var(--navy-2);color:#fff;font-weight:700}
+.sidebar-user strong{color:var(--navy)}
+
+/* ===== Barre haute ===== */
+.topbar{border-bottom:1px solid var(--border)}
+.role-chip{background:var(--navy-soft);color:var(--navy);font-weight:650;border-radius:999px}
+.header-search{border-radius:10px;background:var(--surface-2)}
+.header-search:focus-within{border-color:var(--navy-2);box-shadow:0 0 0 3px rgba(14,86,164,.14);background:var(--surface)}
+.breadcrumb a:hover{color:var(--navy-2)}
+
+/* ===== Cartes ===== */
+.card,.chart-card,.map-card,.kpi-card{border-radius:14px;border:1px solid var(--border);box-shadow:var(--sh-1)}
+.card-header h3{color:var(--navy)}
+.card-header a{color:var(--navy-2);font-weight:650}
+.kpi-card{position:relative;overflow:hidden}
+.kpi-card:hover{border-color:var(--navy-ink);box-shadow:var(--sh-2)}
+.kpi-icon{border-radius:9px}
+.kpi-value{font-size:clamp(22px,2vw,34px);line-height:1.15;overflow-wrap:anywhere;min-width:0;color:var(--navy)!important}
+.kpi-change.positive{background:var(--success-soft);color:var(--success)}
+.kpi-change.negative{background:var(--error-soft);color:var(--error)}
+.kpi-card .kpi-dots{color:var(--text-muted)!important}
+.kpi-chart-caption{background:var(--navy-soft);color:var(--navy)}
+.chart-area{fill:var(--navy-2);fill-opacity:.12}
+.chart-stroke,.trend-chart .chart-stroke{stroke:var(--navy-2)}
+.chart-point{stroke:var(--navy-2)}
+.chart-value{fill:var(--text-secondary)}
+.volume-col .bar{background:linear-gradient(0deg,var(--navy) 0%,var(--navy-3) 100%);border-radius:7px 7px 2px 2px}
+.corridor-fill{background:linear-gradient(90deg,var(--navy-2),var(--navy-3))}
+.legend-dot{background:var(--navy-2)}
+.tone-neutral{background:var(--navy-ink)}
+.priority-icon{background:var(--accent-soft);color:var(--accent-hover)}
+.priority-link:hover{color:var(--navy-2)}
+
+/* Cartes mises en avant : bleu du logo en aplat (comme la carte « Total Earning » de la référence). */
+.range-progress-card,.action-summary{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);color:#fff;border:0;border-radius:16px;padding:22px;box-shadow:0 14px 34px rgba(11,61,111,.24);position:relative;overflow:hidden}
+.range-progress-card::after,.action-summary::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}
+.range-progress-card .card-header h3,.action-summary h3,.range-progress-card .range-code,.range-progress-card .range-meta strong{color:#fff}
+.range-progress-card .card-header a{color:#fff;opacity:.85;text-decoration:underline;text-underline-offset:3px}
+.range-progress-card .card-header a:hover{opacity:1}
+.range-progress-card .range-meta,.action-summary p,.action-summary .overline{color:var(--navy-ink)}
+.action-summary .overline{color:#FFD8B0}
+.range-progress-card .badge{background:rgba(255,255,255,.16);color:#fff}
+.range-progress-card .badge .badge-dot{background:var(--accent)}
+.range-progress-card .progress-track .seg{background:rgba(255,255,255,.22)}
+.range-progress-card .progress-track .seg.filled{background:var(--accent)}
+.range-progress-card .text-muted{color:var(--navy-ink)!important}
+.action-summary .btn-primary,.action-summary .btn{background:#fff;border-color:#fff;color:var(--navy);box-shadow:none}
+.action-summary .btn:hover{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--accent-hover)}
+
+/* ===== Badges et statuts ===== */
+.badge{border-radius:6px;font-weight:650;font-size:12px;letter-spacing:0;text-transform:none}
+.badge-navy{background:var(--navy-soft);color:var(--navy)}
+.badge-accent{background:var(--accent-soft);color:var(--accent-hover)}
+.badge-warning{color:var(--warning);background:var(--warning-soft)}
+.status-TERMINE{color:var(--navy-2);background:var(--navy-soft)}
+.status-SUSPENDU{color:var(--warning);background:var(--warning-soft)}
+.status-RETIRE{color:var(--error);background:var(--error-soft)}
+.status-REJETE{color:var(--error);background:var(--error-soft)}
+
+/* ===== Tableaux ===== */
+.data-table th{background:var(--surface-2);color:var(--text-secondary);border-bottom:1px solid var(--border)}
+.data-table th:first-child{border-radius:10px 0 0 10px}.data-table th:last-child{border-radius:0 10px 10px 0}
+.data-table td{border-bottom:1px solid var(--border-hairline)}
+.data-table tr:hover td{background:var(--navy-soft)}
+.data-table a{color:var(--navy-2);font-weight:650}
+
+/* ===== Champs ===== */
+.input:focus,.select:focus,.textarea:focus,textarea.textarea:focus{border-color:var(--navy-2);box-shadow:0 0 0 3px rgba(14,86,164,.14)}
+.field label{color:var(--navy)}
+
+/* ===== Progression et jalons ===== */
+.progress-track .seg.filled{background:var(--navy-2)}
+.progress-fill,.progress-bar-fill{background:linear-gradient(90deg,var(--navy-2),var(--navy-3))}
+
+/* ===== Connexion ===== */
+.auth-blue{background:linear-gradient(180deg,#EEF4FB 0%,#F7F9FC 100%)}
+.auth-blue .btn-primary{background:var(--accent);border-color:var(--accent)}
+.auth-blue .btn-primary:hover{background:var(--accent-hover)}
+.auth-blue .input:focus{border-color:var(--navy-2);box-shadow:0 0 0 3px rgba(14,86,164,.14)}
+.auth-visual-heading .overline{color:var(--accent-hover)}
+.auth-demo-accounts summary:hover{border-color:var(--navy-2);color:var(--navy)}
+
+/* ===== Écran de contrôle ===== */
+.control-result-badge{border-radius:16px}
+.control-result-badge.valid{box-shadow:0 10px 30px rgba(12,139,65,.16)}
+.control-result-badge.withdrawn{box-shadow:0 10px 30px rgba(225,29,46,.14)}
+.scan-box{border-radius:16px;border:2px dashed var(--navy-ink);background:var(--navy-soft);color:var(--navy-2)}
+
+/* ===== Pied de page ===== */
+.app-footer{color:var(--text-muted)}
+
+/* ===== Thème sombre : mêmes rôles, mêmes tokens ===== */
+:root[data-theme="dark"] .btn-primary{color:#1A1208}
+:root[data-theme="dark"] .range-progress-card,:root[data-theme="dark"] .action-summary,:root[data-theme="dark"] .sidebar-note{background:linear-gradient(135deg,#1E3550,#2E5A8F)}
+:root[data-theme="dark"] .kpi-value{color:var(--text)!important}
+:root[data-theme="dark"] h1,:root[data-theme="dark"] h2,:root[data-theme="dark"] .card-header h3{color:var(--text)}
+
+@media(prefers-reduced-motion:reduce){.btn{transition:none}}
