@@ -26,3 +26,16 @@ setPersona({...user,partnerId:'p2'});assert.equal(demoRows().length,0);assert.th
 console.log('Exemples : ajout unique, isolation des DUT, persistance et périmètres validés.');
 
 function setPersona(user){writeObject('dut_users',[user]);writeObject('dut_current_user',user);}
+
+// --- Carte des trajets : villes et tracé ---
+const { findCity, routePoints } = await import('../js/data/cities.js');
+assert.equal(findCity('Yamoussoukro').lat.toFixed(1), '6.8');
+assert.ok(findCity('san pedro'), 'accents et tirets ignorés');
+assert.ok(findCity('BOUAKÉ'), 'casse ignorée');
+assert.equal(findCity('Ville inconnue'), null);
+const pts = routePoints(findCity('Abidjan'), findCity('Korhogo'), 12);
+assert.equal(pts.length, 13, 'n segments = n+1 points');
+assert.deepEqual(pts[0], [findCity('Abidjan').lat, findCity('Abidjan').lng]);
+assert.deepEqual(pts[12], [findCity('Korhogo').lat, findCity('Korhogo').lng]);
+assert.ok(pts[6][1] !== (findCity('Abidjan').lng + findCity('Korhogo').lng) / 2, 'le tracé est courbé, pas une droite');
+console.log('Carte des trajets : villes retrouvées sans accents, tracé courbé de n+1 points.');

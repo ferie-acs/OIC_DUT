@@ -300,6 +300,33 @@ h1,h2{color:var(--navy)}
 .plan-directory-item strong{color:var(--navy)}
 .plan-empty{border:1px dashed var(--border-strong);border-radius:12px;background:var(--surface-2)}
 
+/* ===== Carte des trajets (planning) ===== */
+.plan-map-card .plan-toolbar{align-items:center}
+.plan-map-hint{font-size:11.5px;color:var(--text-muted);background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:5px 10px;white-space:nowrap}
+.plan-map-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;margin-top:18px}
+.plan-map{height:420px;border-radius:14px;border:1px solid var(--border);overflow:hidden;background:#EAF1F7;min-width:0;z-index:0}
+.plan-map .leaflet-control-zoom{border:0;box-shadow:0 6px 16px rgba(11,61,111,.14);border-radius:10px;overflow:hidden}
+.plan-map .leaflet-control-zoom a{color:var(--navy);background:var(--surface);border-color:var(--border);width:34px;height:34px;line-height:34px;font-weight:600}
+.plan-map .leaflet-tile-pane{filter:saturate(.75) brightness(1.03)}
+.plan-map-offline{height:100%;display:grid;place-items:center;color:var(--text-muted);font-size:13px;padding:24px;text-align:center}
+.plan-truck{width:30px;height:30px;border-radius:50%;background:var(--accent);display:grid;place-items:center;box-shadow:0 6px 16px rgba(241,125,12,.45),0 0 0 3px #fff}
+.plan-map-tip{font-family:var(--font);font-size:12px;font-weight:600;color:var(--navy);border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 16px rgba(11,61,111,.12)}
+.plan-map-list{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow:auto;padding-right:2px;min-width:0}
+.plan-map-item{display:flex;align-items:center;gap:10px;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--text);font:inherit;transition:border-color .15s,background .15s}
+.plan-map-item .plan-dot{margin:0;flex:none}
+.plan-map-item span{display:grid;min-width:0}
+.plan-map-item strong{font-size:13px;font-weight:600;color:var(--navy)}
+.plan-map-item small{font-size:11.5px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plan-map-item:hover{border-color:var(--navy-ink);background:var(--surface-2)}
+.plan-map-item[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.plan-map-empty{font-size:12.5px;color:var(--text-muted);padding:14px;border:1px dashed var(--border-strong);border-radius:12px;text-align:center}
+.plan-label[data-trip]{cursor:pointer}
+.plan-label[data-trip]:hover{background:var(--navy-soft)}
+.plan-label[data-trip]:focus-visible{box-shadow:inset 0 0 0 3px var(--accent-ring)}
+.plan-row.is-selected .plan-label{background:var(--accent-soft)}
+@media(max-width:1000px){.plan-map-layout{grid-template-columns:1fr}.plan-map{height:340px}.plan-map-list{max-height:220px;flex-direction:row;flex-wrap:wrap}.plan-map-item{flex:1 1 220px}}
+@media(max-width:600px){.plan-map{height:280px}}
+
 /* ===== Fenêtres modales : panneau gris doux, blocs blancs en relief, boutons ronds ===== */
 .modal-overlay{background:rgba(11,61,111,.32);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .modal-card{background:var(--surface-2);border:1px solid rgba(255,255,255,.8);border-radius:26px;padding:26px;box-shadow:0 30px 80px rgba(11,61,111,.28),0 2px 0 rgba(255,255,255,.6) inset;animation:modal-pop .22s cubic-bezier(.2,.9,.3,1.1)}
