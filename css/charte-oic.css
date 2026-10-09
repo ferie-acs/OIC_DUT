@@ -300,6 +300,34 @@ h1,h2{color:var(--navy)}
 .plan-directory-item strong{color:var(--navy)}
 .plan-empty{border:1px dashed var(--border-strong);border-radius:12px;background:var(--surface-2)}
 
+/* ===== Planning : en-tête, note, recherche multicritère ===== */
+.plan-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.plan-demo-line{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);margin:-8px 0 20px}
+.plan-demo-line svg{color:var(--navy-2);flex:none}
+.plan-finder{display:grid;grid-template-columns:minmax(260px,1.4fr) auto;gap:10px 14px;align-items:center;margin-top:18px;padding:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px}
+.plan-finder-search{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border-strong);border-radius:11px;padding:0 12px;min-height:44px;color:var(--text-muted);grid-column:1}
+.plan-finder-search:focus-within{border-color:var(--navy-2);box-shadow:0 0 0 3px rgba(14,86,164,.14)}
+.plan-finder-search input{border:0;background:none;outline:none;flex:1;min-width:0;font:inherit;font-size:13.5px;color:var(--text)}
+.plan-finder-search input::-webkit-search-cancel-button{cursor:pointer}
+.plan-finder-chips{display:flex;gap:6px;flex-wrap:wrap;grid-column:2}
+.plan-chip{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:12.5px;font-weight:600;color:var(--text-secondary);background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;padding:8px 12px;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+.plan-chip .plan-dot{margin:0}
+.plan-chip:hover{border-color:var(--navy-ink);color:var(--navy)}
+.plan-chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.plan-finder-field{display:grid;gap:4px;font-size:11.5px;font-weight:600;color:var(--text-secondary);min-width:0}
+.plan-finder-field .select{min-height:40px;background:var(--surface)}
+.plan-finder-foot{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--text-secondary)}
+.plan-finder-count strong{color:var(--navy)}
+.plan-finder>.plan-finder-field{grid-column:auto}
+@media(min-width:1001px){.plan-finder{grid-template-columns:minmax(260px,1.4fr) repeat(3,minmax(150px,1fr))}.plan-finder-search{grid-column:1}.plan-finder-chips{grid-column:2/-1}}
+.plan-legend{font-size:12px;color:var(--text-secondary)}
+.plan-when{font-size:12px;color:var(--navy-2);font-variant-numeric:tabular-nums}
+.plan-when b{font-weight:600}
+.plan-map-item .plan-map-when b{font-weight:600}
+.plan-grid-head,.plan-row{grid-template-columns:300px 1fr}
+.plan-today-track{left:300px}
+.plan-grid{min-width:900px}
+
 /* ===== Carte des trajets (planning) ===== */
 .plan-map-card .plan-toolbar{align-items:center}
 .plan-map-hint{font-size:11.5px;color:var(--text-muted);background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:5px 10px;white-space:nowrap}

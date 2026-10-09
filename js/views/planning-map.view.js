@@ -2,6 +2,7 @@ import { findCity, routePoints } from '../data/cities.js';
 import { escapeHtml as esc } from '../core/utils.js';
 
 const CI_CENTER = [7.54, -5.55];
+const durationOf = (a, b) => { const h = Math.round((Date.parse(b) - Date.parse(a)) / 36e5); if (!Number.isFinite(h) || h <= 0) return ''; const d = Math.floor(h / 24), r = h % 24; return d ? (r ? `${d} j ${r} h` : `${d} j`) : `${h} h`; };
 const when = (iso) => iso ? new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
 const TRUCK_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6" fill="#fff"/><circle cx="17" cy="18" r="1.6" fill="#fff"/></svg>';
 const COLORS = { blue: '#0E56A4', green: '#0C8B41', gray: '#8A93A0', orange: '#F17D0C' };
@@ -27,7 +28,7 @@ export function mountTripMap(container, rows, { colorOf, selectedId = null, onSe
   listEl.innerHTML = trips.length ? trips.map((t) => `
     <button type="button" class="plan-map-item" data-trip="${esc(t.id)}" aria-pressed="false">
       <i class="plan-dot ${t.colorName === 'blue' ? '' : t.colorName}"></i>
-      <span><strong>${esc(t.row.dut.general?.immatriculation || 'Camion à préciser')}</strong><small>${esc(t.from.name)} → ${esc(t.to.name)}</small><small class="plan-map-when">${esc(when(t.row.start))} → ${esc(when(t.row.end))}</small></span>
+      <span><strong>${esc(t.row.dut.general?.immatriculation || 'Camion à préciser')}</strong><small>${esc(t.from.name)} → ${esc(t.to.name)}</small><small class="plan-map-when">${esc(when(t.row.start))} → ${esc(when(t.row.end))}${durationOf(t.row.start, t.row.end) ? ` · <b>${esc(durationOf(t.row.start, t.row.end))}</b>` : ''}</small></span>
     </button>`).join('') : '<p class="plan-map-empty">Aucun trajet avec deux villes connues sur cette période.</p>';
 
   if (!window.L || !mapEl) {

@@ -1,6 +1,6 @@
 import { syncAntennaDirectory } from './services/antenna-directory.service.js';
 import * as adminView from './views/admin.view.js';
-import * as planningView from './views/planning.view.js?v=carte2';
+import * as planningView from './views/planning.view.js?v=finder';
 import * as actionCenterView from './views/action-center.view.js';
 import { decorateKpis } from './views/kpi-trends.view.js';
 import { registerRoute, startRouter, getCurrentPath, setNotFoundHandler, navigate } from './core/router.js';
