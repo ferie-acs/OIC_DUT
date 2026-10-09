@@ -1,6 +1,17 @@
 import { icon } from '../core/icons.js';
 import { escapeHtml } from '../core/utils.js';
 import { listAntennas } from '../services/directory.service.js';
+import { haversineKm } from '../services/verification.service.js';
+
+/** Zone géographique indicative d'après la position (Sud côtier, Nord, Ouest, Est, Centre). */
+export function zoneOf({ lat, lng }) {
+  if (lat < 6.2) return 'Sud';
+  if (lat > 8.6) return 'Nord';
+  if (lng < -6.3) return 'Ouest';
+  if (lng > -3.9) return 'Est';
+  return 'Centre';
+}
+const ZONES = ['Toutes', 'Sud', 'Centre', 'Nord', 'Ouest', 'Est'];
 
 let mapInstance = null;
 
@@ -26,6 +37,11 @@ export function render(container) {
       </section>
       <section class="card ant-list-card" aria-label="Liste des antennes">
         <label class="ant-search">${icon('search', { size: 16 })}<input type="search" id="ant-query" placeholder="Rechercher une antenne ou une ville…" autocomplete="off"></label>
+        <div class="ant-filters">
+          <div class="plan-seg ant-zones" role="group" aria-label="Zone">${ZONES.map((z) => `<button type="button" class="plan-seg-btn" data-zone="${z}" aria-pressed="${z === 'Toutes'}">${z}</button>`).join('')}</div>
+          <button type="button" class="ant-near" id="ant-near" aria-pressed="false">${icon('target', { size: 14 })} Près de moi</button>
+        </div>
+        <div class="ant-count" id="ant-count"></div>
         <div class="ant-list" id="ant-list" role="list"></div>
       </section>
     </div>
@@ -33,22 +49,43 @@ export function render(container) {
 
   const listEl = container.querySelector('#ant-list');
   const isHq = (a) => /SIEGE|SIÈGE/i.test(a.name);
-  function renderList(query = '') {
-    const q = query.trim().toLowerCase();
-    const shown = antennas.filter((a) => !q || `${a.name} ${a.city} ${a.phone}`.toLowerCase().includes(q));
+  const filters = { query: '', zone: 'Toutes', near: null };
+  const km = (a) => (filters.near ? haversineKm(filters.near, a) : null);
+  function renderList() {
+    const q = filters.query.trim().toLowerCase();
+    let shown = antennas.filter((a) => (!q || `${a.name} ${a.city} ${a.phone}`.toLowerCase().includes(q)) && (filters.zone === 'Toutes' || zoneOf(a) === filters.zone));
+    if (filters.near) shown = [...shown].sort((a, b) => km(a) - km(b));
+    container.querySelector('#ant-count').textContent = `${shown.length} antenne${shown.length > 1 ? 's' : ''}${filters.zone !== 'Toutes' ? ` · zone ${filters.zone}` : ''}${filters.near ? ' · de la plus proche à la plus lointaine' : ''}`;
     listEl.innerHTML = shown.length ? shown.map((a) => `
       <button type="button" class="ant-item ${isHq(a) ? 'is-hq' : ''}" data-id="${a.id}" role="listitem" aria-pressed="false">
         <span class="ant-pin">${icon('pin', { size: 15 })}</span>
         <span class="ant-body">
           <strong>${escapeHtml(a.name)}</strong>
-          <small>${escapeHtml(a.city)}${isHq(a) ? ' · Siège' : ''}</small>
+          <small>${escapeHtml(a.city)}${isHq(a) ? ' · Siège' : ''} · ${zoneOf(a)}${filters.near ? ` · <b>${km(a).toFixed(0)} km</b>` : ''}</small>
           <span class="ant-meta"><span>${icon('phone', { size: 12 })} ${escapeHtml(a.phone)}</span>${a.hours && a.hours !== 'Non renseignés' ? `<span>${icon('clock', { size: 12 })} ${escapeHtml(a.hours)}</span>` : ''}</span>
         </span>
         <a class="ant-zone" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${a.lat}&mlon=${a.lng}#map=15/${a.lat}/${a.lng}" title="Ouvrir la zone dans OpenStreetMap">${icon('map', { size: 14 })}</a>
       </button>`).join('') : '<p class="ant-empty">Aucune antenne ne correspond.</p>';
   }
   renderList();
-  container.querySelector('#ant-query').addEventListener('input', (e) => { renderList(e.target.value); if (selected) highlight(selected); });
+  container.querySelector('#ant-query').addEventListener('input', (e) => { filters.query = e.target.value; renderList(); if (selected) highlight(selected); });
+  container.querySelectorAll('[data-zone]').forEach((b) => b.addEventListener('click', () => {
+    filters.zone = b.dataset.zone;
+    container.querySelectorAll('[data-zone]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    renderList(); if (selected) highlight(selected);
+    if (mapInstance) { const inZone = antennas.filter((a) => filters.zone === 'Toutes' || zoneOf(a) === filters.zone); if (inZone.length) mapInstance.flyToBounds(inZone.map((a) => [a.lat, a.lng]), { padding: [28, 28], maxZoom: 9, duration: 0.8 }); }
+  }));
+  const nearBtn = container.querySelector('#ant-near');
+  nearBtn.addEventListener('click', () => {
+    if (filters.near) { filters.near = null; nearBtn.setAttribute('aria-pressed', 'false'); renderList(); return; }
+    if (!navigator.geolocation) { nearBtn.textContent = 'Position indisponible'; return; }
+    nearBtn.disabled = true;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { filters.near = { lat: pos.coords.latitude, lng: pos.coords.longitude }; nearBtn.disabled = false; nearBtn.setAttribute('aria-pressed', 'true'); renderList(); if (mapInstance) { mapInstance.flyTo([filters.near.lat, filters.near.lng], 8, { duration: 0.8 }); window.L.circleMarker([filters.near.lat, filters.near.lng], { radius: 8, color: '#fff', weight: 2, fillColor: '#0C8B41', fillOpacity: 1 }).bindTooltip('Vous êtes ici', { direction: 'top' }).addTo(mapInstance); } },
+      () => { nearBtn.disabled = false; nearBtn.setAttribute('aria-pressed', 'false'); nearBtn.title = 'Position refusée'; },
+      { timeout: 8000 },
+    );
+  });
 
   if (!window.L) {
     container.querySelector('#antennas-map').innerHTML = '<p class="plan-map-offline">Carte indisponible (fond de carte non chargé).</p>';
