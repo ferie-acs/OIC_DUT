@@ -8,7 +8,7 @@ import { mountInsights } from './views/insights.view.js?v=oic-blue';
 import { icon } from './core/icons.js';
 import { getCurrentUser } from './core/auth.js';
 import { renderAppShell, renderLoginShell, renderControlShell } from './core/layout.js?v=planning';
-import { isSeeded, seedDemoData } from './seed.js';
+import { isSeeded, seedDemoData, ensureSignedDemoData } from './seed.js';
 
 import * as loginView from './views/login.view.js?v=oic-blue';
 import * as partnerDashboardView from './views/partner-dashboard.view.js?v=oic-blue';
@@ -25,7 +25,12 @@ import * as oicDashboardView from './views/oic-dashboard.view.js?v=oic-blue';
 import * as transporteurDashboardView from './views/transporteur-dashboard.view.js?v=oic-blue';
 import * as decouvrirView from './views/decouvrir.view.js';
 
-if (!isSeeded()) seedDemoData();
+// Une démo ensemencée avant ce lot est régénérée (données locales uniquement).
+if (!isSeeded()) {
+  Object.keys(localStorage).filter((k) => k.startsWith('dut_')).forEach((k) => localStorage.removeItem(k));
+  seedDemoData();
+}
+await ensureSignedDemoData();
 syncAntennaDirectory();
 
 function withShell(view, breadcrumb) {

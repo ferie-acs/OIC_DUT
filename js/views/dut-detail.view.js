@@ -138,9 +138,9 @@ function renderActions(container, dut, user) {
     confirmAction({
       title: 'Valider ce DUT ?', text: 'Un numéro officiel sera attribué et un QR code sécurisé sera généré. Cette action est irréversible.',
       confirmLabel: 'Valider', icon: 'checkCircle',
-      onConfirm: () => {
+      onConfirm: async () => {
         try {
-          const updated = dutService.validate(dut.id);
+          const updated = await dutService.validate(dut.id);
           toast({ type: 'success', title: 'DUT validé', desc: `Numéro attribué : ${updated.dutNumber}` });
           paint(container, updated);
         } catch (err) { toast({ type: 'error', title: 'Validation impossible', desc: err.message }); }

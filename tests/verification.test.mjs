@@ -268,3 +268,47 @@ const unknown = await C.verifyScan('n-importe-quoi', {});
 assert.equal(unknown.verdict.level, 'INCONNU');
 
 console.log('Contrôle : verifyScan asynchrone enrichi, horodatage réel sous horloge décalée, dérogation validée et auditée.');
+
+// ---------------------------------------------------------------------------
+// Tâche 6 — signature à la validation, ensemencement régénéré, canari
+// ---------------------------------------------------------------------------
+
+const { buildQrPayload } = await import('../js/services/dut.service.js');
+const { seedDemoData, ensureSignedDemoData, isSeeded } = await import('../js/seed.js');
+const { getAllDuts } = await import('../js/repositories/dut.repository.js');
+
+// Charge : jamais de donnée commerciale, fenêtre = validation + 7 jours.
+const pl = buildQrPayload(
+  { qrToken: 'u-9', dutNumber: 'DUT-CI-2026-000999', general: { immatriculation: 'CI-9999-ZZ', transporterName: 'SECRET' }, marchandises: [{ nature: 'SECRET' }] },
+  otherKey, { nbf: '2026-10-09' },
+);
+assert.deepEqual(Object.keys(pl).sort(), ['exp', 'kid', 'nbf', 'num', 'plq', 'uid', 'v']);
+assert.equal(pl.exp, '2026-10-16');
+assert.ok(!JSON.stringify(pl).includes('SECRET'), 'aucune donnée commerciale dans la charge');
+
+// Ensemencement : version, canari, tout DUT numéroté signé et vérifiable.
+store.clear();
+assert.equal(isSeeded(), false);
+seedDemoData();
+await ensureSignedDemoData();
+assert.equal(isSeeded(), true);
+const numbered = getAllDuts().filter((d) => d.dutNumber);
+assert.ok(numbered.length >= 10);
+for (const d of numbered) {
+  assert.ok(d.qrSigned, `${d.dutNumber} doit porter un QR signé`);
+  const check = await verifySignedString(d.qrSigned, loadKey());
+  assert.equal(check.ok, true, `${d.dutNumber} : signature vérifiable avec la clé ensemencée`);
+  assert.equal(check.payload.uid, d.qrToken);
+}
+assert.ok(!JSON.stringify(getAllDuts()).includes('oicdut://verify/'), 'aucun ancien format dans les données');
+const canaries = getAllDuts().filter((d) => d.canary === true);
+assert.equal(canaries.length, 1, 'exactement un DUT piège');
+assert.equal(canaries[0].status, 'VALIDE', 'le piège a l’air vrai');
+assert.ok(canaries[0].qrSigned);
+
+// Relancer ensureSignedDemoData() est sans effet (idempotent).
+const snapshot = JSON.stringify(getAllDuts());
+await ensureSignedDemoData();
+assert.equal(JSON.stringify(getAllDuts()), snapshot);
+
+console.log('Ensemencement : charge sans donnée commerciale, tout DUT numéroté signé, un canari, idempotent.');

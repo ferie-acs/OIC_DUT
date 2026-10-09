@@ -1,8 +1,9 @@
 import { mergeAntennaDirectory } from './data/antennas.js';
-import { STORAGE_KEYS, ROLES, DUT_STATUS, AUDIT_ACTIONS, AUDIT_LABELS, DEMO_PASSWORD } from './core/constants.js';
+import { STORAGE_KEYS, ROLES, DUT_STATUS, AUDIT_ACTIONS, AUDIT_LABELS, DEMO_PASSWORD, DEMO_SEED_VERSION } from './core/constants.js';
 import { uuid, nowIso } from './core/utils.js';
-import { writeCollection, writeObject, readObject } from './core/storage.js';
-import { blankDut } from './services/dut.service.js';
+import { writeCollection, writeObject, readObject, readCollection } from './core/storage.js';
+import { blankDut, buildQrPayload } from './services/dut.service.js';
+import { ensureDemoKey, signPayload } from './services/signing.service.js';
 
 function daysAgoIso(days, hour = 9) {
   const d = new Date();
@@ -11,8 +12,9 @@ function daysAgoIso(days, hour = 9) {
   return d.toISOString();
 }
 
+/** Ensemencé ET à la version courante : une version antérieure est régénérée. */
 export function isSeeded() {
-  return !!readObject(STORAGE_KEYS.DEMO_INITIALIZED, false);
+  return readObject(STORAGE_KEYS.DEMO_SEED_VERSION, 0) >= DEMO_SEED_VERSION;
 }
 
 export function seedDemoData() {
@@ -243,11 +245,26 @@ export function seedDemoData() {
   writeCollection(STORAGE_KEYS.MERCHANDISE_TYPES, merchandiseTypes);
   writeCollection(STORAGE_KEYS.PACKAGING_TYPES, packagingTypes);
   writeCollection(STORAGE_KEYS.OPERATIONS, operations);
+  // DUT piège : vrai en apparence, ne doit jamais circuler. Le scanner alerte le siège.
+  const canary = blankDut({ id: 'SEED', name: 'Siège OIC', partnerId: partnerStfa.id, partnerName: partnerStfa.name, antennaId: antennaAbidjan.id, antennaName: antennaAbidjan.name });
+  canary.status = DUT_STATUS.VALIDE;
+  canary.canary = true;
+  canary.dutNumber = 'DUT-CI-2026-000777';
+  canary.qrToken = uuid();
+  canary.validatedAt = daysAgoIso(4);
+  canary.validatedBy = 'Siège OIC';
+  canary.general.immatriculation = 'CI-0777-CN';
+  canary.general.transporterName = 'TRANSPORT ÉCHANTILLON';
+  canary.trajet.chargement.ville = 'Abidjan';
+  canary.trajet.dechargement.ville = 'Korhogo';
+  duts.push(canary);
+
   writeCollection(STORAGE_KEYS.DUT_LIST, duts);
   writeCollection(STORAGE_KEYS.AUDIT_LOGS, auditLogs);
   writeCollection(STORAGE_KEYS.CONTROL_LOGS, controlLogs);
   writeCollection(STORAGE_KEYS.DOCUMENTS, []);
   writeObject(STORAGE_KEYS.DEMO_INITIALIZED, true);
+  writeObject(STORAGE_KEYS.DEMO_SEED_VERSION, DEMO_SEED_VERSION);
 }
 
 function mkAudit(action, dut, userLabel, role, date, newValue = null, note = null) {
@@ -270,3 +287,20 @@ export const DEMO_ACCOUNTS = [
   { email: 'controle.agent@demo.oic.ci', label: 'Agent Contrôle', password: DEMO_PASSWORD },
   { email: 'transporteur@demo.oic.ci', label: 'Transporteur', password: DEMO_PASSWORD },
 ];
+
+/**
+ * Signe tout DUT numéroté qui ne l'est pas encore, avec la clé de démonstration
+ * (créée si absente). Idempotent : sans effet si tout est déjà signé.
+ */
+export async function ensureSignedDemoData() {
+  const key = await ensureDemoKey();
+  const duts = readCollection(STORAGE_KEYS.DUT_LIST);
+  let changed = false;
+  for (const dut of duts) {
+    if (!dut.dutNumber || !dut.qrToken || dut.qrSigned) continue;
+    const nbf = (dut.validatedAt || nowIso()).slice(0, 10);
+    dut.qrSigned = await signPayload(buildQrPayload(dut, key, { nbf }), key);
+    changed = true;
+  }
+  if (changed) writeCollection(STORAGE_KEYS.DUT_LIST, duts);
+}

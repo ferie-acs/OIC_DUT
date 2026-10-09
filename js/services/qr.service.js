@@ -1,10 +1,16 @@
 import { QR_SCHEME } from '../core/constants.js';
+import { uuid } from '../core/utils.js';
 import { fromBase64Url } from './signing.service.js';
 
 /**
  * Le QR porte une charge SIGNÉE : numéro, plaque, fenêtre de validité, jeton
  * opaque. Jamais de donnée commerciale. Un seul format est accepté.
  */
+
+/** Le jeton opaque embarqué dans la charge : aléatoire, non séquentiel. */
+export function generateToken() {
+  return uuid();
+}
 
 export function buildSignedUri(signed) {
   return `${QR_SCHEME}${signed}`;

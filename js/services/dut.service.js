@@ -1,11 +1,12 @@
 import { uuid, nowIso } from '../core/utils.js';
-import { DUT_STATUS, AUDIT_ACTIONS } from '../core/constants.js';
+import { DUT_STATUS, AUDIT_ACTIONS, CONTROL_POLICY } from '../core/constants.js';
 import { getCurrentUser } from '../core/auth.js';
 import {
   getAllDuts, findDutById, addDut, updateDut,
 } from '../repositories/dut.repository.js';
 import { findActiveOperationForPartner, consumeNextNumber, findOperationById } from '../repositories/operations.repository.js';
 import { generateToken } from './qr.service.js';
+import { loadKey, signPayload } from './signing.service.js';
 import * as auditService from './audit.service.js';
 
 export function blankDut(user) {
@@ -183,26 +184,55 @@ export function reopenForCorrection(id) {
   return findDutById(id);
 }
 
-export function validate(id) {
+function addDays(isoDate, days) {
+  const d = new Date(`${isoDate}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** La charge du QR : identité minimale du DUT, jamais de donnée commerciale. */
+export function buildQrPayload(dut, key, { nbf }) {
+  return {
+    v: 2,
+    kid: key.kid,
+    uid: dut.qrToken,
+    num: dut.dutNumber,
+    plq: dut.general?.immatriculation || '',
+    nbf,
+    exp: addDays(nbf, CONTROL_POLICY.validityDays),
+  };
+}
+
+/** Validation : attribue le numéro ET signe la charge du QR, au même instant. */
+export async function validate(id) {
   const dut = findDutById(id);
   if (!dut) throw new Error('DUT introuvable.');
   if (dut.status !== DUT_STATUS.TERMINE) throw new Error('Le DUT doit être terminé avant validation.');
   const operation = dut.operationId ? findOperationById(dut.operationId) : findActiveOperationForPartner(dut.partnerId);
   if (!operation) throw new Error('Impossible de valider : aucune plage de numéros active pour ce partenaire.');
   if (operation.used >= operation.quantity) throw new Error('Impossible de valider : aucun numéro DUT disponible.');
+  const key = loadKey();
+  if (!key) throw new Error('Clé de signature absente : rechargez la démonstration.');
 
   const dutNumber = consumeNextNumber(operation.id);
   const qrToken = generateToken();
+  const validatedAt = nowIso();
+  const qrSigned = await signPayload(
+    buildQrPayload({ ...dut, qrToken, dutNumber }, key, { nbf: validatedAt.slice(0, 10) }),
+    key,
+  );
   const user = getCurrentUser();
   updateDut(id, {
     status: DUT_STATUS.VALIDE,
     dutNumber,
     qrToken,
+    qrSigned,
     operationId: operation.id,
-    validatedAt: nowIso(),
+    validatedAt,
     validatedBy: user?.name || null,
   });
   auditService.log(AUDIT_ACTIONS.DUT_VALIDATED, { dutId: id, dutNumber, newValue: dutNumber });
+  auditService.log(AUDIT_ACTIONS.DUT_SIGNED, { dutId: id, dutNumber, note: `Clé ${key.kid}` });
   return findDutById(id);
 }
 
