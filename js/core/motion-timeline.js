@@ -86,7 +86,11 @@ export function buildChapter(chapter, { doc, root, timings = {} }) {
     }
 
     if (timeline) {
-      timeline.add(container, { opacity: [0, 1], duration: 300 }, offset);
+      // Fondu CROISÉ : l'entrée commence 300 ms avant la fin de la scène
+      // précédente. Sans ce recouvrement, le fondu sortant et le fondu
+      // entrant se succédaient sans se toucher et laissaient un creux vide
+      // à chaque transition — vingt-six fois sur le film.
+      timeline.add(container, { opacity: [0, 1], duration: 300 }, Math.max(0, offset - 300));
       timeline.add(container, { opacity: [1, 0], duration: 300 }, offset + duration - 300);
     }
     offset += duration;

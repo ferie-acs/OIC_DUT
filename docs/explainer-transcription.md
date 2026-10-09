@@ -8,7 +8,7 @@ Chaque jour, des marchandises quittent le port d’Abidjan pour rejoindre l’in
 
 Chacun de ces transports doit être accompagné d’un document. Ce document, c’est le Document Unique de Transport : le DUT.
 
-Mais un document sur papier ne porte pas la preuve de sa propre authenticité. Sans référence unique et vérifiable, rien ne permet de trancher au bord de la route entre l’original et une copie. Et personne, au niveau national, ne voit circuler l’ensemble.
+Un document sur papier ne porte pas la preuve de sa propre authenticité. Au bord de la route, rien ne permet de trancher entre l’original et une copie.
 
 Trois garanties sont donc attendues : qu’un DUT soit authentifiable, que son parcours soit tracé, et que l’ensemble devienne une statistique nationale exploitable.
 
@@ -20,7 +20,7 @@ Quand le dossier est complet, il le soumet.
 
 L’antenne OIC prend le relais. L’agent vérifie les pièces et la cohérence du dossier. S’il manque quelque chose, il renvoie le dossier avec un motif de rejet obligatoire — le partenaire corrige, puis soumet à nouveau.
 
-À la validation, et seulement à ce moment-là, le dossier reçoit son numéro officiel, pris sur une plage allouée à l’antenne. Précisons-le franchement : dans le dispositif actuel de l’OIC, cette vérification par l’antenne n’existe pas — le partenaire consomme directement un numéro de son stock. Ce contrôle est une amélioration proposée pour le futur système.
+À la validation seulement, le dossier reçoit son numéro officiel, pris sur une plage allouée à l’antenne. Précisons-le : aujourd’hui cette vérification n’existe pas à l’OIC. C’est une amélioration proposée.
 
 Le DUT devient alors imprimable, recto-verso, avec son code QR. Chaque impression est enregistrée : à partir de la deuxième, un motif est exigé.
 
