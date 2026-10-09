@@ -23,8 +23,11 @@ export function haversineKm(a, b) {
   return 2 * EARTH_KM * Math.asin(Math.sqrt(s));
 }
 
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
 function dayStart(iso) { return new Date(`${iso}T00:00:00Z`); }
 function dayEnd(iso) { return new Date(`${iso}T23:59:59.999Z`); }
+/** Une date de charge est lisible si elle a la forme AAAA-MM-JJ et désigne un vrai jour. */
+function readableDay(iso) { return typeof iso === 'string' && DAY.test(iso) && !Number.isNaN(dayStart(iso).getTime()) && dayStart(iso).toISOString().slice(0, 10) === iso; }
 
 // 1. La charge a-t-elle été signée par l'OIC, et personne ne l'a modifiée ?
 export async function checkSignature(ctx) {
@@ -39,6 +42,7 @@ export async function checkSignature(ctx) {
 export function checkValidity(ctx) {
   const p = ctx.parsed.payload || {};
   if (!p.nbf || !p.exp) return f('validite', 'warn', 'VALIDITE_ABSENTE', 'Période de validité absente de la charge.');
+  if (!readableDay(p.nbf) || !readableDay(p.exp)) return f('validite', 'block', 'DATE_ILLISIBLE', 'Dates de validité illisibles : document suspect.');
   if (ctx.now < dayStart(p.nbf)) return f('validite', 'block', 'PAS_ENCORE_VALIDE', `Valide à partir du ${p.nbf}.`);
   if (ctx.now > dayEnd(p.exp)) return f('validite', 'block', 'EXPIRE', `Expiré depuis le ${p.exp}.`);
   return f('validite', 'ok', 'VALIDITE_OK', `Valide du ${p.nbf} au ${p.exp}.`);
@@ -78,14 +82,17 @@ export function checkTravel(ctx) {
   if (!here || !Number.isFinite(here.lat) || !Number.isFinite(here.lng)) {
     return f('trajet', 'info', 'POSITION_INCONNUE', 'Position du contrôle inconnue : cohérence de trajet non évaluée.');
   }
+  // Les contrôles sont journalisés à l'heure réelle : l'écart se mesure à l'heure réelle,
+  // jamais à l'horloge de démonstration (qui ne sert qu'à la validité et à l'âge de la liste).
+  const realNow = ctx.realNow || ctx.now;
   const dutId = ctx.dut ? ctx.dut.id : null;
   const previous = (ctx.controls || [])
     .filter((c) => dutId && c.dutId === dutId && Number.isFinite(c.lat) && Number.isFinite(c.lng) && c.date)
     .map((c) => ({ ...c, at: new Date(c.date) }))
-    .filter((c) => c.at < ctx.now)
+    .filter((c) => c.at < realNow)
     .sort((a, b) => b.at - a.at)[0];
   if (!previous) return f('trajet', 'ok', 'TRAJET_OK', 'Aucun contrôle antérieur.');
-  const hours = Math.max((ctx.now - previous.at) / 3600e3, 1 / 60);
+  const hours = Math.max((realNow - previous.at) / 3600e3, 1 / 60);
   const km = haversineKm(here, previous);
   const speed = km / hours;
   if (speed > CONTROL_POLICY.maxSpeedKmh) {
@@ -102,8 +109,10 @@ export function checkCanary(ctx) {
 
 export function foldVerdict(findings, { online }) {
   const list = findings.filter(Boolean);
+  // Un faux, un piège, une charge expirée ou un voyage impossible se refusent quel que soit l'âge
+  // de la liste : seul l'absence d'autre constat bloquant rend le contrôle « non opposable ».
+  if (list.some((x) => x.severity === 'block' && x.code !== 'NON_OPPOSABLE')) return VERDICT_LEVELS.ROUGE;
   if (list.some((x) => x.code === 'NON_OPPOSABLE')) return VERDICT_LEVELS.INCONNU;
-  if (list.some((x) => x.severity === 'block')) return VERDICT_LEVELS.ROUGE;
   if (list.some((x) => x.severity === 'warn')) return VERDICT_LEVELS.ORANGE;
   if (!online) return VERDICT_LEVELS.ORANGE;
   return VERDICT_LEVELS.VERT;

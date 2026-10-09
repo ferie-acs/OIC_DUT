@@ -156,7 +156,8 @@ assert.equal(V.foldVerdict([F('ok')], { online: true }), 'VERT');
 assert.equal(V.foldVerdict([F('ok')], { online: false }), 'ORANGE', 'jamais vert hors ligne');
 assert.equal(V.foldVerdict([F('ok'), F('warn')], { online: true }), 'ORANGE');
 assert.equal(V.foldVerdict([F('warn'), F('block')], { online: true }), 'ROUGE');
-assert.equal(V.foldVerdict([F('block'), F('block', 'NON_OPPOSABLE')], { online: false }), 'INCONNU', 'NON_OPPOSABLE prime');
+assert.equal(V.foldVerdict([F('block', 'NON_OPPOSABLE')], { online: false }), 'INCONNU', 'liste trop ancienne seule : non opposable');
+assert.equal(V.foldVerdict([F('block'), F('block', 'NON_OPPOSABLE')], { online: false }), 'ROUGE', 'un autre constat bloquant prime sur NON_OPPOSABLE (revue finale)');
 assert.equal(V.foldVerdict([], { online: true }), 'VERT');
 
 // verify() de bout en bout, dépendances injectées.
@@ -330,4 +331,64 @@ console.log('Vue de contrôle : classe de bandeau par niveau.');
     .filter((d) => { const exp = new Date(`${d.validatedAt.slice(0, 10)}T00:00:00Z`); exp.setUTCDate(exp.getUTCDate() + CONTROL_POLICY.validityDays); return exp.toISOString().slice(0, 10) >= today; });
   assert.ok(fresh.length >= 1, 'aucun DUT validé non expiré dans la démo');
   console.log('Ensemencement : au moins un DUT validé encore valable pour le scénario VERT.');
+}
+
+// --- Passe finale (revue) ---------------------------------------------------------------
+{
+  const { CONTROL_POLICY: POLICY } = await import('../js/core/constants.js');
+  // F1. L'horloge de démonstration ne touche pas le contrôle de trajet : l'écart se mesure à l'heure réelle.
+  const tenMinAgo = new Date(T0.getTime() - 10 * 60e3).toISOString();
+  const shifted = V.checkTravel(baseCtx({
+    now: new Date(T0.getTime() + 48 * 3600e3), realNow: T0,
+    controls: [{ dutId: 'd1', lat: ABIDJAN.lat, lng: ABIDJAN.lng, date: tenMinAgo }],
+  }));
+  assert.equal(shifted.code, 'VOYAGE_IMPOSSIBLE', 'horloge +48 h : le voyage impossible doit rester détecté');
+
+  // F2. Un constat bloquant hors liste (faux, piège, expiré, trajet) reste ROUGE même si la liste est trop vieille.
+  const f = (code, severity) => ({ code, severity });
+  assert.equal(V.foldVerdict([f('SIGNATURE_INVALIDE', 'block'), f('NON_OPPOSABLE', 'block')], { online: false }), 'ROUGE');
+  assert.equal(V.foldVerdict([f('CANARI', 'block'), f('NON_OPPOSABLE', 'block')], { online: false }), 'ROUGE');
+  assert.equal(V.foldVerdict([f('SIGNATURE_OK', 'ok'), f('NON_OPPOSABLE', 'block')], { online: false }), 'INCONNU');
+
+  // F3. Dates illisibles dans la charge : bloquant, jamais « valide ».
+  assert.equal(V.checkValidity(baseCtx({ parsed: { format: 'v2', payload: { ...inWindow, nbf: 'zz' } } })).severity, 'block');
+  assert.equal(V.checkValidity(baseCtx({ parsed: { format: 'v2', payload: { ...inWindow, exp: '2026-13-45' } } })).severity, 'block');
+  // F3bis. Le titre ORANGE ne dit « authentique » que si la signature a été vérifiée.
+  const { titleFor } = await import('../js/views/control.view.js');
+  assert.match(titleFor('ORANGE', [f('SIGNATURE_OK', 'ok')]), /AUTHENTIQUE/);
+  assert.doesNotMatch(titleFor('ORANGE', [f('CLE_ABSENTE', 'warn')]), /AUTHENTIQUE/);
+
+  // F4. Signature impossible : la validation échoue sans brûler de numéro ni changer le dossier.
+  const { findOperationById: findOp } = await import('../js/repositories/operations.repository.js');
+  const { validate } = await import('../js/services/dut.service.js');
+  const termine = getAllDuts().find((d) => d.status === 'TERMINE');
+  const opBefore = findOp(termine.operationId) || (await import('../js/repositories/operations.repository.js')).findActiveOperationForPartner(termine.partnerId);
+  const usedBefore = opBefore.used;
+  const realCrypto = globalThis.crypto;
+  Object.defineProperty(globalThis, 'crypto', { value: { getRandomValues: realCrypto.getRandomValues.bind(realCrypto), randomUUID: realCrypto.randomUUID.bind(realCrypto) }, configurable: true, writable: true });
+  await assert.rejects(() => validate(termine.id), /signature/i);
+  Object.defineProperty(globalThis, 'crypto', { value: realCrypto, configurable: true, writable: true });
+  assert.equal((findOp(opBefore.id)).used, usedBefore, 'aucun numéro consommé');
+  assert.equal(getAllDuts().find((d) => d.id === termine.id).status, 'TERMINE');
+
+  // F5. Le DUT piège n'apparaît pas côté partenaire ni transporteur ; le siège le voit.
+  const dutSvc = await import('../js/services/dut.service.js');
+  const canary = getAllDuts().find((d) => d.canary);
+  assert.ok(canary);
+  assert.ok(!dutSvc.listForPartner(canary.partnerId).some((d) => d.canary), 'piège invisible côté partenaire');
+  assert.ok(dutSvc.listAll().some((d) => d.canary), 'piège visible côté siège');
+
+  // F6. La démo reste jouable après 7 jours : un DUT validé dont la charge a expiré est re-signé à aujourd'hui.
+  const { refreshExpiredDemoSignatures } = await import('../js/seed.js');
+  const { updateDut } = await import('../js/repositories/dut.repository.js');
+  const demoKey = loadKey();
+  const stale = getAllDuts().filter((d) => d.status === 'VALIDE' && !d.canary && d.qrSigned)[0];
+  const old = new Date(Date.now() - 20 * 86400e3).toISOString();
+  updateDut(stale.id, { validatedAt: old, qrSigned: await signPayload(buildQrPayload({ ...stale, validatedAt: old }, demoKey, { nbf: old.slice(0, 10) }), demoKey) });
+  await refreshExpiredDemoSignatures();
+  const refreshed = getAllDuts().find((d) => d.id === stale.id);
+  const check = await (await import('../js/services/signing.service.js')).verifySignedString(refreshed.qrSigned, demoKey);
+  assert.equal(check.payload.nbf, new Date().toISOString().slice(0, 10), 'charge re-signée à aujourd’hui');
+  assert.ok(POLICY.validityDays > 0);
+  console.log('Passe finale : horloge isolée du trajet, faux toujours ROUGE, dates illisibles bloquantes, numéro non brûlé, piège masqué, démo re-signée.');
 }

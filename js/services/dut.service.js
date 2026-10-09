@@ -4,7 +4,7 @@ import { getCurrentUser } from '../core/auth.js';
 import {
   getAllDuts, findDutById, addDut, updateDut,
 } from '../repositories/dut.repository.js';
-import { findActiveOperationForPartner, consumeNextNumber, findOperationById } from '../repositories/operations.repository.js';
+import { findActiveOperationForPartner, consumeNextNumber, peekNextNumber, findOperationById } from '../repositories/operations.repository.js';
 import { generateToken } from './qr.service.js';
 import { loadKey, signPayload } from './signing.service.js';
 import * as auditService from './audit.service.js';
@@ -214,13 +214,18 @@ export async function validate(id) {
   const key = loadKey();
   if (!key) throw new Error('Clé de signature absente : rechargez la démonstration.');
 
-  const dutNumber = consumeNextNumber(operation.id);
+  // On signe AVANT de consommer le numéro : si la signature échoue, rien n'est engagé.
+  const dutNumber = peekNextNumber(operation.id);
   const qrToken = generateToken();
   const validatedAt = nowIso();
-  const qrSigned = await signPayload(
-    buildQrPayload({ ...dut, qrToken, dutNumber }, key, { nbf: validatedAt.slice(0, 10) }),
-    key,
-  );
+  let qrSigned;
+  try {
+    qrSigned = await signPayload(buildQrPayload({ ...dut, qrToken, dutNumber }, key, { nbf: validatedAt.slice(0, 10) }), key);
+  } catch (err) {
+    throw new Error(`Signature impossible sur cet appareil : ${err.message}`);
+  }
+  const consumed = consumeNextNumber(operation.id);
+  if (consumed !== dutNumber) throw new Error('Numéro de DUT modifié pendant la validation : réessayez.');
   const user = getCurrentUser();
   updateDut(id, {
     status: DUT_STATUS.VALIDE,
@@ -291,7 +296,7 @@ export function listAll() {
 }
 
 export function listForPartner(partnerId) {
-  return getAllDuts().filter((d) => d.partnerId === partnerId);
+  return getAllDuts().filter((d) => d.partnerId === partnerId && !d.canary);
 }
 
 export function listForAntenna(antennaId) {
@@ -303,5 +308,5 @@ export function listPendingForAntenna(antennaId) {
 }
 
 export function listForTransporter(transporterId) {
-  return getAllDuts().filter((d) => d.general.transporterId === transporterId);
+  return getAllDuts().filter((d) => d.general.transporterId === transporterId && !d.canary);
 }

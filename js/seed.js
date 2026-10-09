@@ -3,7 +3,7 @@ import { STORAGE_KEYS, ROLES, DUT_STATUS, AUDIT_ACTIONS, AUDIT_LABELS, DEMO_PASS
 import { uuid, nowIso } from './core/utils.js';
 import { writeCollection, writeObject, readObject, readCollection } from './core/storage.js';
 import { blankDut, buildQrPayload } from './services/dut.service.js';
-import { ensureDemoKey, signPayload } from './services/signing.service.js';
+import { ensureDemoKey, signPayload, verifySignedString } from './services/signing.service.js';
 
 function daysAgoIso(days, hour = 9) {
   const d = new Date();
@@ -306,6 +306,27 @@ export async function ensureSignedDemoData() {
     if (!dut.dutNumber || !dut.qrToken || dut.qrSigned) continue;
     const nbf = (dut.validatedAt || nowIso()).slice(0, 10);
     dut.qrSigned = await signPayload(buildQrPayload(dut, key, { nbf }), key);
+    changed = true;
+  }
+  if (changed) writeCollection(STORAGE_KEYS.DUT_LIST, duts);
+}
+
+/**
+ * Démo jouable à toute date : un DUT de démonstration validé dont la charge a expiré est
+ * re-signé « valable à partir d'aujourd'hui » (données locales de démonstration uniquement ;
+ * le piège garde sa charge). Idempotent.
+ */
+export async function refreshExpiredDemoSignatures() {
+  const key = await ensureDemoKey();
+  const today = nowIso().slice(0, 10);
+  const duts = readCollection(STORAGE_KEYS.DUT_LIST);
+  let changed = false;
+  for (const dut of duts) {
+    if (dut.status !== DUT_STATUS.VALIDE || dut.canary || !dut.qrSigned) continue;
+    const check = await verifySignedString(dut.qrSigned, key);
+    if (!check.ok || !check.payload.exp || check.payload.exp >= today) continue;
+    dut.validatedAt = nowIso();
+    dut.qrSigned = await signPayload(buildQrPayload(dut, key, { nbf: today }), key);
     changed = true;
   }
   if (changed) writeCollection(STORAGE_KEYS.DUT_LIST, duts);

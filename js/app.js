@@ -8,7 +8,7 @@ import { mountInsights } from './views/insights.view.js?v=oic-blue';
 import { icon } from './core/icons.js';
 import { getCurrentUser } from './core/auth.js';
 import { renderAppShell, renderLoginShell, renderControlShell } from './core/layout.js?v=planning';
-import { isSeeded, seedDemoData, ensureSignedDemoData } from './seed.js';
+import { isSeeded, seedDemoData, ensureSignedDemoData, refreshExpiredDemoSignatures } from './seed.js';
 
 import * as loginView from './views/login.view.js?v=oic-blue';
 import * as partnerDashboardView from './views/partner-dashboard.view.js?v=oic-blue';
@@ -30,7 +30,14 @@ if (!isSeeded()) {
   Object.keys(localStorage).filter((k) => k.startsWith('dut_')).forEach((k) => localStorage.removeItem(k));
   seedDemoData();
 }
-await ensureSignedDemoData();
+// Sans Web Crypto (page servie hors contexte sécurisé), l'application démarre quand même :
+// le contrôle affichera « signature non vérifiable » et la validation refusera de signer.
+try {
+  await ensureSignedDemoData();
+  await refreshExpiredDemoSignatures();
+} catch (err) {
+  console.error('Signature de démonstration indisponible :', err);
+}
 syncAntennaDirectory();
 
 function withShell(view, breadcrumb) {

@@ -21,6 +21,7 @@ export async function verifyScan(rawScanValue, { geo = null } = {}) {
   const post = settings.postId ? getAntenna(settings.postId) : null;
   const context = {
     now: demoNow(),
+    realNow: new Date(),
     online: isOnline(),
     post: post ? { id: post.id, name: post.name, lat: post.lat, lng: post.lng } : null,
     geo: geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lng) ? geo : null,

@@ -25,6 +25,14 @@ export function addOperation(op) {
 }
 
 /** Décrémente le solde de la plage et retourne le numéro DUT officiel attribué. */
+/** Le prochain numéro, sans le consommer (sert à signer la charge avant d'engager le numéro). */
+export function peekNextNumber(operationId) {
+  const op = findOperationById(operationId);
+  if (!op) throw new Error('Opération introuvable.');
+  if (op.used >= op.quantity) throw new Error('Impossible de valider : aucun numéro DUT disponible.');
+  return `DUT-CI-${op.year}-${String(op.rangeStart + op.used).padStart(6, '0')}`;
+}
+
 export function consumeNextNumber(operationId) {
   const list = getAllOperations();
   const idx = list.findIndex((o) => o.id === operationId);

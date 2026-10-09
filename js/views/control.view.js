@@ -29,6 +29,14 @@ const LEVEL_TITLE = {
   ROUGE: 'REFUS',
   INCONNU: 'CONTRÔLE NON OPPOSABLE',
 };
+
+/** « Authentique » n'est affiché que si la signature a réellement été vérifiée. */
+export function titleFor(level, findings = []) {
+  if (level === VERDICT_LEVELS.ORANGE && !findings.some((x) => x && x.code === 'SIGNATURE_OK')) {
+    return 'VÉRIFICATION PARTIELLE — SIGNATURE NON VÉRIFIÉE';
+  }
+  return LEVEL_TITLE[level] || LEVEL_TITLE.INCONNU;
+}
 const LEVEL_ICON = { VERT: 'checkCircle', ORANGE: 'alertTriangle', ROUGE: 'xCircle', INCONNU: 'alertCircle' };
 const SEVERITY_ICON = { ok: 'check', info: 'info', warn: 'alertTriangle', block: 'xCircle' };
 
@@ -200,7 +208,7 @@ async function renderResult(container, rawToken) {
   container.innerHTML = `
     <div class="control-result-badge ${cls}">
       ${icon(LEVEL_ICON[verdict.level], { size: 48 })}
-      <h2>${LEVEL_TITLE[verdict.level]}</h2>
+      <h2>${titleFor(verdict.level, verdict.findings)}</h2>
       ${dut?.dutNumber ? `<div class="fw-bold">${escapeHtml(dut.dutNumber)}</div>` : ''}
       <div class="control-mode">${verdict.mode === 'HORS_LIGNE' ? `Hors ligne${Number.isFinite(verdict.crlAgeHours) ? ` — liste à jour il y a ${Math.round(verdict.crlAgeHours)} h` : ''}` : 'En ligne'}</div>
     </div>
@@ -220,7 +228,7 @@ async function renderResult(container, rawToken) {
     <button type="button" class="btn btn-primary btn-block btn-lg" id="btn-new-scan" style="margin-top:var(--s3)">${icon('scan', { size: 16 })} Nouveau contrôle</button>
   `;
 
-  toast({ type: verdict.level === 'VERT' ? 'success' : verdict.level === 'ORANGE' ? 'warning' : 'error', title: LEVEL_TITLE[verdict.level] });
+  toast({ type: verdict.level === 'VERT' ? 'success' : verdict.level === 'ORANGE' ? 'warning' : 'error', title: titleFor(verdict.level, verdict.findings) });
 
   container.querySelector('#derogation-form')?.addEventListener('submit', (e) => {
     e.preventDefault();
