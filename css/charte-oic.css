@@ -646,3 +646,46 @@ canvas{max-width:100%}
 .chart-box canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
 @media(max-width:1200px){.charts-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.charts-grid{grid-template-columns:1fr}.chart-box{height:210px}}
+
+/* ===== Carte des antennes (refonte) ===== */
+.ant-note{display:block;font-size:12.5px;color:var(--text-secondary);margin:-6px 0 18px;line-height:1.6}
+.ant-note svg{color:var(--navy-2);vertical-align:-2px;margin-right:6px}
+.ant-layout{grid-template-columns:minmax(0,3fr) minmax(300px,2fr);gap:18px;align-items:stretch}
+.ant-map-card{padding:10px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.ant-map{height:560px;max-height:none!important;min-height:0!important;border-radius:12px;border:1px solid var(--border);overflow:hidden;background:#EAF1F7;z-index:0}
+.ant-map .leaflet-tile-pane{filter:saturate(.7) brightness(1.03)}
+.ant-map .leaflet-control-zoom{border:0;box-shadow:0 6px 16px rgba(11,61,111,.14);border-radius:10px;overflow:hidden}
+.ant-map .leaflet-control-zoom a{color:var(--navy);background:var(--surface);border-color:var(--border);width:34px;height:34px;line-height:34px;font-weight:600}
+.ant-map-legend{display:flex;gap:16px;padding:4px 8px 2px;font-size:11.5px;color:var(--text-secondary)}
+.ant-map-legend span{display:inline-flex;align-items:center;gap:6px}
+.ant-dot{width:10px;height:10px;border-radius:50%;background:var(--navy-2);box-shadow:0 0 0 2px #fff,0 0 0 3px var(--navy-ink)}
+.ant-dot.is-hq{background:var(--navy)}
+.ant-dot.is-active{background:var(--accent)}
+.ant-marker{background:none;border:0}
+.ant-marker i{display:block;width:18px;height:18px;border-radius:50%;background:var(--navy-2);border:3px solid #fff;box-shadow:0 2px 8px rgba(11,61,111,.35);transition:transform .15s,background .15s}
+.ant-marker.is-hq i{background:var(--navy);width:20px;height:20px}
+.ant-marker.is-active i{background:var(--accent);transform:scale(1.35);box-shadow:0 0 0 6px rgba(241,125,12,.25),0 4px 12px rgba(241,125,12,.45)}
+.ant-marker:hover i{transform:scale(1.2)}
+.ant-list-card{padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ant-search{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border-strong);border-radius:12px;padding:0 12px;min-height:44px;color:var(--text-muted);box-shadow:0 2px 8px rgba(11,61,111,.05)}
+.ant-search svg{color:var(--navy-2);flex:none}
+.ant-search input{border:0;background:none;outline:none;flex:1;min-width:0;font:inherit;font-size:13.5px;color:var(--text)}
+.ant-search:focus-within{border-color:var(--navy-2);box-shadow:0 0 0 3px rgba(14,86,164,.14)}
+.ant-list{display:flex;flex-direction:column;gap:6px;overflow:auto;max-height:520px;padding-right:2px;scrollbar-width:thin}
+.ant-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--text);font:inherit;transition:border-color .15s,background .15s}
+.ant-item:hover{border-color:var(--navy-ink);background:var(--surface-2)}
+.ant-item[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.ant-pin{flex:none;width:34px;height:34px;border-radius:10px;background:var(--navy-soft);color:var(--navy-2);display:grid;place-items:center}
+.ant-item.is-hq .ant-pin{background:var(--navy);color:#fff}
+.ant-item[aria-pressed="true"] .ant-pin{background:var(--accent);color:#fff}
+.ant-body{display:grid;gap:2px;min-width:0;flex:1}
+.ant-body strong{font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ant-body small{font-size:11.5px;color:var(--text-muted)}
+.ant-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--text-secondary);margin-top:2px}
+.ant-meta span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.ant-meta svg{color:var(--navy-label)}
+.ant-zone{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--text-muted)}
+.ant-zone:hover{background:var(--navy-soft);color:var(--navy-2)}
+.ant-empty{font-size:12.5px;color:var(--text-muted);padding:16px;border:1px dashed var(--border-strong);border-radius:12px;text-align:center}
+@media(max-width:1100px){.ant-layout{grid-template-columns:1fr}.ant-map{height:380px}.ant-list{max-height:360px}}
+@media(max-width:600px){.ant-map{height:300px}}

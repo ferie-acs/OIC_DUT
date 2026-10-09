@@ -15,7 +15,7 @@ import * as loginView from './views/login.view.js?v=oic-blue';
 import * as partnerDashboardView from './views/partner-dashboard.view.js?v=oic-blue';
 import * as operationsView from './views/operations.view.js';
 import * as referentialsView from './views/referentials.view.js';
-import * as antennasMapView from './views/antennas-map.view.js?v=split';
+import * as antennasMapView from './views/antennas-map.view.js?v=charte';
 import * as dutFormView from './views/dut-form.view.js?v=dut-v3';
 import * as dutListView from './views/dut-list.view.js';
 import * as dutDetailView from './views/dut-detail.view.js?v=dut-v2';
