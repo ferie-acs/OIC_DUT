@@ -105,7 +105,8 @@ export function box(opts, scale = ISO_SCALE) {
     + (shadow && z === 0 ? contactShadow({ x, y, w, d }, scale) : '')
     + faces
     + (detail === 'container' ? corrugation(opts, scale) : '')
-    + (detail === 'windows' ? windows(opts, scale) : '')
+    + (detail === 'windows' ? windows(opts, scale, false) : '')
+    + (detail === 'windows-light' ? windows(opts, scale, true) : '')
     + '</g>';
 }
 
@@ -128,7 +129,7 @@ function corrugation({ x, y, z = 0, w, d, h }, scale) {
 }
 
 /** Trame de fenêtres sur les deux flancs visibles d'un bâtiment. */
-function windows({ x, y, z = 0, w, d, h }, scale) {
+function windows({ x, y, z = 0, w, d, h }, scale, light = false) {
   const cells = [];
   const rows = Math.max(1, Math.floor(h / 0.75));
   const colsLeft = Math.max(1, Math.floor(w / 0.8));
@@ -140,12 +141,12 @@ function windows({ x, y, z = 0, w, d, h }, scale) {
     for (let c = 0; c < colsLeft; c += 1) {
       const a = x + 0.26 + c * 0.8;
       const b = a + 0.44;
-      cells.push(`<polygon points="${pts([[a, y + d, zb], [b, y + d, zb], [b, y + d, zt], [a, y + d, zt]], scale)}" fill="#1B4A8C" opacity=".5"/>`);
+      cells.push(`<polygon points="${pts([[a, y + d, zb], [b, y + d, zb], [b, y + d, zt], [a, y + d, zt]], scale)}" fill="${light ? '#CFE1F6' : '#1B4A8C'}" opacity="${light ? 0.82 : 0.5}"/>`);
     }
     for (let c = 0; c < colsRight; c += 1) {
       const a = y + 0.26 + c * 0.8;
       const b = a + 0.44;
-      cells.push(`<polygon points="${pts([[x + w, a, zb], [x + w, b, zb], [x + w, b, zt], [x + w, a, zt]], scale)}" fill="#265EB4" opacity=".45"/>`);
+      cells.push(`<polygon points="${pts([[x + w, a, zb], [x + w, b, zb], [x + w, b, zt], [x + w, a, zt]], scale)}" fill="${light ? '#E2EDF9' : '#265EB4'}" opacity="${light ? 0.78 : 0.45}"/>`);
     }
   }
   return cells.join('');

@@ -48,15 +48,21 @@ export function oicBranch({ x = 0, y = 0, id = '' }) {
     + '</g>';
 }
 
-/** Siège OIC : même langage, volume étagé plus imposant. */
+/**
+ * Siège OIC : volume étagé, dans le BLEU DU LOGO — c'est lui qui identifie
+ * l'institution. Les bandeaux et le porche restent blancs pour détacher les
+ * étages, et les fenêtres sont claires sur fond bleu.
+ */
 export function oicHq({ x = 0, y = 0, id = '' }) {
   return `<g${id ? ` id="${id}"` : ''} class="iso-batiment iso-siege">`
-    + slab({ x: x - 0.5, y: y - 0.5, w: 6.0, d: 5.0, fill: '#E3EAF4' }, S)
-    + box({ x, y, w: 4.6, d: 4.0, h: 2.2, tone: 'white', detail: 'windows' }, S)
-    + box({ x: x + 0.7, y: y + 0.7, z: 2.2, w: 3.2, d: 2.6, h: 1.6, tone: 'white', detail: 'windows', shadow: false }, S)
-    + box({ x: x + 0.7, y: y + 0.7, z: 3.8, w: 3.2, d: 2.6, h: 0.3, tone: 'navy', shadow: false }, S)
-    + portico({ x: x + 4.6, y: y + 1.0 })
-    + flag({ x: x + 5.5, y: y + 3.8 })
+    + slab({ x: x - 0.5, y: y - 0.5, w: 6.0, d: 5.0, fill: '#DCE6F3' }, S)
+    + box({ x, y, w: 4.6, d: 4.0, h: 2.4, tone: 'navy', detail: 'windows-light' }, S)
+    + box({ x, y, z: 2.4, w: 4.6, d: 4.0, h: 0.22, tone: 'white', shadow: false }, S)
+    + box({ x: x + 0.6, y: y + 0.6, z: 2.62, w: 3.4, d: 2.8, h: 1.7, tone: 'navy', detail: 'windows-light', shadow: false }, S)
+    + box({ x: x + 0.6, y: y + 0.6, z: 4.32, w: 3.4, d: 2.8, h: 0.22, tone: 'white', shadow: false }, S)
+    + box({ x: x + 1.7, y: y + 1.6, z: 4.54, w: 1.0, d: 0.9, h: 0.5, tone: 'white', shadow: false }, S)
+    + portico({ x: x + 4.6, y: y + 1.2 })
+    + flag({ x: x + 5.5, y: y + 4.2 })
     + '</g>';
 }
 
