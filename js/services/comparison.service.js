@@ -68,9 +68,14 @@ function statsFor(type, id, period) {
 export function compare(type, ids, keys, period = {}) {
   const t = ENTITY_TYPES[type]; if (!t) return { rows: [], best: {}, indicators: [] };
   const list = t.list(); const inds = keys.map(indicator).filter(Boolean);
-  const rows = ids.map((id) => { const e = list.find((x) => x.id === id); if (!e) return null; const s = statsFor(type, id, period); return { id, name: e.name, sub: e.sub, values: Object.fromEntries(inds.map((i) => [i.key, Number(i.get(s)) || 0])) }; }).filter(Boolean);
+  const rows = ids.map((id) => { const e = list.find((x) => x.id === id); if (!e) return null; const s = statsFor(type, id, period); return { id, name: e.name, sub: e.sub, actif: s.documentaire.entonnoir.crees + s.controle.total > 0, values: Object.fromEntries(inds.map((i) => [i.key, Number(i.get(s)) || 0])) }; }).filter(Boolean);
   const best = {};
-  inds.forEach((i) => { const vals = rows.map((r) => r.values[i.key]); if (!vals.length || vals.every((v) => v === vals[0])) return; const target = i.better === 'low' ? Math.min(...vals) : Math.max(...vals); best[i.key] = rows.find((r) => r.values[i.key] === target)?.id; });
+  inds.forEach((i) => {
+    // Une entité sans aucune activité n'est jamais « la meilleure » sur un taux à minimiser (0 % par absence).
+    const pool = i.better === 'low' ? rows.filter((r) => r.actif) : rows;
+    const vals = pool.map((r) => r.values[i.key]); if (!vals.length || vals.every((v) => v === vals[0])) return;
+    const target = i.better === 'low' ? Math.min(...vals) : Math.max(...vals); best[i.key] = pool.find((r) => r.values[i.key] === target)?.id;
+  });
   return { rows, best, indicators: inds };
 }
 
