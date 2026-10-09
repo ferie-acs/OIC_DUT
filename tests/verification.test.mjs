@@ -86,3 +86,97 @@ for (const bad of ['oicdut://verify/u-1', 'oicdut://v2/', 'oicdut://v2/%%%.%%%',
 assert.equal(parseQr(`  ${uri}  `).format, 'v2');
 
 console.log('QR v2 : construction, lecture, rejet de tout autre format.');
+
+// ---------------------------------------------------------------------------
+// Tâche 3 — pipeline de vérification
+// ---------------------------------------------------------------------------
+
+const V = await import('../js/services/verification.service.js');
+
+// Haversine : Abidjan ↔ Bouaké ≈ 284 km à vol d'oiseau (Δlat 2,345° ≈ 261 km, Δlng ≈ 111 km) ; ±10 km.
+const ABIDJAN = { lat: 5.345, lng: -4.024 };
+const BOUAKE = { lat: 7.690, lng: -5.030 };
+const km = V.haversineKm(ABIDJAN, BOUAKE);
+assert.ok(km > 274 && km < 294, `distance Abidjan-Bouaké attendue ~284 km, obtenu ${km.toFixed(1)}`);
+
+const T0 = new Date('2026-10-10T10:00:00Z');
+const dutOk = { id: 'd1', qrToken: 'u-1', status: 'VALIDE', dutNumber: 'DUT-CI-2026-000401', canary: false };
+const baseCtx = (over = {}) => ({
+  now: T0, online: true, post: { id: 'p-bke', name: 'Bouaké', ...BOUAKE }, geo: null,
+  parsed: parseQr(uri), key: otherKey, dut: dutOk, controls: [], crl: null, ...over,
+});
+
+// Signature : vraie → ok ; altérée → block ; clé absente → warn.
+assert.equal((await V.checkSignature(baseCtx({ parsed: parseQr(buildSignedUri(await signPayload(payload, otherKey))) }))).severity, 'ok');
+assert.equal((await V.checkSignature(baseCtx({ parsed: parseQr(buildSignedUri(altered)) }))).severity, 'block');
+assert.equal((await V.checkSignature(baseCtx({ key: null }))).severity, 'warn', 'clé absente : non vérifiable, pas rouge');
+
+// Validité : dans la fenêtre / avant / après.
+const inWindow = { ...payload, nbf: '2026-10-09', exp: '2026-10-16' };
+assert.equal(V.checkValidity(baseCtx({ parsed: { format: 'v2', payload: inWindow } })).severity, 'ok');
+assert.equal(V.checkValidity(baseCtx({ parsed: { format: 'v2', payload: { ...inWindow, nbf: '2026-10-11' } } })).severity, 'block');
+assert.equal(V.checkValidity(baseCtx({ parsed: { format: 'v2', payload: { ...inWindow, exp: '2026-10-09' } } })).severity, 'block');
+
+// Statut : en ligne fait foi ; hors ligne non consultable.
+assert.equal(V.checkStatus(baseCtx()).severity, 'ok');
+assert.equal(V.checkStatus(baseCtx({ dut: { ...dutOk, status: 'SUSPENDU' } })).severity, 'block');
+assert.equal(V.checkStatus(baseCtx({ dut: { ...dutOk, status: 'RETIRE' } })).severity, 'block');
+assert.equal(V.checkStatus(baseCtx({ dut: null })).severity, 'block');
+assert.equal(V.checkStatus(baseCtx({ online: false })).severity, 'info');
+
+// Révocation (hors ligne) : présent → block ; 23 h → ok ; 25 h → warn ; 73 h → NON_OPPOSABLE ; absente → NON_OPPOSABLE.
+const crlAt = (hoursAgo, entries = []) => ({ syncedAt: new Date(T0.getTime() - hoursAgo * 3600e3).toISOString(), entries });
+assert.equal(V.checkRevocation(baseCtx({ online: false, crl: crlAt(2, [{ uid: 'u-1', status: 'RETIRE' }]) })).severity, 'block');
+assert.equal(V.checkRevocation(baseCtx({ online: false, crl: crlAt(23) })).severity, 'ok');
+assert.equal(V.checkRevocation(baseCtx({ online: false, crl: crlAt(25) })).severity, 'warn');
+assert.equal(V.checkRevocation(baseCtx({ online: false, crl: crlAt(73) })).code, 'NON_OPPOSABLE');
+assert.equal(V.checkRevocation(baseCtx({ online: false, crl: null })).code, 'NON_OPPOSABLE');
+assert.equal(V.checkRevocation(baseCtx({ online: true })), null, 'en ligne, la liste locale ne sert pas');
+
+// Voyage impossible : vu à Abidjan il y a 1 h, contrôlé à Bouaké → block ; il y a 6 h → ok.
+const seen = (hoursAgo, pos) => ({ dutId: 'd1', date: new Date(T0.getTime() - hoursAgo * 3600e3).toISOString(), lat: pos.lat, lng: pos.lng });
+assert.equal(V.checkTravel(baseCtx({ controls: [seen(1, ABIDJAN)] })).severity, 'block');
+assert.equal(V.checkTravel(baseCtx({ controls: [seen(6, ABIDJAN)] })).severity, 'ok');
+// Review Focus n°2 : contrôle ensemencé sans position → ignoré.
+assert.equal(V.checkTravel(baseCtx({ controls: [{ dutId: 'd1', date: seen(1, ABIDJAN).date, lat: null, lng: null }] })).severity, 'ok');
+// Review Focus n°3 : ni poste ni géolocalisation → info, pas d'exception.
+assert.equal(V.checkTravel(baseCtx({ post: null, geo: null, controls: [seen(1, ABIDJAN)] })).severity, 'info');
+// La géolocalisation prime sur le poste.
+assert.equal(V.checkTravel(baseCtx({ geo: ABIDJAN, controls: [seen(1, ABIDJAN)] })).severity, 'ok');
+// Un contrôle d'un AUTRE DUT ne compte pas.
+assert.equal(V.checkTravel(baseCtx({ controls: [{ ...seen(1, ABIDJAN), dutId: 'autre' }] })).severity, 'ok');
+
+// Canari.
+assert.equal(V.checkCanary(baseCtx({ dut: { ...dutOk, canary: true } })).severity, 'block');
+assert.equal(V.checkCanary(baseCtx()), null);
+
+// Repli.
+const F = (severity, code = 'X') => ({ check: 'x', severity, code, message: '' });
+assert.equal(V.foldVerdict([F('ok')], { online: true }), 'VERT');
+assert.equal(V.foldVerdict([F('ok')], { online: false }), 'ORANGE', 'jamais vert hors ligne');
+assert.equal(V.foldVerdict([F('ok'), F('warn')], { online: true }), 'ORANGE');
+assert.equal(V.foldVerdict([F('warn'), F('block')], { online: true }), 'ROUGE');
+assert.equal(V.foldVerdict([F('block'), F('block', 'NON_OPPOSABLE')], { online: false }), 'INCONNU', 'NON_OPPOSABLE prime');
+assert.equal(V.foldVerdict([], { online: true }), 'VERT');
+
+// verify() de bout en bout, dépendances injectées.
+const goodUri = buildSignedUri(await signPayload({ ...payload, nbf: '2026-10-09', exp: '2026-10-16' }, otherKey));
+const deps = { key: otherKey, findDut: (t) => (t === 'u-1' ? dutOk : null), controls: [], crl: null };
+const verdict = await V.verify(goodUri, { now: T0, online: true, post: baseCtx().post, geo: null }, deps);
+assert.equal(verdict.level, 'VERT');
+assert.equal(verdict.mode, 'EN_LIGNE');
+// En ligne, checkRevocation se tait ; checkCanary se tait hors piège. On
+// vérifie l'ensemble exact des vérificateurs qui ont parlé, pas un nombre.
+assert.deepEqual(verdict.findings.map((x) => x.check).sort(), ['signature', 'statut', 'trajet', 'validite']);
+const offline = await V.verify(goodUri, { now: T0, online: false, post: baseCtx().post, geo: null }, { ...deps, crl: crlAt(2) });
+assert.equal(offline.level, 'ORANGE');
+assert.equal(offline.mode, 'HORS_LIGNE');
+assert.ok(offline.crlAgeHours >= 1.9 && offline.crlAgeHours <= 2.1);
+// Review Focus n°5 : hors ligne, liste jamais synchronisée → INCONNU, pas d'exception.
+assert.equal((await V.verify(goodUri, { now: T0, online: false, post: null, geo: null }, { ...deps, crl: null })).level, 'INCONNU');
+// QR malformé → INCONNU avec un constat explicite.
+const bad = await V.verify('n-importe-quoi', { now: T0, online: true, post: null, geo: null }, deps);
+assert.equal(bad.level, 'INCONNU');
+assert.ok(bad.findings.some((x) => x.code === 'QR_INVALIDE'));
+
+console.log('Pipeline : six vérificateurs, Haversine, repli, verify() en ligne, hors ligne, liste absente, QR malformé.');
