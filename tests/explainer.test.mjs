@@ -304,7 +304,7 @@ const { CUSTOM_SCENES } = await import('../js/views/explainer/custom/index.js');
 
 // Les scènes sur mesure référencées par la donnée sont exactement celles implémentées.
 const referenced = storyboard.chapters.flatMap((c) => c.scenes.map((s) => s.custom)).filter(Boolean);
-assert.deepEqual([...new Set(referenced)].sort(), ['architecture-cible', 'carte-depart', 'copie-retiree']);
+assert.deepEqual([...new Set(referenced)].sort(), ['architecture-cible', 'copie-retiree', 'port-abidjan']);
 for (const id of referenced) {
   assert.ok(CUSTOM_SCENES[id], `scène sur mesure « ${id} » non implémentée`);
   assert.equal(typeof CUSTOM_SCENES[id].build, 'function');
@@ -329,7 +329,7 @@ buildChapter(storyboard.chapters[0], { doc: fakeDoc, root: withCustom, timings: 
 const sceneTwo = withCustom.children.find((c) => c.dataset.sceneId === '1.2');
 assert.ok(sceneTwo, 'conteneur de la scène 1.2 absent');
 assert.equal(sceneTwo.children.length, 1, 'la scène 1.2 doit contenir son rendu sur mesure');
-assert.ok(String(sceneTwo.children[0].className).includes('sc-carte-depart'));
+assert.ok(String(sceneTwo.children[0].className).includes('sc-iso'));
 
 console.log('Scènes sur mesure : registre sans orphelin, montées par le constructeur de timeline.');
 

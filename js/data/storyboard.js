@@ -33,7 +33,7 @@ export const storyboard = {
       scenes: [
         titleCard('1.1', 'Chapitre 1', 'Le problème et le DUT'),
         {
-          id: '1.2', at: 2000, duration: 12000, custom: 'carte-depart',
+          id: '1.2', at: 2000, duration: 12000, custom: 'port-abidjan',
           narration: 'Chaque jour, des marchandises quittent le port d’Abidjan pour rejoindre l’intérieur du pays, ou franchir une frontière.',
         },
         {
