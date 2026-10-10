@@ -106,3 +106,18 @@ const root = new URL('..', import.meta.url).pathname;
   assert.ok(PATHS.truck.length > 100);
   console.log('demo3d : moteur d’état déterministe et borné.');
 }
+
+// Lecture : avance plafonnée (Review Focus 3) ; projection écran (Review Focus 2).
+{
+  const { advance, MAX_STEP_MS } = await import('../js/demo3d/player.js');
+  const { ndcToPixels } = await import('../js/demo3d/overlay/project.js');
+  assert.equal(MAX_STEP_MS, 100);
+  assert.equal(advance(1000, 16, 75000), 1016);
+  assert.equal(advance(1000, 5000, 75000), 1100, 'retour d’onglet : pas de saut de 5 s');
+  assert.equal(advance(74990, 50, 75000), 75000);
+  assert.equal(advance(1000, -20, 75000), 1000, 'horloge qui recule : on ne recule pas');
+  assert.deepEqual(ndcToPixels(0, 0, 1920, 1080), { left: 960, top: 540 });
+  assert.deepEqual(ndcToPixels(-1, 1, 1920, 1080), { left: 0, top: 0 });
+  assert.deepEqual(ndcToPixels(1, -1, 800, 450), { left: 800, top: 450 });
+  console.log('demo3d : lecture plafonnée, projection écran exacte.');
+}
