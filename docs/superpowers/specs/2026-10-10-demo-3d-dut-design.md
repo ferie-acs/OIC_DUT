@@ -112,12 +112,14 @@ véhicule · police des étiquettes et sous-titres : Instrument Sans.
 
 ```
 demo-3d.html                          page plein écran : canvas + calque étiquettes/sous-titres
-js/vendor/three.module.min.js         Three.js r186 embarqué, version figée (+ three-LICENSE)
 js/demo3d/
+  vendor/                             Three.js r186 embarqué (core + module + RoundedBoxGeometry + LICENSE)
+  demo3d.css                          styles de la page (hors css/ pour rester hors PWA)
   main.js                             initialisation : renderer, caméra ortho, lumières
   palette.js                          couleurs, source unique
   scenario.js                         DONNÉE : plans, minutage, sous-titres, états du DUT
-  timeline.js                         scenario → timeline anime.js
+  keyframes.js · path.js              interpolation et trajectoires, fonctions pures
+  timeline.js                         stateAt(ms) : état complet de la scène, fonction pure
   world/                              décor statique : sol, route, lagune, végétation
   models/                             une maquette par fichier
   fx/                                 trajets, pulsation, crochets, quai illuminé, goutte, ombre de contact
@@ -133,23 +135,27 @@ La page est autonome, hors plateforme (pas de menu, pas de connexion). Un lien d
 
 1. **Le scénario est une donnée.** `scenario.js` porte plans, durées, sous-titres et états ;
    les maquettes et effets ne contiennent aucun texte.
-2. **Une seule horloge.** Tout mouvement (caméra, véhicules, effets, étiquettes) passe par
-   une timeline anime.js v4 (déjà vendorisée) en `autoplay: false`. Three.js ne fait que
-   dessiner l'état au temps `t`. Interdits dans `js/demo3d` : `requestAnimationFrame`
-   autonome hors du pilote de lecture, `transition`/`animation` CSS, `Math.random()` non
-   amorcé, `Date.now()`/`performance.now()` dans le calcul d'état.
-3. **Trajectoires.** Véhicules sur `CatmullRomCurve3` ; position et cap dérivés de
-   l'avancement sur la courbe. La caméra suit la cible avec un retard calculé comme
+2. **Une seule horloge.** Tout l'état de la scène (caméra, véhicules, effets, étiquettes,
+   sous-titres) est une fonction pure `stateAt(ms)` dérivée du scénario. Three.js ne fait
+   que dessiner cet état. C'est le même contrat que la timeline anime.js de la vidéo longue
+   (temps virtuel, `seek` exact), sans la dépendance au DOM : l'état se teste dans Node.
+   Interdits dans `js/demo3d` (hors `player.js` et `vendor/`) : `requestAnimationFrame`,
+   `setTimeout`/`setInterval`, `Date.now()`/`performance.now()`, `Math.random()` ;
+   et partout : `transition`/`animation` CSS, `innerHTML`.
+3. **Trajectoires.** Véhicules sur des polylignes lissées (Chaikin) paramétrées
+   par la longueur ; position et cap dérivés de l'avancement. La caméra suit la cible avec un retard calculé comme
    fonction pure du temps (pas d'intégration d'image en image).
 4. **Étiquettes en HTML.** Positionnées chaque image par projection 3D → écran ; texte net,
    police de la charte, accessible.
-5. **Lecture et export.** En lecture, un unique pilote `requestAnimationFrame` fait avancer
-   la timeline. En `?render=1`, la page expose
+5. **Lecture et export.** En lecture, un unique pilote `requestAnimationFrame`
+   (`player.js`) fait avancer le temps. En `?render=1`, la page expose
    `window.__demo3d = { seek(ms), duration, ready }` ; le script d'export avance image par
    image, capture la scène (canvas + calque), ffmpeg assemble en 1920×1080, 25 i/s.
    `preserveDrawingBuffer` est activé en mode rendu uniquement.
 6. **Sans build.** Three.js chargé en module ES via `importmap` ; l'application reste
    statique.
+7. **Hors PWA.** `js/demo3d/` est exclu du pré-cache de la plateforme
+   (`tools/pwa/precache.mjs`) : la démo est autonome et ne doit pas alourdir l'application.
 
 ### 5.3 Sécurité et robustesse
 
