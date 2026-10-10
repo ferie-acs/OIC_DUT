@@ -90,7 +90,7 @@ function renderTable(container, user) {
           <td>${escapeHtml(d.expediteur.raisonSociale || '—')}</td>
           <td>${escapeHtml(d.destinataire.raisonSociale || '—')}</td>
           <td>${escapeHtml(d.general.immatriculation || '—')}</td>
-          <td><span class="badge status-${d.status}"><span class="badge-dot"></span>${DUT_STATUS_LABELS[d.status]}</span></td>
+          <td><span class="badge status-${d.status}"><span class="badge-dot"></span>${DUT_STATUS_LABELS[d.status]}</span>${d.canary ? ' <span class="badge badge-warning">Piège</span>' : ''}</td>
           <td class="text-right"><span class="link-action">Ouvrir</span></td>
         </tr>
       `).join('')}

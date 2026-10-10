@@ -15,13 +15,13 @@ export async function generateDutPdf(input, { copy='TRANSPORTEUR', reason='', pr
   assetsPromise ||= Promise.all([imageData('assets/images/logo-oic.jpg'),imageData('assets/images/armoiries-ci.png')]).catch(error=>{assetsPromise=null;throw error;});
   const [logo,emblem]=await assetsPromise;
   const dut=accessibleDut(input.id);
-  if (['VALIDE','SUSPENDU','RETIRE'].includes(dut.status) && (!dut.dutNumber || !dut.qrToken)) throw new Error('Ce dossier ne possède pas de numéro ou de jeton de vérification. Génération impossible.');
+  if (['VALIDE','SUSPENDU','RETIRE'].includes(dut.status) && (!dut.dutNumber || !dut.qrSigned)) throw new Error('Ce dossier ne possède pas de numéro ou de QR signé. Génération impossible.');
   const rank=nextRank(dut);
   if(!preview && rank>1 && !reason.trim()) throw new Error('Le motif de réimpression est obligatoire.');
   const payload=printPayload(dut,{copy,rank});
   const hash=await fingerprint(payload);
-  const qr=['VALIDE','SUSPENDU','RETIRE'].includes(dut.status)&&dut.qrToken ? qrToDataUrl(dut.qrToken,320) : null;
-  if(dut.qrToken && ['VALIDE','SUSPENDU','RETIRE'].includes(dut.status) && !qr) throw new Error('Le QR est indisponible. Rechargez la page avant de générer ce DUT.');
+  const qr=['VALIDE','SUSPENDU','RETIRE'].includes(dut.status)&&dut.qrSigned ? qrToDataUrl(dut.qrSigned,320) : null;
+  if(dut.qrSigned && ['VALIDE','SUSPENDU','RETIRE'].includes(dut.status) && !qr) throw new Error('Le QR est indisponible. Rechargez la page avant de générer ce DUT.');
   const doc=buildDutPdf(window.jspdf.jsPDF,payload,hash,{logo,emblem,qr});
   if(!preview) commitPrint(payload,hash,reason);
   if(download) doc.save(`${dut.dutNumber||'DUT-brouillon'}-${copy.toLowerCase()}-impression-${rank}.pdf`);

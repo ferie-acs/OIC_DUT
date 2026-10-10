@@ -1,0 +1,905 @@
+/* ===========================================================================
+   Vidéo explicative DUT — scène, primitives et lecteur.
+
+   Gabarit calqué sur la référence « Retour CI 360 », transposé aux couleurs
+   OIC : bandeau de progression aux couleurs du drapeau, pastille de chapitre,
+   logo permanent, fond à grille fine, colonne de texte à gauche, visuel à
+   droite dans un cadre d'appareil, sous-titre en boîte sombre.
+
+   Contrat de déterminisme : ce fichier ne contient AUCUNE règle de mouvement
+   pilotée par le navigateur. Tout le mouvement vient de l'unique timeline
+   anime.js. Une seule règle de mouvement CSS ici suffirait à faire diverger le
+   MP4 exporté de ce qu'on voit à l'écran, sans message d'erreur. Le test
+   tests/explainer.test.mjs fait échouer la suite si l'une apparaît.
+   =========================================================================== */
+
+/* --- Enveloppe et mise à l'échelle ------------------------------------- */
+
+.explainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.explainer-viewport {
+  --stage-scale: 1;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  height: calc(1080px * var(--stage-scale));
+}
+
+.scene-stage {
+  /* Palette ÉPINGLÉE. La scène n'hérite pas des tokens de l'application :
+     `css/nexlink.css` redéfinit --accent en bleu et le thème sombre réécrit
+     tout le jeu. Une vidéo doit sortir identique quel que soit le thème de
+     celui qui la fabrique — sinon le MP4 change de couleurs selon la machine. */
+  --accent: #F17D0C;
+  --accent-hover: #D96C08;
+  --accent-soft: #FDECD9;
+  --accent-soft-border: #F8D3AA;
+  --navy: #0B3D6F;
+  --navy-2: #0E56A4;
+  --navy-soft: #E7F0FA;
+  --navy-ink: #BBD3EC;
+  --navy-ink-2: #8FB4DA;
+  --surface: #FFFFFF;
+  --surface-2: #F5F6F8;
+  --surface-sunken: #EEF0F3;
+  --border: #E5E7EB;
+  --border-strong: #C9CDD3;
+  --text: #16202B;
+  --text-secondary: #5B6672;
+  --text-muted: #8A93A0;
+  --text-on-accent: #FFFFFF;
+  --success: #0C8B41;
+  --warning: #F59E0B;
+  --error: #E11D2E;
+  --error-soft: #FCE4E6;
+  --sq-blue-bg: #E7F0FA;
+  --sq-amber-bg: #FEF3D9;
+  --sq-green-bg: #E3F5EA;
+  /* La regle projet « zero ombre » vaut pour l'interface ; la reference video
+     s'appuie sur des cartes flottantes, indispensables pour detacher les objets
+     du fond a grille. */
+  --sc-card-shadow: 0 18px 44px rgba(16, 32, 48, .10);
+  --sc-card-radius: 16px;
+
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
+  background:
+    linear-gradient(to right, rgba(11, 61, 111, .05) 1px, transparent 1px) 0 0 / 64px 64px,
+    linear-gradient(to bottom, rgba(11, 61, 111, .05) 1px, transparent 1px) 0 0 / 64px 64px,
+    linear-gradient(160deg, #FFFFFF 0%, #F7F9FC 55%, #EDF2F8 100%);
+  transform: translateX(-50%) scale(var(--stage-scale));
+  transform-origin: top center;
+  overflow: hidden;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
+  color: var(--text);
+}
+
+/* --- Habillage permanent (hors scènes) ---------------------------------- */
+
+.sc-chrome-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: var(--surface-sunken);
+  z-index: 2;
+}
+
+/* Bandeau de progression aux couleurs du drapeau ivoirien. Sa largeur est
+   pilotée par --progress, réécrit par la vue à chaque image. */
+.sc-chrome-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 10px;
+  width: calc(1920px * var(--progress, 0));
+  background-image: linear-gradient(to right, #F17D0C 0 33.33%, #FFFFFF 33.33% 66.66%, #0C8B41 66.66% 100%);
+  background-size: 1920px 10px;
+  background-repeat: no-repeat;
+  z-index: 3;
+}
+
+.sc-chrome-step {
+  position: absolute;
+  top: 52px;
+  left: 96px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 3;
+}
+
+.sc-chrome-step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-size: 25px;
+  font-weight: 700;
+}
+
+.sc-chrome-step-label {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.sc-chrome-brand {
+  position: absolute;
+  top: 46px;
+  right: 96px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 3;
+}
+
+.sc-chrome-brand img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.sc-chrome-brand span {
+  font-size: 25px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -.01em;
+}
+
+/* Masqué sur les cartons de chapitre, qui occupent tout le cadre. */
+.scene-stage.is-cover .sc-chrome-step,
+.scene-stage.is-cover .sc-chrome-brand {
+  display: none;
+}
+
+/* --- Scènes ------------------------------------------------------------- */
+
+.sc-scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 1;
+}
+
+.scene-stage.is-animated .sc-scene {
+  visibility: visible;
+}
+
+.sc-scene.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Quand la timeline pilote la scène, les éléments partent invisibles et c'est
+   elle qui les révèle.
+
+   Deux règles et non une : l'enveloppe `.sc-custom` d'une scène sur mesure est
+   le SEUL enfant direct de `.sc-scene`, et aucun `animate()` sur mesure ne la
+   cible — la masquer rendait ces scènes définitivement invisibles, l'opacité
+   d'un parent étant multiplicative. On masque donc ses descendants, pas elle.
+
+   Corollaire tenu partout ailleurs : AUCUNE règle `opacity: 0` ne doit vivre
+   hors de cette portée, sinon le rendu par paliers affiche des scènes vides. */
+.scene-stage.is-animated .sc-scene > *:not(.sc-custom) {
+  opacity: 0;
+}
+
+.scene-stage.is-animated .sc-custom > *:not(svg) {
+  opacity: 0;
+}
+
+/* Une scène isométrique anime les groupes À L'INTÉRIEUR du SVG, jamais le SVG
+   lui-même : masquer le SVG rendait toute la scène invisible. On masque donc
+   ses enfants de premier niveau, qui sont exactement les cibles animées.
+   C'est la deuxième fois que la règle large ci-dessus se retourne ainsi —
+   la consigne tient en une phrase : ne masquer que ce que la timeline révèle. */
+.scene-stage.is-animated .sc-iso-svg > g > * {
+  opacity: 0;
+}
+
+/* --- Primitive : titre -------------------------------------------------- */
+
+.sc-title {
+  position: absolute;
+  left: 96px;
+  top: 150px;
+  width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sc-kicker {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.sc-title-text {
+  font-size: 58px;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -.02em;
+  color: var(--navy);
+}
+
+/* Carton de chapitre : plein cadre, dégradé navy, titre centré. */
+.sc-title.is-card {
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: auto;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  text-align: center;
+  background: linear-gradient(150deg, #0B3D6F 0%, #0E4F8C 55%, #0A3660 100%);
+}
+
+.sc-title.is-card .sc-kicker {
+  color: #8FB4DA;
+  order: -1;
+}
+
+.sc-title.is-card .sc-title-text {
+  color: var(--text-on-accent);
+  font-size: 84px;
+  max-width: 1450px;
+}
+
+.sc-title.is-card::after {
+  content: "";
+  width: 220px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background-image: linear-gradient(to right, #F17D0C 0 33.33%, #FFFFFF 33.33% 66.66%, #0C8B41 66.66% 100%);
+}
+
+/* --- Primitive : picto -------------------------------------------------- */
+
+.sc-picto {
+  position: absolute;
+  top: 430px;
+  width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.sc-picto[data-slot='1'] { left: 120px; }
+.sc-picto[data-slot='2'] { left: 740px; }
+.sc-picto[data-slot='3'] { left: 1360px; }
+
+.sc-picto-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 128px;
+  height: 128px;
+  border-radius: var(--r-xl);
+  background: var(--sq-blue-bg);
+  border: 2px solid var(--navy-ink);
+  color: var(--navy-2);
+}
+
+.sc-picto-glyph {
+  width: 56%;
+  height: 56%;
+}
+
+.sc-picto[data-slot='2'] .sc-picto-icon { color: var(--accent-hover); }
+.sc-picto[data-slot='3'] .sc-picto-icon { color: var(--success); }
+
+.sc-picto[data-slot='2'] .sc-picto-icon { background: var(--sq-amber-bg); border-color: var(--accent-soft-border); }
+.sc-picto[data-slot='3'] .sc-picto-icon { background: var(--sq-green-bg); border-color: #A6DCBD; }
+
+.sc-picto-label {
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+/* Quand la scène montre un écran, les pictos deviennent les puces de la
+   colonne de gauche, sous le titre. */
+.sc-scene.has-screen .sc-picto {
+  top: auto;
+  left: 96px;
+  width: 700px;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+}
+
+.sc-scene.has-screen .sc-picto[data-slot='1'] { top: 430px; }
+.sc-scene.has-screen .sc-picto[data-slot='2'] { top: 502px; }
+.sc-scene.has-screen .sc-picto[data-slot='3'] { top: 574px; }
+
+.sc-scene.has-screen .sc-picto-icon {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 0;
+  background: none;
+  border: none;
+  color: var(--navy);
+}
+
+.sc-scene.has-screen .sc-picto-glyph {
+  width: 100%;
+  height: 100%;
+}
+
+.sc-scene.has-screen .sc-picto[data-slot='2'] .sc-picto-icon,
+.sc-scene.has-screen .sc-picto[data-slot='3'] .sc-picto-icon { color: var(--navy); }
+
+.sc-scene.has-screen .sc-picto-label {
+  font-size: 27px;
+  font-weight: 600;
+}
+
+/* --- Primitive : acteur ------------------------------------------------- */
+
+.sc-actor {
+  position: absolute;
+  bottom: 200px;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.sc-actor[data-stage-id='partner'] { left: 180px; }
+.sc-actor[data-stage-id='antenne'] { left: 830px; }
+.sc-actor[data-stage-id='transporteur'] { left: 830px; }
+.sc-actor[data-stage-id='controle'] { left: 1480px; }
+.sc-actor[data-stage-id='systeme'] { left: 1480px; }
+
+.sc-actor-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 116px;
+  height: 116px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  border: none;
+  box-shadow: var(--sc-card-shadow);
+  color: var(--navy-2);
+}
+
+.sc-actor-glyph {
+  width: 46%;
+  height: 46%;
+}
+
+.sc-actor.is-live .sc-actor-dot { color: var(--accent-hover); }
+
+.sc-actor.is-live .sc-actor-dot {
+  background: var(--accent-soft);
+  box-shadow: var(--sc-card-shadow), 0 0 0 5px var(--accent);
+}
+
+.sc-actor-label {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.sc-actor.is-live .sc-actor-label {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+/* Dans une scène à écran, l'acteur descend en bas de la colonne de gauche,
+   en format compact : sinon il se retrouve sous la maquette d'ordinateur. */
+.sc-scene.has-screen .sc-actor {
+  left: 96px;
+  bottom: 230px;
+  width: auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 18px;
+}
+
+.sc-scene.has-screen .sc-actor-dot {
+  width: 72px;
+  height: 72px;
+}
+
+.sc-scene.has-screen .sc-actor-label {
+  font-size: 30px;
+}
+
+/* --- Primitive : document ---------------------------------------------- */
+
+.sc-doc {
+  position: absolute;
+  left: 50%;
+  top: 380px;
+  margin-left: -140px;
+  width: 280px;
+  height: 300px;
+  background: var(--surface);
+  border: none;
+  border-radius: var(--sc-card-radius);
+  box-shadow: var(--sc-card-shadow);
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Décalage horizontal issu de `data-x` : mise en page, donc valable aussi en
+   rendu par paliers. Les trois valeurs utilisées par le storyboard. */
+.sc-doc[data-x='-280'] { margin-left: -480px; }
+.sc-doc[data-x='-40'] { margin-left: -140px; }
+.sc-doc[data-x='200'] { margin-left: 200px; }
+
+.sc-doc.is-dimmed {
+  box-shadow: none;
+  border: 2px dashed var(--border-strong);
+  color: var(--text-muted);
+}
+
+.sc-doc-label {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--navy);
+}
+
+.sc-doc.is-dimmed .sc-doc-label { color: var(--text-muted); }
+
+.sc-doc-lines {
+  display: block;
+  height: 86px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--border) 0 8px,
+    transparent 8px 26px
+  );
+  border-radius: 2px;
+}
+
+.sc-doc-lines::after {
+  content: "";
+  display: block;
+  width: 58%;
+  height: 8px;
+  margin-top: 94px;
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.sc-doc-number {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 19px;
+  color: var(--text-secondary);
+}
+
+.sc-doc-qr {
+  margin-top: auto;
+  align-self: flex-end;
+  width: 92px;
+  height: 92px;
+  background: var(--text);
+}
+
+/* --- Primitive : flux -------------------------------------------------- */
+
+.sc-flow {
+  position: absolute;
+  bottom: 305px;
+  transform-origin: left center;
+  left: 440px;
+  width: 400px;
+  height: 6px;
+}
+
+.sc-flow[data-from='transporteur'][data-to='controle'] { left: 1090px; width: 400px; }
+.sc-flow[data-from='dut'][data-to='systeme'] { left: 960px; width: 520px; }
+
+.sc-flow-line {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--navy-2) 0 18px,
+    transparent 18px 34px
+  );
+}
+
+.sc-flow.is-reverse { bottom: 215px; }
+
+.sc-flow.is-reverse .sc-flow-line {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--warning) 0 18px,
+    transparent 18px 34px
+  );
+}
+
+/* --- Primitive : écran réel, dans un cadre d'appareil ------------------- */
+
+.sc-screen {
+  position: absolute;
+  right: 92px;
+  top: 240px;
+  width: 940px;
+  height: 562px;
+  padding: 14px 14px 26px;
+  background: linear-gradient(170deg, #22303E 0%, #16202B 100%);
+  border-radius: 18px;
+  box-shadow: var(--sc-card-shadow);
+}
+
+/* Socle de l'appareil. */
+.sc-screen::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  width: 1080px;
+  height: 14px;
+  margin-left: -540px;
+  border-radius: 0 0 16px 16px;
+  background: linear-gradient(to bottom, #22303E 0%, #0E151C 100%);
+}
+
+.sc-screen-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.sc-screen-fallback {
+  display: none;
+  position: absolute;
+  inset: 16px 16px 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--error);
+  background: var(--error-soft);
+  border-radius: 6px;
+}
+
+.sc-screen.is-missing .sc-screen-img { display: none; }
+.sc-screen.is-missing .sc-screen-fallback { display: flex; }
+
+.sc-screen-ring {
+  position: absolute;
+  left: 7%;
+  top: 20%;
+  width: 54%;
+  height: 44%;
+  border: 5px solid var(--accent);
+  border-radius: var(--r-md);
+}
+
+/* --- Primitive : annotation (pastille) --------------------------------- */
+
+.sc-callout {
+  position: absolute;
+  left: 96px;
+  bottom: 240px;
+  max-width: 700px;
+  padding: 18px 28px;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.3;
+  border-radius: var(--r-lg);
+  background: var(--navy-2);
+  color: var(--text-on-accent);
+}
+
+.sc-callout[data-tone='warning'] { background: var(--warning); color: var(--text); }
+.sc-callout[data-tone='info'] { background: var(--navy); }
+.sc-callout[data-tone='neutral'] { background: var(--surface); color: var(--text); border: 2px solid var(--border-strong); }
+
+/* Frise verticale : pastille verte, trait de liaison, libelle. Reprend la
+   colonne chronologique de la reference. */
+.sc-callout[data-anchor='lock'] {
+  left: auto;
+  right: 240px;
+  bottom: auto;
+  /* Largeur FIXE et non max-width : sinon chaque élément se dimensionne sur son
+     texte et les pastilles, ancrées à gauche de l'élément, se décalent les unes
+     par rapport aux autres au lieu de former une colonne. */
+  width: 560px;
+  font-size: 27px;
+  font-weight: 700;
+  color: var(--text);
+  background: none;
+  border: none;
+  padding: 0 0 0 44px;
+}
+
+.sc-callout[data-anchor='lock']::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-pill);
+  background: var(--success);
+  box-shadow: 0 0 0 5px rgba(12, 139, 65, .16);
+}
+
+.sc-callout[data-anchor='lock']::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 30px;
+  width: 2px;
+  height: 56px;
+  background: var(--border-strong);
+}
+
+.sc-callout[data-anchor='lock']:nth-of-type(8) {
+  color: var(--navy);
+}
+
+.sc-callout[data-anchor='lock']:nth-of-type(8)::after { display: none; }
+
+.sc-callout[data-anchor='lock']:nth-of-type(3) { top: 250px; }
+.sc-callout[data-anchor='lock']:nth-of-type(4) { top: 326px; }
+.sc-callout[data-anchor='lock']:nth-of-type(5) { top: 402px; }
+.sc-callout[data-anchor='lock']:nth-of-type(6) { top: 478px; }
+.sc-callout[data-anchor='lock']:nth-of-type(7) { top: 554px; }
+.sc-callout[data-anchor='lock']:nth-of-type(8) { top: 630px; }
+
+/* --- Sous-titres (dans la scène, donc dans le MP4) --------------------- */
+
+.sc-subtitle {
+  position: absolute;
+  left: 50%;
+  bottom: 52px;
+  width: 1200px;
+  margin: 0 0 0 -600px;
+  padding: 20px 34px;
+  text-align: center;
+  font-size: 31px;
+  line-height: 1.35;
+  font-weight: 500;
+  color: var(--text-on-accent);
+  background: #1D2B3A;
+  border-radius: var(--r-lg);
+  z-index: 4;
+}
+
+.sc-subtitle:empty,
+.sc-subtitle.is-hidden { display: none; }
+
+/* --- Scènes sur mesure ------------------------------------------------- */
+
+.sc-custom {
+  position: absolute;
+  inset: 0;
+}
+
+/* Scène 1.2 — le port d'Abidjan en isométrie. Le dessin est produit en SVG
+   par js/views/explainer/custom/port-abidjan.js ; ici, seul le cadrage. */
+.sc-iso,
+.sc-iso-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Scène 3.4 — la copie et le verdict du système. */
+.sc-copie-original,
+.sc-copie-copie { top: 300px; }
+
+.sc-copie-original { margin-left: -560px; }
+
+/* Décalé en CSS et non par un tween, pour que la copie ne soit pas superposée
+   à l'original en rendu par paliers. */
+.sc-copie-copie {
+  margin-left: -240px;
+  border-style: dashed;
+  border-color: var(--border-strong);
+}
+
+.sc-copie-beam {
+  position: absolute;
+  left: 50%;
+  top: 250px;
+  width: 6px;
+  height: 480px;
+  margin-left: -100px;
+  background: var(--accent);
+  transform-origin: top center;
+}
+
+.sc-copie-verdict {
+  position: absolute;
+  right: 160px;
+  top: 400px;
+  padding: 22px 48px;
+  font-size: 80px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--text-on-accent);
+  background: var(--error);
+  border-radius: var(--r-lg);
+}
+
+/* Scène 5.3 — architecture du système cible. */
+.sc-architecture {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  padding: 240px 96px 220px;
+  align-content: center;
+}
+
+.sc-archi-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 26px 30px;
+  background: var(--surface);
+  border: 2px solid var(--navy-ink);
+  border-radius: var(--r-lg);
+}
+
+.sc-archi-block[data-block='api'],
+.sc-archi-block[data-block='iam'] { border-color: var(--accent-soft-border); background: var(--accent-soft); }
+
+.sc-archi-block[data-block='db'],
+.sc-archi-block[data-block='sign'] { border-color: #A6DCBD; background: var(--sq-green-bg); }
+
+.sc-archi-label {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.1;
+}
+
+.sc-archi-role {
+  font-size: 22px;
+  color: var(--text-secondary);
+}
+
+/* --- Lecteur (hors zone capturée) -------------------------------------- */
+
+.explainer-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.explainer-chapters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.explainer-chapter {
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-control);
+  cursor: pointer;
+}
+
+.explainer-chapter[aria-current='true'] {
+  color: var(--text-on-accent);
+  background: var(--navy);
+  border-color: var(--navy);
+}
+
+.explainer-seek {
+  flex: 1 1 220px;
+  min-width: 160px;
+}
+
+.explainer-transcript {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy-2);
+}
+
+.explainer-time {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.explainer-notice {
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--navy);
+  background: var(--navy-soft);
+  border: 1px solid var(--navy-ink);
+  border-radius: var(--r-md);
+}
+
+/* --- Mode export : aucun contrôle, scène seule ------------------------- */
+
+.explainer.is-render .explainer-controls,
+.explainer.is-render .explainer-notice { display: none; }
+
+/* La scène est extraite de la coquille applicative et posée seule, non mise à
+   l'échelle, pour que la capture fasse exactement 1920x1080 et ne contienne que
+   la vidéo — ni menu, ni en-tête, ni rognage. */
+body.is-explainer-render > #app,
+body.is-explainer-render > .app-shell { display: none; }
+
+body.is-explainer-render {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body.is-explainer-render > .scene-stage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
+  margin: 0;
+  transform: none;
+}
+
+/* --- Écrans étroits ---------------------------------------------------- */
+
+@media (max-width: 720px) {
+  .explainer-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .explainer-seek { flex: 1 1 auto; }
+}

@@ -28,7 +28,7 @@ export function mountInsights(container) {
           <div class="volume-labels">${s.months.map(m=>`<span>${e(m.label)}</span>`).join('')}</div><p class="ops-footnote">Créations sur les six derniers mois, dans la période sélectionnée. Les brouillons sont inclus.</p>
         </article>
         <article class="card"><div class="card-header"><h3>Cycle de traitement</h3>${icon('layers')}</div>
-          <div class="flow-summary"><div class="flow-donut" style="background:conic-gradient(var(--accent) 0% ${a}%,#75a9dc ${a}% ${b}%,var(--error) ${b}% ${c}%,var(--surface-sunken) ${c}% 100%)"><div><strong>${s.validationRate}%</strong><small>validés</small></div></div>
+          <div class="flow-summary"><div class="flow-donut" style="background:conic-gradient(var(--navy-2) 0% ${a}%,var(--navy-3) ${a}% ${b}%,var(--error) ${b}% ${c}%,var(--surface-sunken) ${c}% 100%)"><div><strong>${s.validationRate}%</strong><small>validés</small></div></div>
           <div class="flow-legend"><div><i class="legend-dot"></i>Validés<b>${s.validated}</b></div><div><i class="legend-dot" style="background:#75a9dc"></i>À valider<b>${s.pending}</b></div><div><i class="legend-dot tone-error"></i>Rejetés / suspendus / retirés<b>${s.blocked}</b></div><div><i class="legend-dot tone-neutral"></i>Brouillons<b>${s.drafts}</b></div></div></div>
           <div class="ops-summary-line"><span>Délai moyen de validation</span><strong>${s.delayHours===null?'—':`${n(s.delayHours,1)} h`}</strong></div><p class="ops-footnote">De la soumission à la validation, pour les DUT actuellement validés avec dates disponibles.</p>
         </article>

@@ -5,3 +5,5 @@
 tmp/
 ~$*
 .superpowers/
+audio/explainer/*.m4a
+output/video/

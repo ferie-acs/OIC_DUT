@@ -17,7 +17,7 @@ function countBy(list, keyFn) {
 }
 
 export function partnerStats(partnerId) {
-  const duts = getAllDuts().filter((d) => d.partnerId === partnerId);
+  const duts = getAllDuts().filter((d) => d.partnerId === partnerId && !d.canary);
   const operation = findActiveOperationForPartner(partnerId) || getAllOperations().find((o) => o.partnerId === partnerId);
   const thisMonth = new Date().toISOString().slice(0, 7);
   return {
