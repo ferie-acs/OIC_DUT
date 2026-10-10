@@ -6,13 +6,14 @@ import path from 'node:path';
 
 const ROOTS = ['index.html', 'manifest.webmanifest', 'css', 'js', 'assets/images', 'assets/icons'];
 const SKIP_EXT = new Set(['.mp4', '.zip', '.pdf', '.psd', '.ai', '.map']);
+const SKIP_DIRS = new Set(['js/demo3d']); // démo autonome : hors application, hors pré-cache
 
 async function walk(root, rel) {
   const out = [];
   for (const entry of await readdir(path.join(root, rel), { withFileTypes: true })) {
     const p = path.posix.join(rel, entry.name);
     if (entry.name.startsWith('.')) continue;
-    if (entry.isDirectory()) out.push(...await walk(root, p));
+    if (entry.isDirectory()) { if (!SKIP_DIRS.has(p)) out.push(...await walk(root, p)); }
     else if (!SKIP_EXT.has(path.extname(entry.name).toLowerCase())) out.push(p);
   }
   return out;

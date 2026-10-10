@@ -9,6 +9,7 @@ assert.ok(files.includes('js/views/control.view.js'));
 assert.ok(files.includes('assets/icons/icon-192.png'));
 assert.ok(!files.some((f) => f.startsWith('tools/') || f.startsWith('tests/') || f.startsWith('docs/') || f.startsWith('output/') || f === 'sw.js'), 'ni outils, ni tests, ni docs, ni le service worker lui-même');
 assert.ok(!files.some((f) => f.endsWith('.mp4') || f.endsWith('.zip')), 'pas de médias lourds');
+assert.ok(!files.some((f) => f.startsWith('js/demo3d/')), 'la démo 3D est autonome : hors pré-cache');
 console.log(`PWA : ${files.length} fichiers à pré-cacher, périmètre borné à l’application.`);
 
 // precache.json doit refléter les fichiers réellement publiés : à régénérer (node tools/pwa/precache.mjs) avant chaque livraison.
