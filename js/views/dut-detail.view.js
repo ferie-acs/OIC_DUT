@@ -11,8 +11,14 @@ import { confirmAction, promptAction, toast, openModal } from '../core/ui.js';
 import * as dutService from '../services/dut.service.js';
 import * as auditService from '../services/audit.service.js';
 import * as qrService from '../services/qr.service.js';
+import { dossier } from '../services/workspace.service.js';
+import { getAllControlLogs } from '../repositories/controls.repository.js';
+import { verdictOf } from '../services/supervision.service.js';
+import { transportActionsHtml, bindTransportActions, stageLabel, nextStage } from './transport-actions.js';
 
 const DONE_ACTIONS = ['DUT_VALIDATED', 'DUT_UNSUSPENDED'];
+const ACCOUNT_LABELS = { PROPRE: 'Compte propre', AUTRUI: 'Pour autrui', SOUS_TRAITANCE: 'Sous-traitance' };
+const TRANSPORT_LABELS = { NATIONAL: 'National', VERS_INTERNATIONAL: 'Vers l’international', VERS_NATIONAL: 'Vers le national' };
 
 let activeTab = 'detail';
 
@@ -30,31 +36,11 @@ export function render(container, params) {
 function paint(container, dut) {
   const user = getCurrentUser();
   const totalsM = dutService.computeMarchandiseTotals(dut.marchandises);
-  const totalsF = dutService.computeFacturationTotals(dut.facturation);
 
   container.innerHTML = `
-    <div class="page-header">
-      <div>
-        <span class="overline">DUT · Détail</span>
-        <div class="row gap-2" style="margin-top:6px">
-          <h1>${escapeHtml(dut.dutNumber || 'Brouillon DUT')}</h1>
-          <span class="badge status-${dut.status}"><span class="badge-dot"></span>${DUT_STATUS_LABELS[dut.status]}</span>
-        </div>
-        <div class="subtitle">${escapeHtml(dut.partnerName)} · Antenne ${escapeHtml(dut.antennaName || '—')}</div>
-      </div>
-      <div class="row gap-2" id="dut-actions"></div>
-    </div>
-    <div class="page-header-rule"></div>
-
-    ${dut.status === 'REJETE' ? `
-      <div class="alert-banner error">${icon('alertTriangle', { size: 18 })}<div class="alert-text"><strong>DUT rejeté</strong>${escapeHtml(dut.rejectionReason || '')}</div></div>
-    ` : ''}
-    ${dut.status === 'SUSPENDU' ? `
-      <div class="alert-banner warning">${icon('alertTriangle', { size: 18 })}<div class="alert-text"><strong>DUT suspendu</strong>Ce DUT ne peut plus être présenté comme valide tant que la suspension n’est pas levée.</div></div>
-    ` : ''}
-    ${dut.status === 'RETIRE' ? `
-      <div class="alert-banner error">${icon('xCircle', { size: 18 })}<div class="alert-text"><strong>DUT retiré</strong>Ce document n’est plus valide.</div></div>
-    ` : ''}
+    ${heroHtml(dut, totalsM)}
+    ${statusAlertHtml(dut, user)}
+    ${lifecycleHtml(dut)}
 
     <div class="tabs">
       <button type="button" class="tab-btn ${activeTab === 'detail' ? 'active' : ''}" data-tab="detail">Détail</button>
@@ -82,9 +68,6 @@ function renderActions(container, dut, user) {
   if (dut.status === 'EN_EDITION' && dut.createdBy === user.id) {
     buttons.push(`<button type="button" class="btn btn-primary" id="btn-continue-edit">${icon('edit', { size: 15 })} Continuer l’édition</button>`);
   }
-  if (dut.status === 'REJETE' && can(user, 'dut.edit_draft')) {
-    buttons.push(`<button type="button" class="btn btn-primary" id="btn-correct">${icon('edit', { size: 15 })} Corriger</button>`);
-  }
   if (dut.status === 'TERMINE' && can(user, 'dut.validate')) {
     buttons.push(`<button type="button" class="btn btn-danger" id="btn-reject">${icon('xCircle', { size: 15 })} Rejeter</button>`);
     buttons.push(`<button type="button" class="btn btn-success" id="btn-validate">${icon('checkCircle', { size: 15 })} Valider</button>`);
@@ -102,7 +85,8 @@ function renderActions(container, dut, user) {
     buttons.push(`<button type="button" class="btn btn-secondary" id="btn-pdf">${icon('download', { size: 15 })} DUT recto / verso</button>`);
     buttons.push(`<button type="button" class="btn btn-ghost" id="btn-preview-pdf">${icon('eye', { size: 15 })} Aperçu</button>`);
   }
-  box.innerHTML = buttons.join('');
+  box.innerHTML = transportActionsHtml(dut) + buttons.join('');
+  bindTransportActions(box, (id) => dutService.getDut(id), () => paint(container, dutService.getDut(dut.id)));
   box.querySelector('#btn-duplicate')?.addEventListener('click', () => {
     try {
       const copy = duplicateDut(dut.id);
@@ -116,7 +100,7 @@ function renderActions(container, dut, user) {
     sessionStorage.setItem('dut_wizard_draft_id', dut.id);
     navigate('/dut/new/1');
   });
-  box.querySelector('#btn-correct')?.addEventListener('click', () => {
+  container.querySelector('#btn-correct')?.addEventListener('click', () => {
     dutService.reopenForCorrection(dut.id);
     sessionStorage.setItem('dut_wizard_draft_id', dut.id);
     navigate('/dut/new/1');
@@ -191,74 +175,230 @@ function renderActions(container, dut, user) {
 function renderDetailTab(container, dut) {
   const totalsM = dutService.computeMarchandiseTotals(dut.marchandises);
   const totalsF = dutService.computeFacturationTotals(dut.facturation);
+  const record = safeDossier(dut.id);
+  const openIncidents = record.incidents.filter((i) => i.status === 'OPEN').length;
+  const controls = getAllControlLogs().filter((c) => c.dutId === dut.id).sort((x, y) => Date.parse(y.date || 0) - Date.parse(x.date || 0));
+  const driver = [dut.general.driverNom, dut.general.driverPrenoms].filter(Boolean).join(' ');
   const tab = container.querySelector('#tab-content');
 
   tab.innerHTML = `
-    <div class="dash-grid">
-      <div class="card" style="padding:26px 0">
-        ${recapSection('Transport', [
-          ['Date émission', formatDate(dut.general.dateEmission)],
-          ['Compte', dut.general.compte],
-          ['Type de transport', dut.general.transportType?.replaceAll('_', ' ')],
-          ['Transporteur', dut.general.transporterName],
-          ['Véhicule', dut.general.immatriculation],
-          ['Conducteur', `${dut.general.driverNom} ${dut.general.driverPrenoms}`],
-        ])}
-        ${recapSection('Parties', [
-          ['Expéditeur', dut.expediteur.raisonSociale],
-          ['Destinataire', dut.destinataire.raisonSociale],
-        ])}
-        ${recapSection('Trajet', [
-          ['Origine', dut.trajet.chargement.ville],
-          ['Destination', dut.trajet.dechargement.ville],
-          ['Départ', dut.trajet.dateDepart ? formatDate(dut.trajet.dateDepart) : '—'],
-          ['Arrivée', dut.trajet.dateArrivee ? formatDate(dut.trajet.dateArrivee) : '—'],
-        ])}
-        ${recapSection('Marchandise', [
-          ['Nature', dut.marchandises[0]?.nature],
-          ['Poids total', `${formatNumber(totalsM.poidsTonnes, 1)} t`],
-          ['Volume total', `${formatNumber(totalsM.volumeM3, 1)} m³`],
-          ['Valeur totale', formatMoney(totalsM.valeur)],
-        ])}
-        ${recapSection('Conditions financières', [
-          ['Total HT', formatMoney(totalsF.totalHT)],
-          ['TVA', formatMoney(totalsF.tva)],
-          ['Timbre fiscal', formatMoney(totalsF.timbreTotal)],
-          ['Total à percevoir', formatMoney(totalsF.totalAPercevoir)],
-        ], true)}
+    <div class="dd-body">
+      <div class="dd-main">
+        <article class="card dd-card">
+          <header class="dd-card-head">${icon('users', { size: 18 })}<h3>Parties</h3></header>
+          <div class="dd-parties">
+            ${partyHtml('Expéditeur', dut.expediteur)}
+            <span class="dd-parties-arrow" aria-hidden="true">${icon('arrowRight', { size: 18 })}</span>
+            ${partyHtml('Destinataire', dut.destinataire)}
+          </div>
+        </article>
+
+        <article class="card dd-card">
+          <header class="dd-card-head">${icon('truck', { size: 18 })}<h3>Véhicule et conducteur</h3></header>
+          <div class="dd-vehicle">
+            <div class="dd-plate" aria-label="Immatriculation">${escapeHtml(dut.general.immatriculation || '—')}</div>
+            <dl class="dd-list">
+              ${dlRow('Transporteur', dut.general.transporterName)}
+              ${dlRow('Conducteur', driver)}
+              ${dlRow('Compte', ACCOUNT_LABELS[dut.general.compte] || dut.general.compte)}
+              ${dlRow('Type de transport', TRANSPORT_LABELS[dut.general.transportType] || dut.general.transportType)}
+              ${dlRow('Date d’émission', dut.general.dateEmission ? formatDate(dut.general.dateEmission) : '')}
+            </dl>
+          </div>
+        </article>
+
+        <article class="card dd-card">
+          <header class="dd-card-head">${icon('package', { size: 18 })}<h3>Marchandise</h3>${dut.dangereuse ? '<span class="badge badge-warning">Dangereuse</span>' : ''}${dut.temperatureControlee ? '<span class="badge badge-neutral">Sous température</span>' : ''}</header>
+          <div class="dd-figures">
+            <div><strong>${formatNumber(totalsM.poidsTonnes, 1)}<small> t</small></strong><span>Poids total</span></div>
+            <div><strong>${formatNumber(totalsM.volumeM3, 1)}<small> m³</small></strong><span>Volume total</span></div>
+            <div><strong>${formatMoney(totalsM.valeur)}</strong><span>Valeur déclarée</span></div>
+          </div>
+          ${dut.marchandises.length ? `<ul class="dd-goods">${dut.marchandises.map((m) => `<li><span>${escapeHtml(m.nature || 'Nature non précisée')}</span><b>${formatNumber(Number(m.poidsTonnes) || 0, 1)} t</b></li>`).join('')}</ul>` : '<p class="text-muted">Aucune marchandise déclarée.</p>'}
+        </article>
       </div>
-      <div class="stack gap-4">
+
+      <aside class="dd-aside">
         ${dut.dutNumber ? `
-          <div class="card text-center">
-            <h3 style="margin-bottom:var(--s3)">QR de vérification</h3>
-            <div id="qr-holder" style="display:flex;justify-content:center"></div>
-            <p class="text-muted" style="font-size:.75rem;margin-top:var(--s2)">Jeton opaque, sans donnée métier — vérifié dans les données locales du POC.</p>
+          <article class="card dd-card dd-qr">
+            <header class="dd-card-head">${icon('qrcode', { size: 18 })}<h3>QR de vérification</h3></header>
+            <div id="qr-holder"></div>
+            <p class="text-muted">Jeton opaque, sans donnée métier — vérifié dans les données locales du POC.</p>
+          </article>` : ''}
+
+        <article class="card dd-card dd-receipt">
+          <header class="dd-card-head">${icon('file', { size: 18 })}<h3>Montant à percevoir</h3></header>
+          <dl>
+            ${receiptRow('Total HT', totalsF.totalHT)}
+            ${receiptRow('TVA', totalsF.tva)}
+            ${receiptRow('Timbre fiscal', totalsF.timbreTotal)}
+          </dl>
+          <div class="dd-receipt-total"><span>Total</span><strong>${formatMoney(totalsF.totalAPercevoir)}</strong></div>
+        </article>
+
+        <article class="card dd-card">
+          <header class="dd-card-head">${icon('layers', { size: 18 })}<h3>Suivi du dossier</h3></header>
+          <div class="dd-counters">
+            ${counterHtml('documents', 'Documents joints', record.files.length, 'paperclip')}
+            ${counterHtml('incidents', 'Incidents ouverts', openIncidents, 'alertTriangle', openIncidents > 0)}
+            ${counterHtml('controls', 'Contrôles routiers', controls.length, 'shield')}
           </div>
-        ` : ''}
-        <div class="card">
-          <h3 style="margin-bottom:var(--s2)">Cycle de vie</h3>
-          <div class="timeline">
-            <div class="timeline-item"><span class="timeline-dot done"></span><div class="timeline-content"><strong>Créé</strong><div class="meta">${formatDateTime(dut.createdAt)}</div></div></div>
-            ${dut.submittedAt ? `<div class="timeline-item"><span class="timeline-dot done"></span><div class="timeline-content"><strong>Soumis</strong><div class="meta">${formatDateTime(dut.submittedAt)}</div></div></div>` : ''}
-            ${dut.validatedAt ? `<div class="timeline-item"><span class="timeline-dot done"></span><div class="timeline-content"><strong>Validé</strong><div class="meta">${formatDateTime(dut.validatedAt)} · ${escapeHtml(dut.validatedBy || '')}</div></div></div>` : ''}
-          </div>
-        </div>
-      </div>
+        </article>
+      </aside>
     </div>
   `;
 
+  const goTo = (section) => navigate(`/dut/${encodeURIComponent(dut.id)}/${section}`);
+  const modals = {
+    documents: () => openModal({ icon: 'paperclip', title: 'Documents joints', large: true, bodyHtml: documentsModalHtml(record.files), confirmLabel: 'Gérer les documents', cancelLabel: 'Fermer', onConfirm: ({ close }) => { close(); goTo('documents'); } }),
+    incidents: () => openModal({ icon: 'alertTriangle', tone: openIncidents ? 'error' : 'accent', title: 'Incidents et réserves', large: true, bodyHtml: incidentsModalHtml(record.incidents), confirmLabel: 'Gérer les incidents', cancelLabel: 'Fermer', onConfirm: ({ close }) => { close(); goTo('incidents'); } }),
+    controls: () => openModal({ icon: 'shield', title: 'Contrôles routiers', large: true, bodyHtml: controlsModalHtml(controls), confirmLabel: 'Fermer', hideCancel: true }),
+  };
+  tab.querySelectorAll('[data-counter]').forEach((button) => button.addEventListener('click', () => modals[button.dataset.counter]()));
   if (dut.dutNumber) qrService.renderQrInto(tab.querySelector('#qr-holder'), dut.qrSigned, 168);
 }
 
-function recapSection(title, rows, highlight = false) {
+function safeDossier(id) {
+  try { return dossier(id); } catch { return { incidents: [], files: [], events: [] }; }
+}
+
+function heroHtml(dut, totalsM) {
+  const from = dut.trajet.chargement;
+  const to = dut.trajet.dechargement;
+  const goods = dut.marchandises[0]?.nature;
   return `
-    <div class="recap-section" style="padding-left:26px;padding-right:26px">
-      <h3><span class="overline" style="font-size:.6rem">${title}</span></h3>
-      <div class="recap-grid">
-        ${rows.map(([label, value]) => `<div class="recap-item"><span>${label}</span><strong${highlight ? ' style="font-size:18px"' : ''}>${escapeHtml(value || '—')}</strong></div>`).join('')}
+    <section class="dd-hero">
+      <div class="dd-hero-top">
+        <div class="dd-hero-id">
+          <span class="overline">DUT · ${dut.dutNumber ? 'Document officiel' : 'Dossier non numéroté'}</span>
+          <div class="dd-title-row">
+            <h1>${escapeHtml(dut.dutNumber || `Dossier ${dut.general.immatriculation || 'sans véhicule'}`)}</h1>
+            <span class="badge status-${dut.status}"><span class="badge-dot"></span>${DUT_STATUS_LABELS[dut.status]}</span>
+          </div>
+          <p class="dd-hero-sub">${escapeHtml(dut.partnerName)} · Antenne ${escapeHtml(dut.antennaName || '—')}</p>
+        </div>
+        <div class="dd-actions" id="dut-actions"></div>
       </div>
-    </div>
-  `;
+      <div class="dd-route" aria-label="Trajet de ${escapeHtml(from.ville || 'départ inconnu')} à ${escapeHtml(to.ville || 'arrivée inconnue')}">
+        <div class="dd-city">
+          <small>Départ</small>
+          <strong>${escapeHtml(from.ville || '—')}</strong>
+          <span>${dut.trajet.dateDepart ? formatDate(dut.trajet.dateDepart) : 'Date à préciser'}${dut.trajet.heureDepart ? ` · ${escapeHtml(dut.trajet.heureDepart)}` : ''}</span>
+        </div>
+        <div class="dd-route-line" aria-hidden="true"><span class="dd-route-truck">${icon('truck', { size: 18 })}</span></div>
+        <div class="dd-city dd-city-end">
+          <small>Arrivée</small>
+          <strong>${escapeHtml(to.ville || '—')}</strong>
+          <span>${dut.trajet.dateArrivee ? formatDate(dut.trajet.dateArrivee) : 'Date à préciser'}${dut.trajet.heureArrivee ? ` · ${escapeHtml(dut.trajet.heureArrivee)}` : ''}</span>
+        </div>
+      </div>
+      <dl class="dd-facts">
+        <div><dt>Transporteur</dt><dd>${escapeHtml(dut.general.transporterName || '—')}</dd></div>
+        <div><dt>Véhicule</dt><dd>${escapeHtml(dut.general.immatriculation || '—')}</dd></div>
+        <div><dt>Marchandise</dt><dd>${escapeHtml(goods || '—')}${totalsM.poidsTonnes ? ` · ${formatNumber(totalsM.poidsTonnes, 1)} t` : ''}</dd></div>
+        <div><dt>Valeur déclarée</dt><dd>${formatMoney(totalsM.valeur)}</dd></div>
+      </dl>
+    </section>`;
+}
+
+function statusAlertHtml(dut, user) {
+  if (dut.status === 'REJETE') {
+    const who = [dut.rejectedAt ? `le ${formatDateTime(dut.rejectedAt)}` : '', dut.rejectedBy ? `par ${escapeHtml(dut.rejectedBy)}` : ''].filter(Boolean).join(' ');
+    const cta = can(user, 'dut.edit_draft') ? `<button type="button" class="btn btn-primary" id="btn-correct">${icon('edit', { size: 15 })} Corriger et resoumettre</button>` : '';
+    return `<div class="dd-alert is-error" role="status">${icon('xCircle', { size: 20 })}<div class="dd-alert-text"><strong>Dossier rejeté${who ? ` ${who}` : ''}</strong><p>${escapeHtml(dut.rejectionReason || 'Aucun motif précisé.')}</p></div>${cta}</div>`;
+  }
+  if (dut.status === 'SUSPENDU') return `<div class="dd-alert is-warning" role="status">${icon('alertTriangle', { size: 20 })}<div class="dd-alert-text"><strong>DUT suspendu${dut.suspendedAt ? ` le ${formatDateTime(dut.suspendedAt)}` : ''}</strong><p>Ce DUT ne peut plus être présenté comme valide tant que la suspension n’est pas levée.</p></div></div>`;
+  if (dut.status === 'RETIRE') return `<div class="dd-alert is-error" role="status">${icon('xCircle', { size: 20 })}<div class="dd-alert-text"><strong>DUT retiré${dut.withdrawnAt ? ` le ${formatDateTime(dut.withdrawnAt)}` : ''}</strong><p>Ce document n’est plus valide.</p></div></div>`;
+  return '';
+}
+
+/** Frise du cycle de vie : étapes passées, en cours, à venir. */
+function lifecycleHtml(dut) {
+  const step = (label, at, state) => ({ label, at, state });
+  const steps = [step('Créé', dut.createdAt, 'done')];
+  const s = dut.status;
+  if (s === 'EN_EDITION') steps.push(step('En édition', null, 'current'), step('Soumis', null, 'todo'), step('Validé', null, 'todo'));
+  else steps.push(step('Soumis', dut.submittedAt, 'done'));
+  if (s === 'TERMINE') steps.push(step('Relecture antenne', null, 'current'), step('Validé', null, 'todo'));
+  if (s === 'REJETE') steps.push(step('Rejeté', dut.rejectedAt, 'error'), step('Correction', null, 'todo'), step('Validé', null, 'todo'));
+  if (['VALIDE', 'SUSPENDU', 'RETIRE'].includes(s)) steps.push(step('Validé', dut.validatedAt, 'done'));
+  if (s === 'VALIDE') steps.push(nextStage(dut.id) ? { label: 'Transport', at: null, state: 'current', note: stageLabel(dut.id) } : step('Livré', safeDossier(dut.id).events?.find((e) => e.label === 'Livré')?.at || null, 'done'));
+  if (s === 'SUSPENDU') steps.push(step('Suspendu', dut.suspendedAt, 'warning'));
+  if (s === 'RETIRE') steps.push(step('Retiré', dut.withdrawnAt, 'error'));
+  return `<ol class="dd-steps" aria-label="Cycle de vie du dossier">${steps.map((x) => `
+    <li class="dd-step is-${x.state}"${x.state === 'current' ? ' aria-current="step"' : ''}>
+      <span class="dd-step-dot" aria-hidden="true">${x.state === 'done' ? icon('check', { size: 12 }) : x.state === 'error' ? icon('x', { size: 12 }) : ''}</span>
+      <strong>${x.label}</strong>
+      <small>${x.note ? escapeHtml(x.note) : x.at ? formatDateTime(x.at) : x.state === 'current' ? 'En cours' : 'À venir'}</small>
+    </li>`).join('')}</ol>`;
+}
+
+function partyHtml(role, party = {}) {
+  const name = party.raisonSociale || '';
+  const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?';
+  return `<div class="dd-party">
+    <span class="dd-party-avatar" aria-hidden="true">${escapeHtml(initials)}</span>
+    <div><small>${role}</small><strong>${escapeHtml(name || '—')}</strong>${party.adresse ? `<span>${escapeHtml(party.adresse)}</span>` : ''}${party.contact ? `<span>${escapeHtml(party.contact)}</span>` : ''}</div>
+  </div>`;
+}
+
+function dlRow(label, value) {
+  return `<div><dt>${label}</dt><dd>${escapeHtml(value || '—')}</dd></div>`;
+}
+
+function receiptRow(label, value) {
+  return `<div><dt>${label}</dt><dd>${formatMoney(value)}</dd></div>`;
+}
+
+/** Compteur du dossier : ouvre le détail dans une fenêtre. */
+function counterHtml(key, label, value, iconName, alert = false) {
+  return `<button type="button" class="dd-counter${alert ? ' is-alert' : ''}" data-counter="${key}" aria-haspopup="dialog">
+    <span class="dd-counter-icon" aria-hidden="true">${icon(iconName, { size: 16 })}</span>
+    <span>${label}</span><b>${formatNumber(value)}</b>${icon('chevronRight', { size: 15 })}
+  </button>`;
+}
+
+const VERDICT_LABELS = { VERT: ['Valide', 'badge-success'], ORANGE: ['À vérifier', 'badge-warning'], ROUGE: ['Refusé', 'badge-error'], INCONNU: ['Inconnu', 'badge-neutral'] };
+
+function emptyModal(text) {
+  return `<p class="dd-modal-empty">${text}</p>`;
+}
+
+function documentsModalHtml(files) {
+  if (!files.length) return emptyModal('Aucun document joint pour ce dossier.');
+  return `<ul class="dd-modal-list">${files.map((f) => `
+    <li>
+      <span class="dd-modal-icon" aria-hidden="true">${icon('file', { size: 16 })}</span>
+      <div><strong>${escapeHtml(f.name)}</strong><small>${escapeHtml(f.category || 'Sans catégorie')} · ${Math.ceil((f.size || 0) / 1024)} Ko · ${formatDateTime(f.at)} · ${escapeHtml(f.author || '')}</small></div>
+      ${/^data:(application\/pdf|image\/(png|jpeg));/.test(f.data || '') ? `<a class="btn btn-secondary btn-sm" href="${escapeHtml(f.data)}" download="${escapeHtml(f.name)}">${icon('download', { size: 14 })} Télécharger</a>` : ''}
+    </li>`).join('')}</ul>`;
+}
+
+function incidentsModalHtml(incidents) {
+  if (!incidents.length) return emptyModal('Aucun incident ni réserve signalé.');
+  return `<ul class="dd-modal-list">${incidents.map((i) => {
+    const open = i.status === 'OPEN';
+    const badge = open ? (i.severity === 'URGENT' ? ['Urgent · ouvert', 'badge-error'] : ['Ouvert', 'badge-warning']) : ['Résolu', 'badge-success'];
+    return `<li>
+      <span class="dd-modal-icon${open ? ' is-alert' : ''}" aria-hidden="true">${icon(open ? 'alertTriangle' : 'checkCircle', { size: 16 })}</span>
+      <div><strong>${escapeHtml(i.type)} <span class="badge ${badge[1]}">${badge[0]}</span></strong>
+        <p class="preserve-lines">${escapeHtml(i.description)}</p>
+        <small>Suivi : ${escapeHtml(i.assignee)} · ${formatDateTime(i.createdAt)} · ${escapeHtml(i.author || '')}</small>
+        ${open ? '' : `<small>Résolution : ${escapeHtml(i.resolution || '')} · ${formatDateTime(i.resolvedAt)}</small>`}</div>
+    </li>`;
+  }).join('')}</ul>`;
+}
+
+function controlsModalHtml(controls) {
+  if (!controls.length) return emptyModal('Ce DUT n’a encore été contrôlé sur aucun poste.');
+  return `<ul class="dd-modal-list">${controls.map((c) => {
+    const [label, cls] = VERDICT_LABELS[verdictOf(c)] || VERDICT_LABELS.INCONNU;
+    return `<li>
+      <span class="dd-modal-icon" aria-hidden="true">${icon('scan', { size: 16 })}</span>
+      <div><strong>${escapeHtml(c.postName || 'Poste non renseigné')} <span class="badge ${cls}">${label}</span></strong>
+        <small>${formatDateTime(c.date)} · ${escapeHtml(c.agentLabel || '')} · ${c.mode === 'HORS_LIGNE' ? 'hors ligne' : 'en ligne'}</small></div>
+    </li>`;
+  }).join('')}</ul>`;
 }
 
 function renderAuditTab(container, dut) {
