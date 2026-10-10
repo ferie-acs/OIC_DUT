@@ -988,3 +988,52 @@ th.is-sorted .sup-sort{color:var(--navy)}
 .settings-danger .settings-head{align-items:flex-start}
 .settings-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 @media(max-width:1100px){.settings-layout{grid-template-columns:1fr}.settings-aside{position:static}}
+
+/* ===== Barre latérale : rail fixe au défilement, sections rétractables ===== */
+@media(min-width:961px){
+  .app-rail{position:fixed;top:0;bottom:0;left:0;z-index:2;overflow-y:auto;scrollbar-width:none}
+  .app-rail::-webkit-scrollbar{display:none}
+}
+button.sidebar-section-label{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;background:none;border:0;cursor:pointer;font-family:inherit;text-transform:uppercase;text-align:left;border-radius:var(--r-sm)}
+button.sidebar-section-label:hover{color:var(--navy)}
+button.sidebar-section-label:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.sidebar-section-label svg{flex:none;transition:transform .2s ease}
+.sidebar-section.is-collapsed>.sidebar-section-label svg{transform:rotate(-90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;gap:2px}
+.sidebar-section.is-collapsed>.sidebar-section-items{display:none}
+@media(prefers-reduced-motion:reduce){button.sidebar-section-label svg{transition:none}}
+
+/* ===== Tuiles d'indicateurs (statistiques, supervision) : pastille d'icône teintée, halo léger ===== */
+.st-kpi{
+  --kpi-tone:var(--sq-navy-fg);
+  background:
+    radial-gradient(120% 110% at 100% 0%,color-mix(in srgb,var(--kpi-tone) 9%,transparent) 0%,transparent 55%),
+    linear-gradient(180deg,var(--surface) 0%,color-mix(in srgb,var(--surface) 92%,var(--kpi-tone)) 100%);
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.st-kpi:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--kpi-tone) 28%,var(--border));box-shadow:0 12px 26px -12px color-mix(in srgb,var(--kpi-tone) 40%,transparent)}
+.st-kpi .kpi-label{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.st-kpi .kpi-label>span:first-child{padding-top:6px}
+.st-kpi-icon{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--kpi-tone);background:color-mix(in srgb,var(--kpi-tone) 12%,transparent)}
+.st-kpi-icon svg{stroke-width:1.9}
+.st-kpi .kpi-hint{margin-top:auto;padding-top:10px;border-top:1px solid color-mix(in srgb,var(--kpi-tone) 14%,var(--border))}
+.sup-kpis .st-kpi .kpi-value{margin-top:0}
+@media(prefers-reduced-motion:reduce){.st-kpi{transition:none}.st-kpi:hover{transform:none}}
+
+/* ===== Cycle de traitement : contenu réparti sur toute la hauteur de la carte, pastilles fidèles au donut ===== */
+.ops-flow-card{display:flex;flex-direction:column}
+.ops-flow-card .flow-summary{flex:1;margin:12px 0 20px}
+.ops-flow-card .flow-donut{width:150px;height:150px}
+.ops-flow-card .flow-donut>div{width:116px;height:116px}
+.ops-flow-card .flow-donut strong{font-size:26px}
+.ops-flow-card .flow-legend{flex:1;min-width:0}
+.legend-dot.tone-pending{background:var(--navy-3)}
+.legend-dot.tone-error{background:var(--error)}
+.legend-dot.tone-neutral{background:var(--surface-sunken)}
+
+/* ===== Principaux corridors : liste répartie sur la hauteur, barres uniformes ===== */
+.ops-corridor-card{display:flex;flex-direction:column}
+.ops-corridor-card .corridor-list{flex:1;display:flex;flex-direction:column;justify-content:space-evenly}
+.ops-corridor-card .corridor{margin:10px 0}
+.ops-corridor-card .corridor .corridor-fill{opacity:1}
+.ops-corridor-card .ops-footnote{margin-top:12px}

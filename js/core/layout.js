@@ -43,6 +43,14 @@ const NAV_SECTIONS_BY_ROLE = {
   ],
 };
 
+const EXPANDED_SECTIONS_KEY = 'dut_nav_expanded';
+
+/** Sections du menu dépliées par l'utilisateur (libellés). Par défaut tout est replié, sauf la section de la page ouverte. */
+function readExpandedSections() {
+  const value = readObject(EXPANDED_SECTIONS_KEY, []);
+  return Array.isArray(value) ? value.filter(name => typeof name === 'string') : [];
+}
+
 function appRoot() {
   return document.getElementById('app');
 }
@@ -66,6 +74,7 @@ export function renderAppShell(user, currentPath, breadcrumbItems = []) {
   if (user.role === 'OIC_ADMIN') sections.push({ label: 'Ressources', items: [{ path: '/oic/operations', label: 'Demandes de plages', icon: 'layers' }, { path: '/oic/antennas', label: 'Carte des antennes', icon: 'map' }] });
 
   if(user.role==='OIC_ADMIN') sections.push({label:'Administration',items:[{path:'/admin/users',label:'Utilisateurs',icon:'users'},{path:'/admin/roles',label:'Rôles & accès',icon:'shield'},{path:'/admin/settings',label:'Paramètres',icon:'layers'},{path:'/admin/audit',label:'Journal',icon:'file'}]});
+  const expandedSections = readExpandedSections();
   document.title=settings().platformName;
   root.innerHTML = `
     <div class="app-shell">
@@ -85,16 +94,24 @@ export function renderAppShell(user, currentPath, breadcrumbItems = []) {
           </div>
         </div>
         <nav class="sidebar-nav">
-          ${sections.map((section) => `
-            <div class="sidebar-section">
-              <div class="sidebar-section-label">${section.label}</div>
+          ${sections.map((section, index) => {
+            const hasActive = section.items.some(item => item.path && isActive(item.path, currentPath));
+            const collapsed = !hasActive && !expandedSections.includes(section.label);
+            return `
+            <div class="sidebar-section ${collapsed ? 'is-collapsed' : ''}">
+              <button type="button" class="sidebar-section-label" data-section="${escapeHtml(section.label)}" aria-expanded="${String(!collapsed)}" aria-controls="nav-section-${index}">
+                <span>${section.label}</span>${icon('chevronDown', { size: 14 })}
+              </button>
+              <div class="sidebar-section-items" id="nav-section-${index}">
               ${section.items.map((item) => (
                 item.action
                   ? `<a class="nav-link" href="#" data-nav-action="${item.action}">${icon(item.icon, { size: 16 })}<span>${item.label}</span></a>`
                   : `<a class="nav-link ${isActive(item.path, currentPath) ? 'active' : ''}" href="#${item.path}">${icon(item.icon, { size: 16 })}<span>${item.label}</span></a>`
               )).join('')}
+              </div>
             </div>
-          `).join('')}
+          `;
+          }).join('')}
         </nav>
         <div class="sidebar-note">${icon('shield', {size:22})}<strong>Un transport traçable</strong><p>Du document à la route, chaque étape de votre DUT est enregistrée.</p><span class="badge badge-accent" style="margin-top:12px">Espace de démonstration</span></div>
         <div class="sidebar-footer">
@@ -163,6 +180,18 @@ export function renderAppShell(user, currentPath, breadcrumbItems = []) {
     const dut = createDraft(user);
     sessionStorage.setItem('dut_wizard_draft_id', dut.id);
     navigate('/dut/new/1');
+  });
+
+  root.querySelectorAll('.sidebar-section-label[data-section]').forEach(button => {
+    button.addEventListener('click', () => {
+      const section = button.closest('.sidebar-section');
+      const collapsed = section.classList.toggle('is-collapsed');
+      button.setAttribute('aria-expanded', String(!collapsed));
+      const label = button.dataset.section;
+      const next = readExpandedSections().filter(name => name !== label);
+      if (!collapsed) next.push(label);
+      try { writeObject(EXPANDED_SECTIONS_KEY, next); } catch { /* préférence d'affichage seulement : on garde l'état à l'écran */ }
+    });
   });
 
   root.querySelector('#btn-logout').addEventListener('click', () => {

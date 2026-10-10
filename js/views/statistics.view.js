@@ -1,5 +1,6 @@
 // Statistiques de la plateforme (admin OIC) : filtres communs, alertes, huit domaines en onglets.
 import { icon } from '../core/icons.js';
+import { iconForLabel } from '../core/card-icons.js';
 import { escapeHtml as esc, formatDate, formatDateTime, formatNumber } from '../core/utils.js';
 import { DUT_STATUS_LABELS } from '../core/constants.js';
 import { barChart, lineChart, doughnutChart } from '../core/chartjs.js';
@@ -14,7 +15,7 @@ const n = (v, d = 0) => (v == null || Number.isNaN(v) ? '—' : formatNumber(v, 
 const h = (v) => (v == null ? '—' : v < 48 ? `${n(v, 1)} h` : `${n(v / 24, 1)} j`);
 const pc = (v) => (v == null ? '—' : `${n(v, 1)} %`);
 const fcfa = (v) => (v == null ? '—' : `${n(Math.round(v))} F`);
-const kpi = (label, value, hint = '', tone = 'navy') => `<div class="kpi-card st-kpi"><div class="kpi-label">${esc(label)}</div><div class="kpi-value" style="color:var(--sq-${tone}-fg)">${value}</div>${hint ? `<div class="kpi-hint">${hint}</div>` : ''}</div>`;
+const kpi = (label, value, hint = '', tone = 'navy') => `<div class="kpi-card st-kpi" style="--kpi-tone:var(--sq-${tone}-fg)"><div class="kpi-label"><span>${esc(label)}</span><span class="st-kpi-icon" aria-hidden="true">${icon(iconForLabel(label), { size: 17 })}</span></div><div class="kpi-value" style="color:var(--sq-${tone}-fg)">${value}</div>${hint ? `<div class="kpi-hint">${hint}</div>` : ''}</div>`;
 const chart = (id, title, subtitle = '', total = '') => `<div class="chart-card"><div class="chart-head"><div><h3>${esc(title)}</h3>${subtitle ? `<p>${esc(subtitle)}</p>` : ''}</div>${total !== '' ? `<span class="chart-total"><strong>${total}</strong></span>` : ''}</div><div class="chart-box"><canvas id="${id}" role="img" aria-label="${esc(title)}"></canvas></div></div>`;
 const table = (cols, rows, empty = 'Aucune donnée') => rows.length ? `<div class="table-wrap"><table class="data-table st-table"><thead><tr>${cols.map(([l, , cls]) => `<th class="${cls || ''}">${esc(l)}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${cols.map(([, f, cls]) => `<td class="${cls || ''}">${f(r)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : `<p class="sup-empty">${esc(empty)}</p>`;
 const pairs = (list, fmt = (v) => n(v)) => list.length ? `<ul class="st-pairs">${list.map((x) => `<li><span>${esc(x.label)}</span><b>${fmt(x.value)}</b></li>`).join('')}</ul>` : '<p class="sup-empty">Aucune donnée</p>';

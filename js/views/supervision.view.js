@@ -1,5 +1,6 @@
 // Supervision (admin OIC) : liste classée par acteur, puis fiche détaillée avec statistiques et journal.
 import { icon } from '../core/icons.js';
+import { iconForLabel } from '../core/card-icons.js';
 import { escapeHtml as esc, formatDate, formatDateTime, formatNumber } from '../core/utils.js';
 import { navigate } from '../core/router.js';
 import { openModal, toast } from '../core/ui.js';
@@ -108,7 +109,7 @@ function renderOverview(container, actor) {
 }
 
 // ---------------------------------------------------------------- Fiches
-const kpiCard = (label, value, tone = 'navy', hint = '') => `<div class="kpi-card"><div class="kpi-label">${esc(label)}</div><div class="kpi-value" style="color:var(--sq-${tone}-fg)">${value}</div>${hint ? `<div class="kpi-hint">${hint}</div>` : ''}</div>`;
+const kpiCard = (label, value, tone = 'navy', hint = '') => `<div class="kpi-card st-kpi" style="--kpi-tone:var(--sq-${tone}-fg)"><div class="kpi-label"><span>${esc(label)}</span><span class="st-kpi-icon" aria-hidden="true">${icon(iconForLabel(label), { size: 17 })}</span></div><div class="kpi-value" style="color:var(--sq-${tone}-fg)">${value}</div>${hint ? `<div class="kpi-hint">${hint}</div>` : ''}</div>`;
 const dutRows = (duts) => duts.length ? `<table class="data-table"><thead><tr><th>Date</th><th>N° DUT</th><th>Transporteur</th><th>Trajet</th><th>Statut</th></tr></thead><tbody>${duts.map((d) => `<tr><td>${dateOr(d.createdAt)}</td><td><a href="#/dut/${esc(d.id)}">${esc(d.dutNumber || 'Brouillon')}</a></td><td>${esc(d.general?.transporterName || '—')}</td><td>${esc(d.trajet?.chargement?.ville || '—')} → ${esc(d.trajet?.dechargement?.ville || '—')}</td><td>${statusBadge(d.status)}</td></tr>`).join('')}</tbody></table>` : '<p class="sup-empty">Aucun DUT.</p>';
 const controlRows = (controls, withAgent = true) => controls.length ? `<table class="data-table"><thead><tr><th>Date</th><th>DUT</th>${withAgent ? '<th>Agent</th>' : ''}<th>Poste</th><th>Mode</th><th>Verdict</th></tr></thead><tbody>${controls.map((c) => `<tr><td>${formatDateTime(c.date)}</td><td>${esc(c.dutNumber || 'QR inconnu')}</td>${withAgent ? `<td>${esc(c.agentLabel || '—')}</td>` : ''}<td>${esc(c.postName || '—')}</td><td>${c.mode === 'HORS_LIGNE' ? 'Hors ligne' : 'En ligne'}</td><td>${verdictBadge(verdictOf(c))}</td></tr>`).join('')}</tbody></table>` : '<p class="sup-empty">Aucun contrôle.</p>';
 const journalHtml = (journal) => journal.length ? `<ul class="sup-journal">${journal.map((e) => `<li><span class="sup-journal-date">${formatDateTime(e.date)}</span><div><strong>${esc(e.label || e.action)}</strong>${e.dutNumber ? ` · ${esc(e.dutNumber)}` : ''}<small>${esc(e.userLabel || '—')}${e.note ? ` — ${esc(e.note)}` : ''}</small></div></li>`).join('')}</ul>` : '<p class="sup-empty">Aucune action enregistrée.</p>';

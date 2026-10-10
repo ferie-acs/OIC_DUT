@@ -4,7 +4,7 @@ import * as planningView from './views/planning.view.js?v=finder2';
 import * as actionCenterView from './views/action-center.view.js?v=charte';
 import { decorateKpis } from './views/kpi-trends.view.js';
 import { registerRoute, startRouter, getCurrentPath, setNotFoundHandler, navigate } from './core/router.js';
-import { mountInsights } from './views/insights.view.js?v=oic-blue';
+import { mountInsights } from './views/insights.view.js?v=corridors';
 import { icon } from './core/icons.js';
 import { getCurrentUser } from './core/auth.js';
 import { renderAppShell, renderLoginShell, renderControlShell } from './core/layout.js?v=supervision3';
