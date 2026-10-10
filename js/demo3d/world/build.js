@@ -13,6 +13,15 @@ import { createCheckpoint } from '../models/checkpoint.js';
 import { createTree, createPalm } from '../models/vegetation.js';
 import { createFence } from '../models/fence.js';
 import { LAYOUT } from './layout.js';
+import { PATHS } from '../timeline.js';
+import { TRUCK_SIZE } from '../models/truck.js';
+import { FORKLIFT_SIZE } from '../models/forklift.js';
+import { createTrail } from '../fx/trail.js';
+import { createPulse } from '../fx/pulse.js';
+import { createBrackets } from '../fx/brackets.js';
+import { createGlow } from '../fx/glow.js';
+import { createScan } from '../fx/scan.js';
+import { createDocumentToken } from '../fx/document.js';
 
 function buildPort(scene) {
   scene.add(at(createQuay(140), -73.5, 0, -10));
@@ -56,5 +65,17 @@ export async function buildWorld(scene) {
 
   const truck = createTruck({ cab: PALETTE.orange, stripe: PALETTE.vert, brand: 'TRANSPORTS ÉBRIÉ', wave: true });
   scene.add(truck);
-  return { truck, forklift, checkpoint, traffic, buildings: { partner, antenne, destination } };
+  const [sx, sy, sz] = checkpoint.userData.scannerLocal;
+  const fx = {
+    truckTrail: createTrail(PATHS.truck, { solid: PALETTE.royal, dashed: PALETTE.ciel }),
+    documentTrail: createTrail(PATHS.document, { solid: PALETTE.royal, dashed: PALETTE.ciel, width: 0.6 }),
+    pulse: createPulse(),
+    bracketsTruck: createBrackets(TRUCK_SIZE),
+    bracketsForklift: createBrackets(FORKLIFT_SIZE),
+    glow: createGlow(),
+    scan: createScan([PLACES.checkpointBooth[0] + sx, sy, PLACES.checkpointBooth[1] + sz]),
+    docToken: createDocumentToken(),
+  };
+  for (const effect of Object.values(fx)) scene.add(effect.object);
+  return { truck, forklift, checkpoint, traffic, fx, buildings: { partner, antenne, destination } };
 }

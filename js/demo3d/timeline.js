@@ -25,8 +25,10 @@ const RANK = Object.fromEntries(DUT_STATUSES.map((s, i) => [s, i]));
 
 /** Circulation d'ambiance : boucles déterministes sur la voie opposée (vers -x). */
 const TRAFFIC = Object.freeze([
-  { id: 'trafic-1', lane: 2.2, speed: 7, offset: 0 },
-  { id: 'trafic-2', lane: 2.2, speed: 7, offset: 95 },
+  // Visible seulement avant le départ du camion suivi (un sens inverse le croiserait forcément) ;
+  // décalages choisis pour qu'à cet instant les deux camions soient déjà hors champ, côté est.
+  { id: 'trafic-1', lane: 2.2, speed: 7, offset: 170 },
+  { id: 'trafic-2', lane: 2.2, speed: 7, offset: 195 },
 ]);
 const TRAFFIC_SPAN = Object.freeze({ from: 105, length: 210 });
 
@@ -109,6 +111,7 @@ export function stateAt(rawMs) {
     x: TRAFFIC_SPAN.from - ((((ms / 1000) * speed + offset) % TRAFFIC_SPAN.length) + TRAFFIC_SPAN.length) % TRAFFIC_SPAN.length,
     z: lane,
     heading: -Math.PI / 2,
+    visible: ms < SPANS.routeTrail[0],
   }));
 
   const isLast = shot === SHOTS[SHOTS.length - 1];

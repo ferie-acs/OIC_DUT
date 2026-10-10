@@ -133,3 +133,13 @@ const root = new URL('..', import.meta.url).pathname;
   }
   console.log(`demo3d : décor hors chaussée (${LAYOUT.trees.length} arbres, ${LAYOUT.palms.length} palmiers).`);
 }
+
+// Circulation d'ambiance : présente sur la partie port, absente dès le départ du camion suivi,
+// et déjà hors champ (côté est) quand elle disparaît.
+{
+  const { stateAt } = await import('../js/demo3d/timeline.js');
+  assert.ok(stateAt(3000).traffic.every((t) => t.visible));
+  for (let ms = 38000; ms <= 75000; ms += 500) assert.ok(stateAt(ms).traffic.every((t) => !t.visible), `circulation visible à ${ms} ms`);
+  for (const t of stateAt(37999).traffic) assert.ok(t.x > 40, `${t.id} encore dans le champ au départ (x = ${t.x.toFixed(1)})`);
+  console.log('demo3d : circulation limitée à la partie port.');
+}
