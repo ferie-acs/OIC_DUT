@@ -161,3 +161,28 @@ affiche encore « Validé ».
 ## DUT révisé : recto / verso et contrôle d’impression
 
 Les quatre PDF de `docs/` servent de références de présentation. Le dossier propose maintenant **DUT recto / verso** (téléchargement) et **Aperçu** (lecteur PDF.js local, sans enregistrer une impression).
+## Application installable (PWA)
+
+L'application s'installe sur ordinateur et téléphone (bouton « Installer l'application » dans la barre latérale quand le navigateur le propose) et fonctionne hors ligne : la coquille (pages, styles, scripts, images, icônes) est pré-cachée par `sw.js` ; les bibliothèques externes et les polices sont gardées en cache après la première visite ; le fond de carte OpenStreetMap est servi depuis le cache quand le réseau manque. Les données restent dans le navigateur (LocalStorage).
+
+- `manifest.webmanifest` — nom, icônes (`assets/icons/`), couleur de thème, raccourcis (Contrôle, Nouveau DUT).
+- `sw.js` — service worker ; la liste des fichiers et leur version viennent de `precache.json`.
+- **Avant chaque livraison** : `node tools/pwa/precache.mjs` régénère `precache.json` (le test `tests/pwa.test.mjs` échoue s'il est périmé).
+- Nécessite un contexte sécurisé : `localhost` ou HTTPS (pas d'installation via une adresse IP en HTTP).
+
+## Démo 3D du parcours DUT
+
+Animation 3D isométrique de 75 s, du dépôt du DUT à la livraison (Three.js r186, sans build).
+Spec : `docs/superpowers/specs/2026-10-10-demo-3d-dut-design.md`.
+
+- **Moteur** : `js/demo3d/`. Tout l'état de la scène est une fonction pure `stateAt(ms)` ; le contenu
+  (plans, sous-titres, minutage, états du DUT) se modifie dans `js/demo3d/scenario.js` uniquement.
+- **Lecture autonome** : servir le dépôt (`python3 -m http.server 8091`) puis ouvrir
+  `http://127.0.0.1:8091/demo-3d.html`. Page hors plateforme et hors PWA.
+- **Vidéo (HyperFrames)** : projet `video/demo-3d-dut/`, qui réutilise le moteur par lien symbolique
+  (`demo3d -> ../../js/demo3d`). Dans ce dossier :
+  - aperçu et retouches : `npx hyperframes preview --background` ;
+  - images fixes : `npx hyperframes snapshot --at 10,45,57 --no-end` ;
+  - export MP4 : `npx hyperframes render --fps 25 --quality delivery` → `renders/demo-3d-dut.mp4`.
+- **Tests** : `node tests/demo3d.test.mjs` ; validation de la composition : `cd video/demo-3d-dut && npx hyperframes check`.
+- Three.js vendorisé dans `js/demo3d/vendor/` (version et empreintes dans `VERSION.md`).

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parcours du DUT — 3D</title>
+  <meta name="description" content="Animation 3D isométrique : le parcours d’un Document Unique de Transport, de sa création à la livraison.">
+  <link rel="stylesheet" href="js/demo3d/demo3d.css">
+  <script type="importmap">
+    { "imports": { "three": "./js/demo3d/vendor/three.module.js", "three/addons/": "./js/demo3d/vendor/addons/" } }
+  </script>
+</head>
+<body>
+  <main id="stage" class="d3-stage" aria-label="Animation : le parcours d’un DUT">
+    <canvas id="d3-canvas" class="d3-canvas"></canvas>
+    <div id="d3-labels" class="d3-labels" aria-hidden="true"></div>
+    <p id="d3-subtitle" class="d3-subtitle" aria-live="polite"></p>
+    <section id="d3-audit" class="d3-audit" aria-label="Journal d’audit" hidden>
+      <h2 class="d3-audit__title">Journal d’audit</h2>
+      <ol class="d3-audit__list"></ol>
+    </section>
+    <p id="d3-fallback" class="d3-fallback" hidden>
+      Votre navigateur ne peut pas afficher cette animation 3D (WebGL indisponible).
+      La version vidéo se trouve dans <code>video/demo-3d-dut/renders/demo-3d-dut.mp4</code>.
+    </p>
+  </main>
+  <div id="d3-controls" class="d3-controls">
+    <button id="d3-play" class="d3-play" type="button" aria-pressed="false">Lire</button>
+  </div>
+  <script type="module" src="js/demo3d/main.js"></script>
+</body>
+</html>

@@ -28,6 +28,35 @@ const rows = [
 ];
 export const officialAntennas=rows.map(([name,city,phone,lat,lng],index)=>({id:`oic-antenna-${index+1}`,name,city,phone,lat,lng,address:'Adresse précise non fournie',hours:'Non renseignés',demoLocation:true,source:'LISTE ANTENNE.pdf',directoryVersion:1}));
 const normalize=name=>String(name).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]/gi,'').toUpperCase();
+/** Zone géographique indicative d'après la position (Sud côtier, Nord, Ouest, Est, Centre). */
+export function zoneOf({lat,lng}){
+ if(lat<6.2)return 'Sud';
+ if(lat>8.6)return 'Nord';
+ if(lng<-6.3)return 'Ouest';
+ if(lng>-3.9)return 'Est';
+ return 'Centre';
+}
+
+// Encadrement de démonstration : noms ivoiriens plausibles, déterministes par antenne.
+// Données fictives — à remplacer par le référentiel RH de l'OIC.
+const PRENOMS=['Kouassi','Aminata','Yao','Mariam','Koffi','Adjoua','Seydou','Nadège','Brou','Fatoumata','Ibrahim','Akissi','Moussa','Affoué','Souleymane','Ahou','Lacina','Désirée','Konan','Awa','Drissa','Gnamien','Salimata'];
+const NOMS=['Koné','N’Guessan','Traoré','Kouamé','Diabaté','Yapo','Ouattara','Bamba','Assi','Coulibaly','Kouadio','Soro','Tanoh','Cissé','Gbagbo','Diomandé','Touré','Aka','Fofana','Ehouman','Silué','Brou','Sanogo'];
+export function antennaLeadership(index,name){
+ const i=Math.abs(Number(index)||0);
+ const chef=`${PRENOMS[i%PRENOMS.length]} ${NOMS[(i*7+3)%NOMS.length]}`;
+ const adjoint=`${PRENOMS[(i*5+11)%PRENOMS.length]} ${NOMS[(i*3+9)%NOMS.length]}`;
+ const slug=normalize(name).toLowerCase().slice(0,14);
+ const phone=`07 ${String(10+(i*37)%89).padStart(2,'0')} ${String(10+(i*53)%89).padStart(2,'0')} ${String(10+(i*71)%89).padStart(2,'0')} ${String(10+(i*13)%89).padStart(2,'0')}`;
+ return {chef:{name:chef,phone,email:`chef.${slug}@oic.ci`},adjoint:{name:adjoint},effectif:2+(i*5)%6,hours:'Lun.–Ven. 7 h 30 – 16 h 30'};
+}
+
+/** Complète une antenne avec son encadrement de démonstration si elle n'en a pas. */
+export function withLeadership(antenna,index){
+ if(antenna.chef?.name)return antenna;
+ const lead=antennaLeadership(index,antenna.name);
+ return {...antenna,...lead,hours:antenna.hours&&antenna.hours!=='Non renseignés'?antenna.hours:lead.hours};
+}
+
 export function mergeAntennaDirectory(existing){
  const used=new Set();
  const merged=officialAntennas.map(entry=>{
@@ -36,5 +65,5 @@ export function mergeAntennaDirectory(existing){
   // Keep identifiers so DUTs, accounts and partners retain their attachments.
   return previous?.directoryVersion===1?previous:{...previous,...entry,id:previous?.id||entry.id};
  });
- return [...merged,...existing.filter(a=>!used.has(a.id)&&!merged.some(b=>b.id===a.id))];
+ return [...merged,...existing.filter(a=>!used.has(a.id)&&!merged.some(b=>b.id===a.id))].map((a,i)=>withLeadership(a,i));
 }

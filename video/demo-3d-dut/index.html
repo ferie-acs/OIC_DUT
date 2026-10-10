@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <title>Parcours du DUT — 3D</title>
+    <link rel="stylesheet" href="demo3d/demo3d.css">
+    <style>
+      @font-face { font-family: 'Instrument Sans'; font-weight: 500; src: url('demo3d/fonts/instrument-sans-500.woff2') format('woff2'); }
+      @font-face { font-family: 'Instrument Sans'; font-weight: 600; src: url('demo3d/fonts/instrument-sans-600.woff2') format('woff2'); }
+      @font-face { font-family: 'Instrument Sans'; font-weight: 700; src: url('demo3d/fonts/instrument-sans-700.woff2') format('woff2'); }
+      html, body { width: 1920px; height: 1080px; margin: 0; overflow: hidden; background: #EAF0F6; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; font-family: 'Instrument Sans', system-ui, sans-serif; }
+      #root .d3-stage { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
+    </style>
+    <script type="importmap">
+      { "imports": { "three": "./demo3d/vendor/three.module.js", "three/addons/": "./demo3d/vendor/addons/" } }
+    </script>
+  </head>
+  <body>
+    <div data-hf-id="hf-dtou" id="root" data-composition-id="demo3d" data-no-timeline="" data-start="0" data-duration="75" data-width="1920" data-height="1080">
+      <main data-hf-id="hf-bmxy" id="stage" class="d3-stage" aria-label="Animation : le parcours d’un DUT">
+        <canvas data-hf-id="hf-ycnv" id="d3-canvas" class="d3-canvas"></canvas>
+        <div data-hf-id="hf-3mcx" id="d3-labels" class="d3-labels" aria-hidden="true"></div>
+        <p data-hf-id="hf-ois5" id="d3-subtitle" class="d3-subtitle"></p>
+        <section data-hf-id="hf-kfnb" id="d3-audit" class="d3-audit" aria-label="Journal d’audit" hidden>
+          <h2 data-hf-id="hf-p297" class="d3-audit__title">Journal d’audit</h2>
+          <ol data-hf-id="hf-h33h" class="d3-audit__list"></ol>
+        </section>
+        <p id="d3-fallback" class="d3-fallback" hidden>WebGL indisponible : la scène 3D ne peut pas être affichée dans ce navigateur.</p>
+      </main>
+    </div>
+    <script type="module">
+      // Une seule horloge : HyperFrames publie le temps (hf-seek), stateAt(ms) en dérive toute la scène.
+      import { stateAt } from './demo3d/timeline.js';
+      import { createStage } from './demo3d/stage.js';
+      import { buildWorld } from './demo3d/world/build.js';
+      import { createOverlay } from './demo3d/overlay/overlay.js';
+      import { applyState } from './demo3d/apply.js';
+
+      async function build() {
+        await Promise.all([
+          document.fonts.load("500 16px 'Instrument Sans'"),
+          document.fonts.load("600 16px 'Instrument Sans'"),
+          document.fonts.load("700 60px 'Instrument Sans'"),
+        ]);
+        const stage = createStage(document.getElementById('d3-canvas'), { preserveDrawingBuffer: true });
+        if (!stage) {
+          // Visible en aperçu ; le rendu, lui, doit échouer bruyamment plutôt qu'exporter ce message.
+          document.getElementById('d3-fallback').hidden = false;
+          throw new Error('WebGL indisponible');
+        }
+        const world = await buildWorld(stage.scene);
+        const overlay = createOverlay(document.getElementById('stage'));
+        const renderAt = (seconds) => {
+          const s = stateAt(seconds * 1000);
+          applyState(world, stage, s);
+          stage.render();
+          overlay.update(s, world, stage);
+        };
+        window.addEventListener('hf-seek', (event) => renderAt(event.detail.time));
+        renderAt(window.__hfThreeTime || 0);
+      }
+
+      window.__hf = window.__hf || {};
+      window.__hf.buildReady = window.__hf.buildReady || {};
+      window.__hf.buildReady['demo3d-scene'] = build();
+    </script>
+  </body>
+</html>

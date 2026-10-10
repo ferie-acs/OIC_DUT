@@ -8,3 +8,15 @@ const updated=mergeAntennaDirectory(old);assert.equal(updated.length,23);assert.
 assert.equal(mergeAntennaDirectory([...old,{id:'custom',name:'Personnalisée'}]).length,24);
 assert.ok(updated.every(a=>Number.isFinite(a.lat)&&Number.isFinite(a.lng)&&a.phone));
 console.log('23 antennes : contacts, identifiants existants, absence de doublons et migration répétable validés.');
+
+// Zones géographiques indicatives de la carte des antennes.
+{
+  globalThis.document ??= { createElement: () => ({ style: {} }) };
+  const { zoneOf } = await import('../js/views/antennas-map.view.js');
+  assert.equal(zoneOf({ lat: 5.2893, lng: -4.0072 }), 'Sud', 'Abidjan');
+  assert.equal(zoneOf({ lat: 9.458, lng: -5.629 }), 'Nord', 'Korhogo');
+  assert.equal(zoneOf({ lat: 7.412, lng: -7.554 }), 'Ouest', 'Man');
+  assert.equal(zoneOf({ lat: 8.04, lng: -2.8 }), 'Est', 'Bondoukou');
+  assert.equal(zoneOf({ lat: 6.827, lng: -5.289 }), 'Centre', 'Yamoussoukro');
+  console.log('Antennes : zones Sud / Nord / Ouest / Est / Centre déduites de la position.');
+}
