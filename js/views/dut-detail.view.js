@@ -302,6 +302,12 @@ function heroHtml(dut, totalsM) {
 }
 
 function statusAlertHtml(dut, user) {
+  const anomaly = safeDossier(dut.id).b2fAnomalie;
+  const b2fAlert = anomaly ? `<div class="dd-alert is-warning" role="status">${icon('alertTriangle', { size: 20 })}<div class="dd-alert-text"><strong>Étape « ${escapeHtml(anomaly.etape)} » déclarée dans la Bourse de fret le ${formatDateTime(anomaly.at)} alors que le DUT n’était pas validé</strong><p>Statut du DUT à ce moment : ${escapeHtml(DUT_STATUS_LABELS[anomaly.statutDut] || anomaly.statutDut)}. Le camion a pu circuler sans document valide.</p></div></div>` : '';
+  return b2fAlert + statusAlertCore(dut, user);
+}
+
+function statusAlertCore(dut, user) {
   if (dut.status === 'REJETE') {
     const who = [dut.rejectedAt ? `le ${formatDateTime(dut.rejectedAt)}` : '', dut.rejectedBy ? `par ${escapeHtml(dut.rejectedBy)}` : ''].filter(Boolean).join(' ');
     const cta = can(user, 'dut.edit_draft') ? `<button type="button" class="btn btn-primary" id="btn-correct">${icon('edit', { size: 15 })} Corriger et resoumettre</button>` : '';

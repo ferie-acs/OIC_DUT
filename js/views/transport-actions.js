@@ -4,6 +4,7 @@ import { icon } from '../core/icons.js';
 import { escapeHtml } from '../core/utils.js';
 import { openModal, toast } from '../core/ui.js';
 import * as workspace from '../services/workspace.service.js';
+import { linkedMission, B2F_APP_URL } from '../services/b2f-link.service.js';
 
 const STAGE_KEYS = Object.keys(workspace.STAGES);
 const STAGE_ICONS = { LOADED: 'package', DEPARTED: 'truck', ARRIVED: 'pin', DELIVERED: 'checkCircle' };
@@ -28,6 +29,10 @@ export function stageLabel(dutId) {
  */
 export function transportActionsHtml(dut, { compact = false } = {}) {
   if (!workspace.canContribute()) return '';
+  const mission = linkedMission(dut);
+  if (mission) {
+    return `<a class="btn btn-secondary${compact ? ' btn-sm' : ''} ta-b2f" href="${B2F_APP_URL}" target="_blank" rel="noopener noreferrer" title="Les étapes et incidents de ce transport se déclarent dans la Bourse de fret.">${icon('layers', { size: 15 })} Suivi par la Bourse de fret · ${escapeHtml(mission.reference)}</a>`;
+  }
   const next = nextStage(dut.id);
   const size = compact ? ' btn-sm' : '';
   const id = escapeHtml(dut.id);

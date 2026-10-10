@@ -1192,3 +1192,13 @@ button.dd-counter:focus-visible{outline:2px solid var(--accent);outline-offset:2
 .ta-dashboard{display:flex;flex-direction:column;gap:18px}
 .ta-dashboard>.card:last-child .stack{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
 .ta-nowrap{white-space:nowrap}
+
+/* ===== Passerelle Bourse de fret : boîte de réception des missions, mention de suivi ===== */
+.b2f-inbox{padding:20px 22px;margin-bottom:18px;border-color:color-mix(in srgb,var(--navy-2) 25%,var(--border));background:linear-gradient(180deg,color-mix(in srgb,var(--navy-2) 5%,var(--surface)) 0%,var(--surface) 100%)}
+.b2f-inbox .dd-card-head{margin-bottom:6px}
+.b2f-inbox-sub{margin:0 0 12px;font-size:13px;color:var(--text-secondary)}
+.b2f-inbox-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--border)}
+.b2f-inbox-row>div{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.b2f-inbox-row strong{font-size:14px;font-weight:600;color:var(--text);overflow-wrap:anywhere}
+.b2f-inbox-row small{font-size:12.5px;color:var(--text-muted)}
+.ta-b2f{white-space:nowrap}
