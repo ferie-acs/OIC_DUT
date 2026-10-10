@@ -121,3 +121,15 @@ const root = new URL('..', import.meta.url).pathname;
   assert.deepEqual(ndcToPixels(1, -1, 800, 450), { left: 800, top: 450 });
   console.log('demo3d : lecture plafonnée, projection écran exacte.');
 }
+
+// Décor : aucun arbre ni palmier sur la chaussée ni sur les trajectoires.
+{
+  const { LAYOUT } = await import('../js/demo3d/world/layout.js');
+  const { PATHS } = await import('../js/demo3d/timeline.js');
+  const { nearestU } = await import('../js/demo3d/path.js');
+  for (const [x, z] of [...LAYOUT.trees, ...LAYOUT.palms].map((p) => p.at)) {
+    assert.ok(Math.abs(z) > 7, `végétation sur la route : ${x},${z}`);
+    assert.ok(nearestU(PATHS.truck, [x, z]).dist > 4, `végétation sur le trajet du camion : ${x},${z}`);
+  }
+  console.log(`demo3d : décor hors chaussée (${LAYOUT.trees.length} arbres, ${LAYOUT.palms.length} palmiers).`);
+}
