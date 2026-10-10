@@ -143,3 +143,21 @@ const root = new URL('..', import.meta.url).pathname;
   for (const t of stateAt(37999).traffic) assert.ok(t.x > 40, `${t.id} encore dans le champ au départ (x = ${t.x.toFixed(1)})`);
   console.log('demo3d : circulation limitée à la partie port.');
 }
+
+// Contrat d'horloge unique (spec §5.2-2) : la scène ne dépend que de stateAt(ms).
+{
+  const { readdir, readFile: rf } = await import('node:fs/promises');
+  const dir = `${root}js/demo3d`;
+  const files = (await readdir(dir, { recursive: true })).filter((f) => f.endsWith('.js') && !f.startsWith('vendor'));
+  const CLOCK = /requestAnimationFrame|setTimeout|setInterval|Date\.now|performance\.now|Math\.random/;
+  const violations = [];
+  for (const f of files) {
+    const src = await rf(`${dir}/${f}`, 'utf8');
+    if (f !== 'player.js' && CLOCK.test(src)) violations.push(`${f} : horloge ou hasard hors player.js`);
+    if (/innerHTML/.test(src)) violations.push(`${f} : innerHTML interdit`);
+  }
+  const css = await rf(`${dir}/demo3d.css`, 'utf8');
+  if (/transition|animation|@keyframes/.test(css)) violations.push('demo3d.css : transition ou animation CSS interdite');
+  assert.deepEqual(violations, []);
+  console.log(`demo3d : contrat d’horloge respecté (${files.length} fichiers).`);
+}
