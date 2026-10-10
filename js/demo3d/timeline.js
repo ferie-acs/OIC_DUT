@@ -6,6 +6,7 @@
 import { SHOTS, TOTAL_MS, KEYS, SPANS, ROUTES, PLACES, AUDIT, AUDIT_STEP_MS, DUT_NUMBER, DUT_STATUSES } from './scenario.js';
 import { keyed, stepped, within, spanProgress, plateau, clamp, ease } from './keyframes.js';
 import { smooth, makePath, sampleAt, nearestU } from './path.js';
+import { ROAD, PORT_GATE } from './world/layout.js';
 
 export const BASE_VIEW_HEIGHT = 70;
 export const FOLLOW_LAG_MS = 450;
@@ -23,14 +24,15 @@ const NAMED_U = Object.freeze({ start: 0, checkpoint: nearestU(PATHS.truck, PLAC
 const TRUCK_KEYS = KEYS.truckRoute.map(([t, stop]) => [t, NAMED_U[stop]]);
 const RANK = Object.fromEntries(DUT_STATUSES.map((s, i) => [s, i]));
 
-/** Circulation d'ambiance : boucles déterministes sur la voie opposée (vers -x). */
+/**
+ * Circulation d'ambiance : un seul passage par camion, sur la voie opposée (vers -x), de l'est
+ * hors champ jusqu'au hangar du terminal où il disparaît à l'abri. Les deux passages sont finis
+ * avant que le camion suivi n'entre sur la route (un sens inverse le croiserait forcément).
+ */
 const TRAFFIC = Object.freeze([
-  // Visible seulement avant le départ du camion suivi (un sens inverse le croiserait forcément) ;
-  // décalages choisis pour qu'à cet instant les deux camions soient déjà hors champ, côté est.
-  { id: 'trafic-1', lane: 2.2, speed: 7, offset: 170 },
-  { id: 'trafic-2', lane: 2.2, speed: 7, offset: 195 },
+  { id: 'trafic-1', lane: PORT_GATE.zCenter, speed: 7, start: -14000 },
+  { id: 'trafic-2', lane: PORT_GATE.zCenter, speed: 7, start: 5000 },
 ]);
-const TRAFFIC_SPAN = Object.freeze({ from: 105, length: 210 });
 
 export function frustum(aspect, zoom) {
   const halfH = BASE_VIEW_HEIGHT / (2 * zoom);
@@ -106,13 +108,16 @@ export function stateAt(rawMs) {
     lit: ms >= auditStart ? clamp(Math.floor((ms - auditStart) / AUDIT_STEP_MS) + 1, 0, AUDIT.length) : 0,
   };
 
-  const traffic = TRAFFIC.map(({ id, lane, speed, offset }) => ({
-    id,
-    x: TRAFFIC_SPAN.from - ((((ms / 1000) * speed + offset) % TRAFFIC_SPAN.length) + TRAFFIC_SPAN.length) % TRAFFIC_SPAN.length,
-    z: lane,
-    heading: -Math.PI / 2,
-    visible: ms < SPANS.routeTrail[0],
-  }));
+  const traffic = TRAFFIC.map(({ id, lane, speed, start }) => {
+    const x = ROAD.toX - (speed * (ms - start)) / 1000;
+    return {
+      id,
+      x: clamp(x, PORT_GATE.hideX, ROAD.toX),
+      z: lane,
+      heading: -Math.PI / 2,
+      visible: x <= ROAD.toX && x >= PORT_GATE.hideX,
+    };
+  });
 
   const isLast = shot === SHOTS[SHOTS.length - 1];
   return {

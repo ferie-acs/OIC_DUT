@@ -2,8 +2,7 @@
 import * as THREE from 'three';
 import { PALETTE } from '../palette.js';
 import { flat, at } from '../models/kit.js';
-
-const ROAD = Object.freeze({ fromX: -60, toX: 110, width: 9 });
+import { ROAD } from './layout.js';
 
 export function buildGround(scene) {
   const g = new THREE.Group();

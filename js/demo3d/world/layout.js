@@ -1,4 +1,14 @@
 /** Positions du décor — donnée pure. at = [x, z]. */
+
+/** Chaussée : axe X à z = 0. Elle se prolonge hors champ à l'est. */
+export const ROAD = Object.freeze({ fromX: -60, toX: 150, width: 9 });
+
+/**
+ * Hangar du terminal portuaire, ouvert côté +x, au bout ouest de la route :
+ * la circulation d'ambiance y entre et disparaît à l'abri (x ≤ hideX).
+ */
+export const PORT_GATE = Object.freeze({ x0: -72.5, x1: -58, zCenter: 2.2, width: 8, height: 6, hideX: -67 });
+
 export const LAYOUT = Object.freeze({
   trees: [
     { at: [-8, 9], scale: 1.1 }, { at: [2, 10], scale: 0.9 }, { at: [12, 9], scale: 1.2 }, { at: [40, 9.5], scale: 1.0 },

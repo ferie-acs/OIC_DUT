@@ -24,18 +24,20 @@ export const SHOTS = Object.freeze([
 /** Lieux clés. Le camion (10 m) a son centre au point indiqué. */
 export const PLACES = Object.freeze({
   partnerDock: [-30, -10],
-  warehouseDoor: [-30, -16.5],
+  warehouseDoor: [-30, -18.5],
   antenneDock: [-2, -17.5],
-  palletStack: [-38, -14],
+  palletStack: [-42, -16.8],
   checkpointStop: [22, -2],
   checkpointBooth: [31, -9],
   destinationDock: [78, -9],
 });
 
 export const ROUTES = Object.freeze({
-  truck: [[-30, -10], [-30, -5], [-26, -2], [24, -2], [70, -2], [76, -4], [78, -9]],
-  document: [[-30, -16.5], [-24, -15], [-10, -15], [-2, -17.5], [-10, -15], [-24, -15], [-30, -16.5]],
-  forklift: [[-38, -14], [-35, -16.5], [-32.6, -16.2]],
+  truck: [[-30, -10], [-30, -5], [-26, -2], [24, -2], [72, -2], [78, -3.5], [78, -9]],
+  document: [[-30, -18.5], [-24, -15], [-10, -15], [-2, -17.5], [-10, -15], [-24, -15], [-30, -18.5]],
+  // Le chariot arrive en ligne droite par l'ouest et charge par le côté, dans l'espace de 3,4 m
+  // entre la façade et l'arrière du camion.
+  forklift: [[-42, -16.8], [-37, -16.8], [-32.8, -16.8]],
 });
 
 export const KEYS = Object.freeze({

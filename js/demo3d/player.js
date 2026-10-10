@@ -38,6 +38,9 @@ export function startPlayer({ renderAt, duration, button }) {
   document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); toggle(); }
   });
+  // En pause ou en fin de lecture, un redimensionnement doit aussi redessiner : sinon
+  // l'étiquette garde sa position en pixels de l'ancienne taille et se détache de son objet.
+  new ResizeObserver(() => renderAt(position)).observe(document.getElementById('stage'));
   label();
   requestAnimationFrame(tick);
 }

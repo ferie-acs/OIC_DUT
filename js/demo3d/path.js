@@ -45,6 +45,16 @@ export function sampleAt(path, u) {
   };
 }
 
+/**
+ * Un point de trajet est « devant » s'il est au-delà de l'avancement u sur la jambe en cours :
+ * stops liste les demi-tours (ex. [0.5] pour un aller-retour), les points du retour ne
+ * s'affichent donc pas pendant l'aller.
+ */
+export function dotAhead(du, u, stops = []) {
+  const legEnd = stops.find((s) => s > u) ?? 1;
+  return du > u + 0.004 && du <= legEnd + 1e-9;
+}
+
 /** Avancement u du point de la trajectoire le plus proche de [x, z]. */
 export function nearestU(path, [px, pz]) {
   let best = { u: 0, dist: Infinity };

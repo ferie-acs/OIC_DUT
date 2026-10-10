@@ -1,10 +1,11 @@
 /** Trajet au sol : ruban plein derrière l'avancement u, points devant. */
 import * as THREE from 'three';
-import { sampleAt } from '../path.js';
+import { sampleAt, dotAhead } from '../path.js';
 
 const Y = 0.07;
 
-export function createTrail(path, { solid, dashed, width = 0.9, step = 0.5, dashEvery = 1.6 }) {
+/** stops : avancements des demi-tours (ex. [0.5] pour un aller-retour). */
+export function createTrail(path, { solid, dashed, width = 0.9, step = 0.5, dashEvery = 1.6, stops = [] }) {
   const object = new THREE.Group();
   const n = Math.max(2, Math.ceil(path.length / step) + 1);
   const pts = Array.from({ length: n }, (_, i) => sampleAt(path, i / (n - 1)));
@@ -44,7 +45,7 @@ export function createTrail(path, { solid, dashed, width = 0.9, step = 0.5, dash
       object.visible = u !== null;
       if (u === null) return;
       geo.setDrawRange(0, Math.floor(u * (n - 1)) * 6);
-      for (const { dot, u: du } of dots) dot.visible = du > u + 0.004;
+      for (const { dot, u: du } of dots) dot.visible = dotAhead(du, u, stops);
     },
   };
 }

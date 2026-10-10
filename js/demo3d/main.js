@@ -17,8 +17,9 @@ function showFallback() {
 async function boot() {
   // Les textures de texte (livrées, enseignes) exigent la police chargée.
   await Promise.all([
-    document.fonts.load('700 74px "Instrument Sans"'),
+    document.fonts.load('500 16px "Instrument Sans"'),
     document.fonts.load('600 16px "Instrument Sans"'),
+    document.fonts.load('700 60px "Instrument Sans"'),
   ]);
   const stageEl = document.getElementById('stage');
   const stage = createStage(document.getElementById('d3-canvas'), { preserveDrawingBuffer: RENDER_MODE });

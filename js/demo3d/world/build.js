@@ -6,13 +6,13 @@ import { at } from '../models/kit.js';
 import { createTruck } from '../models/truck.js';
 import { createWarehouse } from '../models/warehouse.js';
 import { createAntenne } from '../models/antenne.js';
-import { createCrane, createStack, createShip, createQuay } from '../models/port.js';
+import { createCrane, createStack, createShip, createQuay, createGateShed } from '../models/port.js';
 import { loadLogoTexture } from '../models/logo.js';
 import { createForklift } from '../models/forklift.js';
 import { createCheckpoint } from '../models/checkpoint.js';
 import { createTree, createPalm } from '../models/vegetation.js';
 import { createFence } from '../models/fence.js';
-import { LAYOUT } from './layout.js';
+import { LAYOUT, PORT_GATE } from './layout.js';
 import { PATHS } from '../timeline.js';
 import { TRUCK_SIZE } from '../models/truck.js';
 import { FORKLIFT_SIZE } from '../models/forklift.js';
@@ -27,7 +27,8 @@ function buildPort(scene) {
   scene.add(at(createQuay(140), -73.5, 0, -10));
   scene.add(at(createShip(), -84, 0, -8));
   scene.add(at(createCrane(), -66, 0, -24));
-  scene.add(at(createCrane(), -66, 0, 2));
+  scene.add(at(createCrane(), -66, 0, 16));
+  scene.add(createGateShed(PORT_GATE));
   scene.add(at(createStack({ cols: 4, rows: 4, levels: 3, seed: 0 }), -60, 0, -38));
   scene.add(at(createStack({ cols: 3, rows: 3, levels: 2, seed: 4 }), -52, 0, 8));
 }
@@ -68,7 +69,7 @@ export async function buildWorld(scene) {
   const [sx, sy, sz] = checkpoint.userData.scannerLocal;
   const fx = {
     truckTrail: createTrail(PATHS.truck, { solid: PALETTE.royal, dashed: PALETTE.ciel }),
-    documentTrail: createTrail(PATHS.document, { solid: PALETTE.royal, dashed: PALETTE.ciel, width: 0.6 }),
+    documentTrail: createTrail(PATHS.document, { solid: PALETTE.royal, dashed: PALETTE.ciel, width: 0.6, stops: [0.5] }),
     pulse: createPulse(),
     bracketsTruck: createBrackets(TRUCK_SIZE),
     bracketsForklift: createBrackets(FORKLIFT_SIZE),

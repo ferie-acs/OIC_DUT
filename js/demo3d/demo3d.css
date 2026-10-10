@@ -1,3 +1,7 @@
+/* Police servie localement (aucun appel à Google Fonts). */
+@font-face { font-family: 'Instrument Sans'; font-weight: 500; src: url('fonts/instrument-sans-500.woff2') format('woff2'); }
+@font-face { font-family: 'Instrument Sans'; font-weight: 600; src: url('fonts/instrument-sans-600.woff2') format('woff2'); }
+@font-face { font-family: 'Instrument Sans'; font-weight: 700; src: url('fonts/instrument-sans-700.woff2') format('woff2'); }
 :root {
   --d3-fond: #EAF0F6;
   --d3-encre: #1E3A6E;

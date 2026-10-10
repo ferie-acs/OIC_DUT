@@ -66,3 +66,35 @@ export function createQuay(length) {
   g.add(at(new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, length), mat(PALETTE.marquageJaune)), 1.3, 0.62, 0));
   return g;
 }
+
+/**
+ * Hangar du terminal, ouvert côté +x (vers la route) : la circulation d'ambiance y entre et
+ * disparaît à l'abri du toit. gate = PORT_GATE (layout.js).
+ */
+export function createGateShed({ x0, x1, zCenter, width, height }) {
+  const g = new THREE.Group();
+  const len = x1 - x0;
+  const cx = (x0 + x1) / 2;
+  const wall = 0.4;
+  g.add(at(rbox(wall, height, width, 0.1, PALETTE.mur), x0 + wall / 2, height / 2, zCenter));
+  for (const side of [-1, 1]) g.add(at(rbox(len, height, wall, 0.1, PALETTE.mur), cx, height / 2, zCenter + side * (width / 2 - wall / 2)));
+  g.add(at(rbox(len + 0.8, 0.5, width + 0.8, 0.15, PALETTE.royal), cx, height + 0.25, zCenter));
+  g.add(at(rbox(0.5, 1.0, width, 0.1, PALETTE.marine), x1 - 0.25, height - 0.5, zCenter));
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(len - wall, width - 2 * wall), mat(PALETTE.quai, { roughness: 1 }));
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(cx, 0.03, zCenter);
+  g.add(floor);
+  const sign = canvasTexture(1024, 160, (c, w, h) => {
+    c.fillStyle = PALETTE.marine;
+    c.fillRect(0, 0, w, h);
+    c.fillStyle = '#FFFFFF';
+    c.font = '700 76px "Instrument Sans", sans-serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText('TERMINAL · PORT D’ABIDJAN', w / 2, h / 2 + 6);
+  });
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(width - 1, 0.8), new THREE.MeshStandardMaterial({ map: sign, roughness: 0.8 }));
+  plate.rotation.y = Math.PI / 2;
+  g.add(at(plate, x1 + 0.02, height - 0.5, zCenter));
+  return g;
+}
