@@ -71,4 +71,12 @@ assert.equal(record.incidents[0].type, 'Barrage');
 assert.equal(record.incidents[0].status, 'OPEN');
 assert.ok(w.INCIDENT_TYPES.includes('Barrage') && w.INCIDENT_TYPES.includes('Litige au chargement'));
 
+// Lot B : statut du DUT relié, demandé par la Bourse de fret
+const reply = link.receive(B2F, { v: 1, type: 'b2f.statut?', appariementId: 'mr-1' });
+assert.equal(reply.statut, 'répondu');
+assert.deepEqual(reply.reponse, { v: 1, type: 'dut.statut', appariementId: 'mr-1', dut: { statut: 'VALIDE', numero: null } });
+assert.equal(link.receive(B2F, { v: 1, type: 'b2f.statut?', appariementId: 'mr-inconnue' }).reponse.dut, null);
+assert.equal(link.receive('http://evil.example', { v: 1, type: 'b2f.statut?', appariementId: 'mr-1' }).statut, 'refusé');
+assert.equal(link.receive(B2F, { v: 1, type: 'b2f.statut?', appariementId: '../etc' }).statut, 'refusé');
+
 console.log('Passerelle B2F → DUT : origine, validation, idempotence, attente, préremplissage, étapes, incidents et anomalie validés.');

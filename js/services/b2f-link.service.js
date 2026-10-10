@@ -64,7 +64,19 @@ export function validateMessage(message) {
     if (observation != null && (typeof observation !== 'string' || observation.length > 2000)) return { error: 'observation' };
     return { value: { type: 'b2f.event', id, appariementId, kind: categorie, valeur, observation: observation?.trim() || '', horodatage } };
   }
+  if (message.type === 'b2f.statut?') {
+    if (!isId(message.appariementId)) return { error: 'demande de statut' };
+    return { value: { type: 'b2f.statut?', appariementId: message.appariementId } };
+  }
   return { error: 'type inconnu' };
+}
+
+/** Statut du DUT relié à une mission (lot B) : code de statut et numéro officiel, ou null si aucun DUT. */
+export function statusFor(appariementId) {
+  const mission = missionFor(appariementId);
+  const dut = (mission?.dutId && findDutById(mission.dutId))
+    || getAllDuts().find((d) => d.source?.plateforme === 'B2F' && d.source.appariementId === appariementId);
+  return dut ? { statut: dut.status, numero: dut.dutNumber || null } : null;
 }
 
 export const missions = () => readObject(MISSIONS_KEY, []);
@@ -75,12 +87,16 @@ export const linkedMission = (dut) => (dut?.source?.plateforme === 'B2F' ? missi
 
 /**
  * Point d'entrée du relais : origine, format, idempotence, puis enregistrement et application.
- * @returns {{statut: 'appliqué'|'en attente'|'doublon'|'refusé', raison?: string}}
+ * @returns {{statut: 'appliqué'|'en attente'|'doublon'|'refusé'|'répondu', raison?: string, reponse?: object}}
  */
 export function receive(origin, message) {
   if (!B2F_ORIGINS.includes(origin)) return { statut: 'refusé', raison: 'origine non autorisée' };
   const { value, error } = validateMessage(message);
   if (error) return { statut: 'refusé', raison: error };
+
+  if (value.type === 'b2f.statut?') {
+    return { statut: 'répondu', reponse: { v: 1, type: 'dut.statut', appariementId: value.appariementId, dut: statusFor(value.appariementId) } };
+  }
 
   if (value.type === 'b2f.mission') {
     const list = missions();

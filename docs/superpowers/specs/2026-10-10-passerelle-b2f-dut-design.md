@@ -99,7 +99,7 @@ Stockage côté DUT, à ajout seul :
 | `b2f.mission` | B2F | `appariementId`, `reference`, `donnees` (champs du §4 uniquement) |
 | `b2f.event` | B2F | `id`, `appariementId`, `categorie` (`etape`/`incident`), `valeur`, `observation`, `horodatage` |
 | `dut.ack` | DUT | `id` du message reçu, `statut` (`appliqué`, `en attente`, `refusé`) |
-| `dut.status?` / `dut.status` | B2F / DUT | **Lot B** : statut et numéro du DUT relié à un appariement |
+| `b2f.statut?` / `dut.statut` | B2F / DUT | **Lot B** : statut et numéro du DUT relié à un appariement |
 
 ## 6. Règles et cas limites
 
@@ -112,7 +112,7 @@ Stockage côté DUT, à ajout seul :
 ## 7. Découpage
 
 - **Lot A — flux B2F → DUT** : relais, liste blanche, validation, idempotence, file d'attente ; boîte de réception des missions et création du brouillon relié ; application des étapes et incidents ; mention « Suivi par la Bourse de fret ». Côté B2F : client de passerelle et émission après validation, étape et incident.
-- **Lot B — retour DUT → B2F** : statut du DUT affiché sur la mission B2F, et refus de « En route » sans DUT validé.
+- **Lot B — retour DUT → B2F** *(livré le 2026-10-10)* : B2F demande au relais le statut du DUT relié à chaque transport affiché (`b2f.statut?` → `dut.statut` : code de statut et numéro, ou `null`), le mémorise et l'affiche sur la fiche (« DUT : validé · DUT-CI-… »). « En route » est refusé tant que ce DUT n'est pas validé, avec la raison (« Aucun DUT validé n'est connu… », « Le DUT de ce transport est rejeté… »). La règle est vérifiée par le service de transport pour les déclarations faites à l'écran ; l'historique de démonstration semé au démarrage n'y est pas soumis, et elle reste inactive hors navigateur (tests Node). Un statut inconnu (DUT non créé, plateforme DUT injoignable) vaut refus.
 
 ## 8. Cible production (non construite)
 
