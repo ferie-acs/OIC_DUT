@@ -12,6 +12,7 @@ const HOME_BY_ROLE = {
   [ROLES.OIC_ADMIN]: '/oic/dashboard',
   [ROLES.CONTROLLER]: '/control',
   [ROLES.TRANSPORTEUR]: '/transporteur/dashboard',
+  [ROLES.CASHIER]: '/caisse/paiements', // Lot d2
 };
 
 export function render(container) {

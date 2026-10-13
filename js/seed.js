@@ -292,6 +292,9 @@ export const DEMO_ACCOUNTS = [
   { email: 'oic.admin@demo.oic.ci', label: 'Admin OIC', password: DEMO_PASSWORD },
   { email: 'controle.agent@demo.oic.ci', label: 'Agent Contrôle', password: DEMO_PASSWORD },
   { email: 'transporteur@demo.oic.ci', label: 'Transporteur', password: DEMO_PASSWORD },
+  // Lot d2 : rôle Caisse et comptabilité OIC
+  { email: 'caisse@demo.oic.ci', label: 'Caisse et comptabilité OIC', password: DEMO_PASSWORD },
+  // Fin lot d2
 ];
 
 /**
