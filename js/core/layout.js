@@ -138,9 +138,16 @@ export function renderAppShell(user, currentPath, breadcrumbItems = []) {
   if (lotD4Menu) sections.push(lotD4Menu);
   // Lot d5 : pilotage de la Direction générale
   if (user.role === 'DIRECTION') sections[0].items = sections[0].items.filter(item => !['/planning', '/actions'].includes(item.path)); // aucun DUT à éditer ni à traiter
-  if (user.role === 'OIC_ADMIN') sections.push({ label: 'Pilotage de la Direction', items: [{ path: '/direction/tableau-de-bord', label: 'Synthèse de la Direction', icon: 'dashboard' }, { path: '/direction/antennes', label: 'Suivi des antennes', icon: 'trendingUp' }, { path: '/direction/objectifs', label: 'Contrats d’objectifs', icon: 'target' }, { path: '/direction/agents', label: 'Agents', icon: 'users' }, { path: '/direction/documents', label: 'Documents', icon: 'file' }, { path: '/direction/reunions', label: 'Réunions et décisions', icon: 'calendar' }, { path: '/direction/contrats', label: 'Contrats et conventions', icon: 'handshake' }] });
+  if (user.role === 'OIC_ADMIN') sections.push({ label: 'Pilotage de la Direction', items: [{ path: '/direction/tableau-de-bord', label: 'Synthèse de la Direction', icon: 'dashboard' }, { path: '/direction/antennes', label: 'Suivi des antennes', icon: 'trendingUp' }, { path: '/direction/objectifs', label: 'Contrats d’objectifs', icon: 'target' }, { path: '/direction/actions', label: 'Actions correctives', icon: 'clipboardList' }, { path: '/direction/indicateurs', label: 'Indicateurs', icon: 'barChart' }, { path: '/direction/agents', label: 'Agents', icon: 'users' }, { path: '/direction/documents', label: 'Documents', icon: 'file' }, { path: '/direction/reunions', label: 'Réunions et décisions', icon: 'calendar' }, { path: '/direction/contrats', label: 'Contrats et conventions', icon: 'handshake' }] });
   if (user.role === 'ANTENNA_AGENT') sections.push({ label: 'Objectifs', items: [{ path: '/antenna/objectifs', label: 'Objectifs de l’antenne', icon: 'target' }, { path: '/antenna/actions', label: 'Actions correctives', icon: 'clipboardList' }] });
   // Fin lot d5
+  // Intégration des lots : consultation nationale de la Direction (lecture seule), puis « Découvrir » et
+  // « Mon compte » toujours en fin de menu, quel que soit l'ordre d'ajout des lots.
+  if (user.role === 'DIRECTION') sections.push(
+    { label: 'Exploitation', items: [{ path: '/incidents', label: 'Incidents', icon: 'alertTriangle' }, { path: '/lenteurs', label: 'Suivi des lenteurs', icon: 'gauge' }, { path: '/remontees', label: 'Remontées du terrain', icon: 'megaphone' }, { path: '/equipements', label: 'Équipements', icon: 'monitor' }] },
+    { label: 'Recettes', items: [{ path: '/caisse/ventes', label: 'Ventes de références', icon: 'receipt' }, { path: '/rapprochement', label: 'Rapprochement', icon: 'scale' }] },
+  );
+  for (const label of ['Découvrir', 'Mon compte']) { const i = sections.findIndex((x) => x.label === label); if (i >= 0) sections.push(...sections.splice(i, 1)); }
   const expandedSections = readExpandedSections();
   document.title=settings().platformName;
   root.innerHTML = `

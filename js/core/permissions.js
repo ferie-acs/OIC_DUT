@@ -71,6 +71,12 @@ PERMISSIONS[ROLES.ANTENNA_AGENT].push('objectives.results', 'actions.follow');
 // - La justification d'un écart de rapprochement devient un droit distinct de sa consultation (la Direction lit seulement).
 PERMISSIONS[ROLES.DIRECTION].push('incidents.read', 'equipment.view', 'equipment.read', 'reconciliation.view', 'sales.report', 'ranges.read');
 [ROLES.OIC_ADMIN, ROLES.CASHIER, ROLES.PARTNER_ADMIN].forEach((role) => PERMISSIONS[role].push('reconciliation.justify'));
+// Les décisions et paramétrages ajoutés par les lots suivent les mêmes garde-fous que ceux du lot d1 :
+// jamais confiés à un rôle externe, ni cumulés avec la saisie des DUT.
+const PERMISSION_CLASSES_EXTRA = {
+  validation: ['ranges.validate', 'ranges.revoke', 'payments.validate', 'objectives.validate', 'documents.validate', 'legal.visa', 'legal.validate_final'],
+  administration: ['antennas.manage', 'ranges.allocate', 'ranges.settings'],
+};
 // Fin intégration
 
 export function can(user, permission) {
@@ -131,3 +137,7 @@ export function effectivePermissions(role) {
   for (const p of override.add || []) if (!list.includes(p) && !grantRefusal(role, p, list)) list.push(p);
   return list;
 }
+
+// Intégration : classes de droits étendues (voir le bloc « Intégration des lots d1 à d5 »).
+PERMISSION_CLASSES.validation.push(...PERMISSION_CLASSES_EXTRA.validation);
+PERMISSION_CLASSES.administration.push(...PERMISSION_CLASSES_EXTRA.administration);
