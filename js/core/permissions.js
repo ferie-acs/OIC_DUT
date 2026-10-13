@@ -46,6 +46,25 @@ const LOT_D4_PERMISSIONS = {
 };
 for (const [role, list] of Object.entries(LOT_D4_PERMISSIONS)) PERMISSIONS[role].push(...list);
 
+// Lot d5 : pilotage de la Direction générale
+// La Direction lit tout au niveau national et valide (objectifs, documents, contrats) ; elle n'édite aucun DUT.
+// L'Admin OIC prépare (contrats d'objectifs, documents, visa juridique) ; l'agent d'antenne saisit les résultats
+// et suit les actions correctives de sa seule antenne.
+PERMISSIONS[ROLES.DIRECTION] = [
+  'pilotage.view', 'pilotage.report', 'objectives.manage', 'objectives.validate', 'objectives.results', 'actions.manage',
+  'agents.manage', 'agents.evaluate', 'documents.view', 'documents.manage', 'documents.validate',
+  'meetings.manage', 'legal.view', 'legal.validate_final', 'partners.evaluate',
+  // Droits proposés par le lot d4 (remontées terrain), déclarés ici pour le rôle Direction
+  'fieldreports.view', 'fieldreports.manage',
+];
+PERMISSIONS[ROLES.OIC_ADMIN].push(
+  'pilotage.view', 'pilotage.report', 'objectives.manage', 'objectives.results', 'actions.manage',
+  'agents.manage', 'agents.evaluate', 'documents.view', 'documents.manage', 'documents.validate',
+  'meetings.manage', 'legal.view', 'legal.manage', 'legal.visa', 'partners.evaluate',
+);
+PERMISSIONS[ROLES.ANTENNA_AGENT].push('objectives.results', 'actions.follow');
+// Fin lot d5
+
 export function can(user, permission) {
   if (!user) return false;
   return permissionsFor(user.role).includes(permission);

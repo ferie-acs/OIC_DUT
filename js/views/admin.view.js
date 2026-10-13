@@ -15,6 +15,8 @@ const missions={PARTNER_ADMIN:'Crée et soumet les DUT de son partenaire, gère 
 // Lot d2 : mission du rôle Caisse et comptabilité OIC
 missions.CASHIER='Encaisse et valide les paiements des plages et des frais DUT, produit le rapport des ventes et le rapprochement.';
 // Fin lot d2
+// Lot d5 : pilotage de la Direction générale
+missions.DIRECTION='Suit et compare les antennes, valide les contrats d’objectifs, les documents et les contrats ; ne modifie aucun DUT.';
 const error=err=>toast({type:'error',title:err.message});
 const options=(items,value)=>items.map(([id,label])=>`<option value="${e(id)}" ${id===value?'selected':''}>${e(label)}</option>`).join('');
 function codeModal(code){openModal({title:'Nouvel accès créé',text:'Copiez ce mot de passe et transmettez-le au titulaire. Il ne sera plus affiché après fermeture. Les anciens accès réinitialisés ne fonctionnent plus.',bodyHtml:`<label class="field">Mot de passe<input class="input" readonly value="${e(code)}" onclick="this.select()"></label>`,hideCancel:true,confirmLabel:'Fermer'});}
