@@ -295,6 +295,8 @@ export const DEMO_ACCOUNTS = [
   // Lot d2 : rôle Caisse et comptabilité OIC
   { email: 'caisse@demo.oic.ci', label: 'Caisse et comptabilité OIC', password: DEMO_PASSWORD },
   // Fin lot d2
+  // Lot d5 : pilotage de la Direction générale (compte créé par js/seed-lot-d5.js)
+  { email: 'direction@demo.oic.ci', label: 'Direction générale et pilotage', password: DEMO_PASSWORD },
 ];
 
 /**

@@ -62,6 +62,7 @@ try {
 syncAntennaDirectory();
 seedLotD2();
 await import('./seed-lot-d4.js').then((m) => m.seedLotD4()); // Lot d4 : données de démonstration (idempotent)
+(await import('./seed-lot-d5.js')).installLotD5Seed(); // Lot d5 : pilotage de la Direction générale
 
 function withShell(view, breadcrumb) {
   return (params) => {
@@ -125,6 +126,29 @@ registerRoute('/caisse/ventes', withShell(salesReportView, ['Caisse', 'Ventes de
 registerRoute('/rapprochement', withShell(reconciliationView, ['Contrôle', 'Rapprochement']), { permission: 'reconciliation.view' });
 // Fin lot d2
 
+// Lot d5 : pilotage de la Direction générale
+const d5View = async (name) => import(`./views/${name}.view.js`);
+const d5 = (name, section) => ({ render: async (root, p) => (await d5View(name)).render(root, { ...p, section }) });
+registerRoute('/direction/antennes', withShell(d5('direction-antennas'), ['Direction générale', 'Suivi des antennes']), { permission: 'pilotage.view' });
+registerRoute('/direction/statistiques', withShell(statisticsView, ['Direction générale', 'Statistiques']), { permission: 'pilotage.view' });
+registerRoute('/direction/statistiques/:tab', withShell(statisticsView, ['Direction générale', 'Statistiques']), { permission: 'pilotage.view' });
+registerRoute('/direction/objectifs', withShell(d5('objectives'), ['Direction générale', 'Contrats d’objectifs']), { permission: 'pilotage.view' });
+registerRoute('/direction/objectifs/:id', withShell(d5('objectives'), ['Direction générale', 'Contrats d’objectifs', 'Contrat']), { permission: 'pilotage.view' });
+registerRoute('/direction/actions', withShell(d5('objectives', 'actions'), ['Direction générale', 'Actions correctives']), { permission: 'pilotage.view' });
+registerRoute('/direction/indicateurs', withShell(d5('objectives', 'indicators'), ['Direction générale', 'Indicateurs']), { permission: 'pilotage.view' });
+registerRoute('/direction/agents', withShell(d5('agents'), ['Direction générale', 'Agents']), { permission: 'pilotage.view' });
+registerRoute('/direction/agents/:id', withShell(d5('agents'), ['Direction générale', 'Agents', 'Fiche']), { permission: 'pilotage.view' });
+registerRoute('/direction/documents', withShell(d5('direction-documents'), ['Direction générale', 'Documents']), { permission: 'documents.view' });
+registerRoute('/direction/documents/:id', withShell(d5('direction-documents'), ['Direction générale', 'Documents', 'Document']), { permission: 'documents.view' });
+registerRoute('/direction/reunions', withShell(d5('meetings'), ['Direction générale', 'Réunions et décisions']), { permission: 'pilotage.view' });
+registerRoute('/direction/reunions/:id', withShell(d5('meetings'), ['Direction générale', 'Réunions', 'Réunion']), { permission: 'pilotage.view' });
+registerRoute('/direction/contrats', withShell(d5('legal-contracts'), ['Direction générale', 'Contrats et conventions']), { permission: 'legal.view' });
+registerRoute('/direction/contrats/:id', withShell(d5('legal-contracts'), ['Direction générale', 'Contrats', 'Contrat']), { permission: 'legal.view' });
+registerRoute('/antenna/objectifs', withShell(d5('objectives'), ['Antenne', 'Objectifs']), { permission: 'objectives.results' });
+registerRoute('/antenna/objectifs/:id', withShell(d5('objectives'), ['Antenne', 'Objectifs', 'Contrat']), { permission: 'objectives.results' });
+registerRoute('/antenna/actions', withShell(d5('objectives', 'actions'), ['Antenne', 'Actions correctives']), { permission: 'actions.follow' });
+// Fin lot d5
+
 registerRoute('/control', (params) => {
   const el = renderControlShell(getCurrentUser());
   controlView.render(el, params);
@@ -179,6 +203,8 @@ setNotFoundHandler(({ reason }) => {
     PARTNER_ADMIN: '/partner/dashboard', PARTNER_EDITOR: '/partner/dashboard', ANTENNA_AGENT: '/antenna/dashboard',
     OIC_ADMIN: '/oic/dashboard', CONTROLLER: '/control', TRANSPORTEUR: '/transporteur/dashboard',
     CASHIER: '/caisse/paiements', // Lot d2
+    // Lot d5 : pilotage de la Direction générale
+    DIRECTION: '/direction/antennes',
   };
   main.querySelector('#btn-back-home').addEventListener('click', () => navigate(user ? (homeByRole[user.role] || '/login') : '/login'));
 });

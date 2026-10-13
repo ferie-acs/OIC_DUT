@@ -13,6 +13,8 @@ const HOME_BY_ROLE = {
   [ROLES.CONTROLLER]: '/control',
   [ROLES.TRANSPORTEUR]: '/transporteur/dashboard',
   [ROLES.CASHIER]: '/caisse/paiements', // Lot d2
+  // Lot d5 : pilotage de la Direction générale
+  [ROLES.DIRECTION]: '/direction/antennes',
 };
 
 export function render(container) {
