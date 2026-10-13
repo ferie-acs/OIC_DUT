@@ -1,0 +1,56 @@
+/* Lot d1 : comptes et acteurs — compléments de mise en page, variables et rayons existants uniquement. */
+.d1-auth-links{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:var(--s3);font-size:13px}
+.d1-auth-links a{display:inline-flex;align-items:center;gap:4px;color:var(--navy-2);font-weight:600}
+.d1-signup{display:flex;align-items:center;gap:10px;margin-top:var(--s3);padding:12px 13px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface-2);color:var(--navy-2);font-size:13px;font-weight:600}
+.d1-signup span{flex:1}
+.auth-card .alert-banner{font-size:13px;line-height:1.55}
+.auth-card .alert-banner + .btn{margin-top:var(--s2)}
+.d1-auth-wide{max-width:560px}
+.auth-blue .d1-auth-wide{max-width:560px}
+.auth-card .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.d1-inbox{display:grid;gap:12px;margin-top:var(--s3)}
+.d1-inbox-wide{max-width:860px}
+.d1-message{padding:16px 18px;display:grid;gap:6px}
+.d1-message h3{font-size:15px;color:var(--navy);margin:0}
+.d1-message-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px}
+.d1-message-body{font-size:13px;line-height:1.6;color:var(--text);margin:4px 0;overflow-wrap:anywhere}
+.d1-message .btn{justify-self:start}
+.d1-message .badge svg{width:12px;height:12px}
+.d1-form{display:grid;gap:var(--s3)}
+.d1-form .field-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+.d1-form .wizard-section-label{margin:var(--s2) 0 0}
+.d1-form-actions{display:flex;justify-content:flex-end;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s2)}
+.d1-small{font-size:12.5px;margin-top:var(--s2)}
+.d1-actions{flex-wrap:wrap}
+.d1-signal{margin:2px 0;white-space:normal;text-align:left}
+.d1-inline{display:inline-flex;align-items:center;gap:var(--s2);font-size:13px;color:var(--text-secondary)}
+.d1-inline .select{width:auto}
+.d1-sim{display:flex;align-items:center;gap:8px}
+.d1-legend{display:flex;gap:var(--s3);flex-wrap:wrap;align-items:center;font-size:12px;color:var(--text-secondary);margin-bottom:var(--s3)}
+.d1-legend span{display:inline-flex;align-items:center;gap:6px}
+.d1-matrix td,.d1-matrix th{white-space:nowrap}
+.d1-matrix td:first-child{white-space:normal;min-width:200px}
+.d1-matrix .d1-family td{background:var(--surface-2);color:var(--navy);font-size:12px}
+.d1-cell{display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+.d1-cell input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.d1-cell input:disabled{cursor:not-allowed}
+.d1-cell svg{color:var(--text-muted)}
+.d1-cell .badge{font-size:10px}
+.sup-table-card .sup-table-tools .select{width:auto}
+.alert-banner.warning > div{flex:1;min-width:0}
+.alert-banner.warning p{margin:4px 0;font-size:13px}
+.alert-banner.warning small{color:var(--text-secondary)}
+@media(max-width:700px){
+  .d1-form .field-row,.auth-card .field-row{grid-template-columns:1fr}
+  .alert-banner.warning{flex-wrap:wrap}
+  .d1-actions{width:100%}
+  .d1-actions .btn{flex:1}
+  .sup-table-card .sup-table-tools{width:100%}
+  .sup-table-card .sup-table-tools .search-input,.sup-table-card .sup-table-tools .select{flex:1 1 100%}
+}
+.sup-table-card .data-table td > strong + small{display:block}
+.auth-blue .auth-card .select{height:48px;border-color:var(--border);font-size:15px}
+.auth-card .checkbox-row{margin-bottom:var(--s3)}
+.sup-list li > .badge{white-space:nowrap;flex:none}
+.d1-form .field-row{align-items:start}
+.d1-form .field,.auth-card .field-row .field{align-content:start}
