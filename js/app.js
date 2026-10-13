@@ -28,12 +28,19 @@ import * as transporteurDashboardView from './views/transporteur-dashboard.view.
 import * as decouvrirView from './views/decouvrir.view.js';
 import * as supervisionView from './views/supervision.view.js';
 import * as statisticsView from './views/statistics.view.js';
+// Lot d3 : cycle de vie du DUT et contrôle
+import * as antennaCounterView from './views/antenna-counter.view.js';
+import * as antennaArchivesView from './views/antenna-archives.view.js';
+import * as transporterReferencesView from './views/transporter-references.view.js';
+import * as controlDriverView from './views/control-driver.view.js';
+import { seedLotD3 } from './seed-lot-d3.js';
 
 // Une démo ensemencée avant ce lot est régénérée (données locales uniquement).
 if (!isSeeded()) {
   Object.keys(localStorage).filter((k) => k.startsWith('dut_')).forEach((k) => localStorage.removeItem(k));
   seedDemoData();
 }
+seedLotD3();
 // Sans Web Crypto (page servie hors contexte sécurisé), l'application démarre quand même :
 // le contrôle affichera « signature non vérifiable » et la validation refusera de signer.
 try {
@@ -101,6 +108,14 @@ registerRoute('/control/result/:token', (params) => {
   const el = renderControlShell(getCurrentUser());
   controlView.render(el, params);
 }, { permission: 'control.scan' });
+
+// Lot d3 : cycle de vie du DUT et contrôle
+registerRoute('/antenna/guichet', withShell(antennaCounterView, ['Antenne', 'Saisie au guichet']), { permission: 'dut.counter' });
+registerRoute('/antenna/archives', withShell(antennaArchivesView, ['Antenne', 'Contrôle et archives']), { permission: 'dut.archive' });
+registerRoute('/oic/archives', withShell(antennaArchivesView, ['OIC', 'Archives des antennes']), { permission: 'archives.view' });
+registerRoute('/transporteur/references', withShell(transporterReferencesView, ['Transporteur', 'Mes références']), { permission: 'references.view' });
+registerRoute('/control/conducteur', () => controlDriverView.renderSearch(renderControlShell(getCurrentUser())), { permission: 'control.driver_search' });
+registerRoute('/control/historique', () => controlDriverView.renderHistory(renderControlShell(getCurrentUser())), { permission: 'control.history' });
 
 setNotFoundHandler(({ reason }) => {
   const user = getCurrentUser();

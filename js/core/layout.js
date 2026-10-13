@@ -43,6 +43,17 @@ const NAV_SECTIONS_BY_ROLE = {
   ],
 };
 
+// Lot d3 : cycle de vie du DUT et contrôle
+NAV_SECTIONS_BY_ROLE.TRANSPORTEUR.push({ label: 'Documents', items: [
+  { action: 'new-dut', label: 'Nouveau DUT', icon: 'plus' },
+  { path: '/transporteur/references', label: 'Mes références', icon: 'wallet' },
+] });
+NAV_SECTIONS_BY_ROLE.ANTENNA_AGENT.push({ label: 'Guichet', items: [
+  { path: '/antenna/guichet', label: 'Saisie au guichet', icon: 'plus' },
+  { path: '/antenna/archives', label: 'Contrôle et archives', icon: 'archive' },
+] });
+NAV_SECTIONS_BY_ROLE.OIC_ADMIN.push({ label: 'Archives', items: [{ path: '/oic/archives', label: 'Archives des antennes', icon: 'archive' }] });
+
 const EXPANDED_SECTIONS_KEY = 'dut_nav_expanded';
 
 /** Sections du menu dépliées par l'utilisateur (libellés). Par défaut tout est replié, sauf la section de la page ouverte. */
