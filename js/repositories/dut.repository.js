@@ -36,3 +36,9 @@ export function updateDut(id, patch) {
   saveDuts(list);
   return list[idx];
 }
+
+// Lot d3 : cycle de vie du DUT et contrôle
+/** Dossier auquel appartient un jeton de QR remplacé (transbordement) : l'ancien document reste reconnu, mais refusé. */
+export function findDutByReplacedToken(token) {
+  return getAllDuts().find((d) => (d.replacedTokens || []).some((r) => r.token === token)) || null;
+}

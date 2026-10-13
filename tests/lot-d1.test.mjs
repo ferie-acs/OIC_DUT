@@ -261,7 +261,9 @@ as(OIC);
 assert.throws(() => H.setPermission('PARTNER_ADMIN', 'dut.validate', true, 'Essai de délégation'), /externe/);
 assert.throws(() => H.setPermission('TRANSPORTEUR', 'control.scan', true, 'Essai de délégation'), /externe/);
 assert.throws(() => H.setPermission('PARTNER_EDITOR', 'partners.manage', true, 'Essai de délégation'), /administrateur OIC/);
-assert.throws(() => H.setPermission('ANTENNA_AGENT', 'dut.create', true, 'Essai de cumul'), /Séparation/);
+// Après fusion avec le lot d3, l'agent d'antenne saisit au guichet (dut.create) et valide : la séparation y est
+// assurée document par document (l'agent qui a saisi ne valide pas). Le cumul reste refusé pour un rôle de validation pur.
+assert.throws(() => H.setPermission('OIC_ADMIN', 'dut.create', true, 'Essai de cumul'), /Séparation/);
 assert.throws(() => H.setPermission('OIC_ADMIN', 'admin.manage', false, 'Essai de retrait'), /ne peut pas être retiré/);
 assert.throws(() => H.setPermission('CONTROLLER', 'dut.view', true, ''), /motif/);
 H.setPermission('CONTROLLER', 'dut.view', true, 'Consultation des DUT au contrôle');
