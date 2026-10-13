@@ -11,6 +11,7 @@ import { renderAppShell, renderLoginShell, renderControlShell } from './core/lay
 import { isSeeded, seedDemoData, ensureSignedDemoData, refreshExpiredDemoSignatures } from './seed.js';
 import { registerServiceWorker, mountInstallButton } from './core/pwa.js';
 import { watchCards } from './core/card-icons.js';
+import './core/searchable-select.js'; // Lot d0 : recherche intégrée à toutes les listes de choix (observateur global)
 
 import * as loginView from './views/login.view.js?v=oic-blue';
 import * as partnerDashboardView from './views/partner-dashboard.view.js?v=oic-blue';
