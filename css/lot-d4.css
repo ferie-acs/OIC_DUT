@@ -1,0 +1,22 @@
+/* Lot d4 : incidents, remontées du terrain, équipements, échanges partenaires.
+   Compléments minimes aux styles de Supervision ; variables existantes uniquement. */
+.d4-tools{flex-wrap:wrap;justify-content:flex-end}
+.d4-tools .select{width:auto;max-width:220px;padding-top:8px;padding-bottom:8px;font-size:13px}
+.d4-actions{flex-wrap:wrap;justify-content:flex-end}
+.d4-divider{border:0;border-top:1px solid var(--border);margin:var(--s3) 0}
+.d4-reply{display:grid;gap:var(--s2);margin-top:var(--s4);padding-top:var(--s3);border-top:1px solid var(--border)}
+.d4-reply .row{justify-content:flex-end}
+@media(max-width:800px){
+  .d4-tools{justify-content:stretch}
+  .d4-tools .search-input{flex:1 1 100%}
+  .d4-tools .select{flex:1 1 140px;max-width:none}
+  .d4-actions{justify-content:flex-start}
+}
+.d4-nowrap{white-space:nowrap}
+.d4-stack{display:grid;gap:var(--s4)}
+.d4-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s4)}
+@media(max-width:1000px){.d4-two{grid-template-columns:1fr}}
+.d4-row{margin-bottom:var(--s3)}
+.d4-row .field{margin-bottom:0}
+.d4-row[hidden]{display:none}
+.d4-check{margin-bottom:var(--s3)}
