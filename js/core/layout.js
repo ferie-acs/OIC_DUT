@@ -7,6 +7,7 @@ import { logout } from './auth.js';
 import { navigate } from './router.js';
 import { ROLE_LABELS } from './constants.js';
 import { createDraft } from '../services/dut.service.js';
+import { can } from './permissions.js';
 
 let shellEvents;
 
@@ -41,7 +42,38 @@ const NAV_SECTIONS_BY_ROLE = {
   TRANSPORTEUR: [
     { label: 'Pilotage', items: [{ path: '/transporteur/dashboard', label: 'Tableau de bord', icon: 'dashboard' }] },
   ],
+  // Lot d2 : menu propre du rôle Caisse et comptabilité OIC
+  CASHIER: [
+    { label: 'Caisse', items: [
+      { path: '/caisse/paiements', label: 'Encaissements', icon: 'wallet' },
+      { path: '/caisse/ventes', label: 'Ventes de références', icon: 'receipt' },
+      { path: '/rapprochement', label: 'Rapprochement', icon: 'scale' },
+    ] },
+  ],
+  // Fin lot d2
 };
+
+// Lot d2 : entrées ajoutées aux menus existants (section existante complétée, sinon créée en fin de menu)
+const LOT_D2_NAV = {
+  OIC_ADMIN: [
+    { label: 'Réseau', items: [{ path: '/oic/reseau/antennes', label: 'Gestion des antennes', icon: 'building' }, { path: '/reseau/sites', label: 'Sites', icon: 'mapPin' }] },
+    { label: 'Ressources', items: [{ path: '/oic/plages', label: 'Stock et transferts', icon: 'arrowLeftRight' }] },
+    { label: 'Caisse', items: [{ path: '/caisse/paiements', label: 'Encaissements', icon: 'wallet' }, { path: '/caisse/ventes', label: 'Ventes de références', icon: 'receipt' }, { path: '/rapprochement', label: 'Rapprochement', icon: 'scale' }] },
+  ],
+  ANTENNA_AGENT: [
+    { label: 'Ressources', items: [{ path: '/antenna/stock', label: 'Stock de numéros', icon: 'layers' }, { path: '/caisse/paiements', label: 'Encaissements', icon: 'wallet' }, { path: '/reseau/sites', label: 'Sites de l’antenne', icon: 'mapPin' }] },
+  ],
+  PARTNER_ADMIN: [
+    { label: 'Ressources', items: [{ path: '/rapprochement', label: 'Rapprochement', icon: 'scale' }] },
+  ],
+};
+function addLotD2Nav(sections, role) {
+  (LOT_D2_NAV[role] || []).forEach((extra) => {
+    const existing = sections.find((s) => s.label === extra.label);
+    if (existing) existing.items.push(...extra.items); else sections.push({ label: extra.label, items: [...extra.items] });
+  });
+}
+// Fin lot d2
 
 const EXPANDED_SECTIONS_KEY = 'dut_nav_expanded';
 
@@ -67,13 +99,14 @@ export function renderAppShell(user, currentPath, breadcrumbItems = []) {
   const root = appRoot();
   document.documentElement.dataset.theme = readObject('dut_theme', 'light');
   const sections = (NAV_SECTIONS_BY_ROLE[user.role] || []).map(section => ({ ...section, items: [...section.items] }));
-  if (sections.length) sections[0].items.push({ path: '/planning', label: 'Planning des trajets', icon: 'truck' });
-  if (sections.length) sections[0].items.push({ path: '/actions', label: 'Centre d’actions', icon: 'checkCircle' });
+  if (sections.length && can(user, 'dut.view')) sections[0].items.push({ path: '/planning', label: 'Planning des trajets', icon: 'truck' });
+  if (sections.length && can(user, 'dut.view')) sections[0].items.push({ path: '/actions', label: 'Centre d’actions', icon: 'checkCircle' });
   sections.push({ label: 'Découvrir', items: [{ path: '/decouvrir', label: 'Comment fonctionne le DUT', icon: 'file' }] });
   if (user.role === 'OIC_ADMIN') sections.push({ label: 'Supervision', items: [{ path: '/oic/supervision/antennes', label: 'Antennes', icon: 'map' }, { path: '/oic/supervision/partenaires', label: 'Partenaires', icon: 'layers' }, { path: '/oic/supervision/controleurs', label: 'Agents de contrôle', icon: 'shield' }, { path: '/oic/supervision/transporteurs', label: 'Transporteurs', icon: 'truck' }] });
   if (user.role === 'OIC_ADMIN') sections.push({ label: 'Ressources', items: [{ path: '/oic/operations', label: 'Demandes de plages', icon: 'layers' }, { path: '/oic/antennas', label: 'Carte des antennes', icon: 'map' }] });
 
   if(user.role==='OIC_ADMIN') sections.push({label:'Administration',items:[{path:'/admin/users',label:'Utilisateurs',icon:'users'},{path:'/admin/roles',label:'Rôles & accès',icon:'shield'},{path:'/admin/settings',label:'Paramètres',icon:'layers'},{path:'/admin/audit',label:'Journal',icon:'file'}]});
+  addLotD2Nav(sections, user.role); // Lot d2
   const expandedSections = readExpandedSections();
   document.title=settings().platformName;
   root.innerHTML = `

@@ -28,6 +28,15 @@ import * as transporteurDashboardView from './views/transporteur-dashboard.view.
 import * as decouvrirView from './views/decouvrir.view.js';
 import * as supervisionView from './views/supervision.view.js';
 import * as statisticsView from './views/statistics.view.js';
+// Lot d2 : antennes, sites, plages, caisse et rapprochement
+import { seedLotD2 } from './seed-lot-d2.js';
+import * as antennasAdminView from './views/antennas-admin.view.js';
+import * as sitesView from './views/sites.view.js';
+import * as rangesView from './views/ranges.view.js';
+import * as paymentsView from './views/payments.view.js';
+import * as salesReportView from './views/sales-report.view.js';
+import * as reconciliationView from './views/reconciliation.view.js';
+// Fin lot d2
 
 // Une démo ensemencée avant ce lot est régénérée (données locales uniquement).
 if (!isSeeded()) {
@@ -43,6 +52,7 @@ try {
   console.error('Signature de démonstration indisponible :', err);
 }
 syncAntennaDirectory();
+seedLotD2();
 
 function withShell(view, breadcrumb) {
   return (params) => {
@@ -93,6 +103,19 @@ registerRoute('/oic/dashboard', withShell(oicDashboardView, ['OIC', 'Dashboard n
 
 registerRoute('/transporteur/dashboard', withShell(transporteurDashboardView, ['Transporteur', 'Tableau de bord']), { permission: 'dashboard.transporteur' });
 
+// Lot d2 : antennes, sites, plages de numéros, caisse et rapprochement
+registerRoute('/oic/reseau/antennes', withShell(antennasAdminView, ['OIC', 'Réseau', 'Gestion des antennes']), { permission: 'antennas.manage' });
+registerRoute('/oic/reseau/antennes/nouvelle', withShell({ render: (root) => antennasAdminView.render(root, { id: 'nouvelle' }) }, ['OIC', 'Réseau', 'Nouvelle antenne']), { permission: 'antennas.manage' });
+registerRoute('/oic/reseau/antennes/:id', withShell(antennasAdminView, ['OIC', 'Réseau', 'Fiche antenne']), { permission: 'antennas.manage' });
+registerRoute('/reseau/sites', withShell(sitesView, ['Réseau', 'Sites']), { permission: 'sites.view' });
+registerRoute('/oic/plages', withShell(rangesView, ['OIC', 'Stock et transferts']), { permission: 'ranges.validate' });
+registerRoute('/oic/plages/:tab', withShell(rangesView, ['OIC', 'Stock et transferts']), { permission: 'ranges.validate' });
+registerRoute('/antenna/stock', withShell(rangesView, ['Antenne', 'Stock de numéros']), { permission: 'ranges.stock' });
+registerRoute('/caisse/paiements', withShell(paymentsView, ['Caisse', 'Encaissements']), { permission: 'payments.desk' });
+registerRoute('/caisse/ventes', withShell(salesReportView, ['Caisse', 'Ventes de références']), { permission: 'sales.report' });
+registerRoute('/rapprochement', withShell(reconciliationView, ['Contrôle', 'Rapprochement']), { permission: 'reconciliation.view' });
+// Fin lot d2
+
 registerRoute('/control', (params) => {
   const el = renderControlShell(getCurrentUser());
   controlView.render(el, params);
@@ -120,6 +143,7 @@ setNotFoundHandler(({ reason }) => {
   const homeByRole = {
     PARTNER_ADMIN: '/partner/dashboard', PARTNER_EDITOR: '/partner/dashboard', ANTENNA_AGENT: '/antenna/dashboard',
     OIC_ADMIN: '/oic/dashboard', CONTROLLER: '/control', TRANSPORTEUR: '/transporteur/dashboard',
+    CASHIER: '/caisse/paiements', // Lot d2
   };
   main.querySelector('#btn-back-home').addEventListener('click', () => navigate(user ? (homeByRole[user.role] || '/login') : '/login'));
 });
