@@ -156,7 +156,8 @@ function renderProfile(container, actor, id) {
           <div class="card"><div class="card-header"><h3>Dérogations accordées</h3></div>${p.derogations.length ? `<ul class="sup-list">${p.derogations.map((d) => `<li><span>${formatDateTime(d.date)} · ${esc(d.dutNumber || '')}</span><b>${esc(d.reason)}</b></li>`).join('')}</ul>` : '<p class="sup-empty">Aucune.</p>'}</div>
         </aside>
       </div>`, exportBtn);
-    container.querySelector('#sup-edit').addEventListener('click', () => editAntenna(a, () => renderProfile(container, actor, id)));
+    // Lot d2 : la fiche complète (identité, position, encadrement, statut) se modifie dans la gestion des antennes.
+    container.querySelector('#sup-edit').addEventListener('click', () => navigate(`/oic/reseau/antennes/${id}`));
   } else if (actor === 'partenaires') {
     const x = p.partner, st = p.stats;
     shell(container, actor, x.name, `Antenne de rattachement : ${esc(x.antennaName || '—')}`, `<span class="badge badge-navy">${num(st.duts.total)} DUT</span>${st.tauxRejet >= 20 ? '<span class="badge badge-error">Taux de rejet élevé</span>' : ''}`,

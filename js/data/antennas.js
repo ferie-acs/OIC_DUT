@@ -53,6 +53,8 @@ export function antennaLeadership(index,name){
 /** Complète une antenne avec son encadrement de démonstration si elle n'en a pas. */
 export function withLeadership(antenna,index){
  if(antenna.chef?.name)return antenna;
+ // Lot d2 : une antenne créée ou gérée par l'OIC garde son encadrement réel (même vide).
+ if(antenna.managed)return antenna;
  const lead=antennaLeadership(index,antenna.name);
  return {...antenna,...lead,hours:antenna.hours&&antenna.hours!=='Non renseignés'?antenna.hours:lead.hours};
 }
@@ -60,7 +62,7 @@ export function withLeadership(antenna,index){
 export function mergeAntennaDirectory(existing){
  const used=new Set();
  const merged=officialAntennas.map(entry=>{
-  const previous=existing.find(a=>normalize(a.name)===normalize(entry.name)||(entry.name==='ABIDJAN SIEGE'&&normalize(a.name)==='ABIDJAN'));
+  const previous=existing.find(a=>normalize(a.directoryName||a.name)===normalize(entry.name)/* Lot d2 : nom d'origine conservé après renommage */||(entry.name==='ABIDJAN SIEGE'&&normalize(a.name)==='ABIDJAN'));
   if(previous)used.add(previous.id);
   // Keep identifiers so DUTs, accounts and partners retain their attachments.
   return previous?.directoryVersion===1?previous:{...previous,...entry,id:previous?.id||entry.id};

@@ -21,6 +21,13 @@ const PERMISSIONS = {
   [ROLES.TRANSPORTEUR]: ['dashboard.transporteur', 'dut.view'],
 };
 
+// Lot d2 : antennes, sites, plages de numéros, rapprochement et caisse
+PERMISSIONS[ROLES.OIC_ADMIN].push('antennas.manage', 'sites.view', 'sites.manage', 'ranges.stock', 'ranges.allocate', 'ranges.transfer', 'ranges.validate', 'ranges.revoke', 'ranges.settings', 'reconciliation.view', 'payments.view', 'payments.validate', 'payments.desk', 'sales.report');
+PERMISSIONS[ROLES.ANTENNA_AGENT].push('sites.view', 'ranges.stock', 'ranges.transfer', 'payments.record', 'payments.desk');
+PERMISSIONS[ROLES.PARTNER_ADMIN].push('reconciliation.view', 'payments.pay');
+PERMISSIONS[ROLES.CASHIER] = ['payments.view', 'payments.record', 'payments.validate', 'payments.desk', 'sales.report', 'reconciliation.view'];
+// Fin lot d2
+
 export function can(user, permission) {
   if (!user) return false;
   return permissionsFor(user.role).includes(permission);
