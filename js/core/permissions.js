@@ -20,6 +20,14 @@ const PERMISSIONS = {
   [ROLES.TRANSPORTEUR]: ['dashboard.transporteur', 'dut.view'],
 };
 
+// Lot d3 : cycle de vie du DUT et contrôle
+PERMISSIONS[ROLES.PARTNER_ADMIN].push('dut.transship');
+PERMISSIONS[ROLES.PARTNER_EDITOR].push('dut.transship');
+PERMISSIONS[ROLES.TRANSPORTEUR].push('dut.create', 'dut.edit_draft', 'dut.pay_reference', 'dut.transship', 'references.view', 'dut.print');
+PERMISSIONS[ROLES.ANTENNA_AGENT].push('dut.create', 'dut.edit_draft', 'dut.counter', 'dut.pay_reference', 'dut.withdraw', 'dut.archive', 'archives.view', 'dut.print');
+PERMISSIONS[ROLES.OIC_ADMIN].push('archives.view');
+PERMISSIONS[ROLES.CONTROLLER].push('control.driver_search', 'control.history');
+
 export function can(user, permission) {
   if (!user) return false;
   const list = PERMISSIONS[user.role] || [];

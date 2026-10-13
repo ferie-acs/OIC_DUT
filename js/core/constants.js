@@ -21,6 +21,11 @@ export const STORAGE_KEYS = {
   CONTROL_SETTINGS: 'dut_control_settings_v1',
   DEROGATIONS: 'dut_derogations_v1',
   DEMO_SEED_VERSION: 'dut_demo_seed_version',
+  // Lot d3 : cycle de vie du DUT et contrôle
+  LOCALITIES: 'dut_localities_v1',
+  ARCHIVES: 'dut_archives_v1',
+  CONTROL_SEARCHES: 'dut_control_searches_v1',
+  LOT_D3_SEED: 'dut_seed_lot_d3',
 };
 
 export const ROLES = {
@@ -79,6 +84,18 @@ export const AUDIT_ACTIONS = {
   CRL_SYNCED: 'CRL_SYNCED',
   CANARY_TRIGGERED: 'CANARY_TRIGGERED',
   DUT_DEROGATION: 'DUT_DEROGATION',
+  // Lot d3 : cycle de vie du DUT et contrôle
+  DUT_REFERENCE_PAID: 'DUT_REFERENCE_PAID',
+  DUT_TRANSSHIPPED: 'DUT_TRANSSHIPPED',
+  DUT_ARCHIVED: 'DUT_ARCHIVED',
+  DUT_COUNTER_CREATED: 'DUT_COUNTER_CREATED',
+  REFERENCE_RETIRED: 'REFERENCE_RETIRED',
+  REF_ADDED: 'REF_ADDED',
+  REF_UPDATED: 'REF_UPDATED',
+  REF_DEACTIVATED: 'REF_DEACTIVATED',
+  REF_REACTIVATED: 'REF_REACTIVATED',
+  REF_REMOVED: 'REF_REMOVED',
+  CONTROL_DRIVER_SEARCH: 'CONTROL_DRIVER_SEARCH',
 };
 
 export const AUDIT_LABELS = {
@@ -101,6 +118,18 @@ export const AUDIT_LABELS = {
   CRL_SYNCED: 'Liste de révocation synchronisée',
   CANARY_TRIGGERED: 'DUT piège scanné',
   DUT_DEROGATION: 'Dérogation accordée',
+  // Lot d3 : cycle de vie du DUT et contrôle
+  DUT_REFERENCE_PAID: 'DUT payé par référence',
+  DUT_TRANSSHIPPED: 'DUT transbordé',
+  DUT_ARCHIVED: 'DUT contrôlé et archivé',
+  DUT_COUNTER_CREATED: 'DUT saisi au guichet',
+  REFERENCE_RETIRED: 'Numéro de référence retiré',
+  REF_ADDED: 'Fiche de référentiel ajoutée',
+  REF_UPDATED: 'Fiche de référentiel modifiée',
+  REF_DEACTIVATED: 'Fiche de référentiel désactivée',
+  REF_REACTIVATED: 'Fiche de référentiel réactivée',
+  REF_REMOVED: 'Fiche de référentiel retirée',
+  CONTROL_DRIVER_SEARCH: 'Recherche par conducteur',
 };
 
 export const CONTROL_RESULTS = {

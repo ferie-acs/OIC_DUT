@@ -9,6 +9,14 @@ import * as dutService from '../services/dut.service.js';
 import {
   transporters, vehicles, drivers, thirdParties, merchandiseTypes, packagingTypes,
 } from '../services/referentials.service.js';
+// Lot d3 : éditeur transporteur ou guichet, fiches actives du périmètre, facture détaillée, localités
+import { ownerForDut, lockedTransporterId, localities } from '../services/referentials.service.js';
+import { billingDetail, billingErrors, accountMention, ACCOUNT_LABELS } from '../services/dut-billing.service.js';
+import { openPaymentModal } from './dut-lifecycle.view.js';
+
+const HOME_BY_ROLE = { TRANSPORTEUR: '/transporteur/dashboard', ANTENNA_AGENT: '/antenna/guichet' };
+const homeFor = (user) => HOME_BY_ROLE[user?.role] || '/partner/dut';
+const editorLabel = (dut) => (dut.guichet ? 'Antenne · Saisie au guichet' : dut.editeur?.type === 'TRANSPORTEUR' ? 'Transporteur · Documents' : 'Partenaire · Documents');
 
 const STEPS = [
   { id: '1', label: 'Général' },
@@ -30,7 +38,7 @@ export function render(container, params) {
   try { dut = id ? accessibleDut(id) : null; } catch {}
   if (!dut) {
     toast({ type: 'error', title: 'Aucun brouillon en cours', desc: 'Créez un nouveau DUT depuis le tableau de bord.' });
-    navigate('/partner/dashboard');
+    navigate(homeFor(getCurrentUser()));
     return;
   }
   if (dut.status !== 'EN_EDITION') {
@@ -44,9 +52,9 @@ export function render(container, params) {
   container.innerHTML = `
     <div class="page-header">
       <div>
-        <span class="overline">Partenaire · Documents</span>
+        <span class="overline">${editorLabel(dut)}</span>
         <h1>Nouveau DUT</h1>
-        <div class="subtitle">Brouillon · ${escapeHtml(dut.partnerName)}</div>
+        <div class="subtitle">Brouillon · ${escapeHtml(dut.guichet ? `pour ${dut.guichet.usagerName}` : dut.partnerName)}</div>
       </div>
       <button type="button" class="btn btn-secondary btn-sm" id="btn-exit">${icon('x', { size: 14 })} Fermer</button>
     </div>
@@ -82,7 +90,7 @@ export function render(container, params) {
 
   container.querySelector('#btn-exit').addEventListener('click', () => {
     sessionStorage.removeItem('dut_wizard_draft_id');
-    navigate('/partner/dut');
+    navigate(homeFor(getCurrentUser()));
   });
 
   renderLiveRecap(container.querySelector('#live-recap-body'), dut);
@@ -183,6 +191,8 @@ function val(content, id) { return content.querySelector(`#${id}`)?.value ?? '';
 /* ===================== ÉTAPE 1 — GÉNÉRAL ===================== */
 function stepGeneral(dut) {
   const g = dut.general;
+  const owner = ownerForDut(dut);
+  const locked = !!lockedTransporterId(dut);
   return `
     <h2>1. Informations générales</h2>
     <div class="wizard-section-label">Émission</div>
@@ -194,20 +204,24 @@ function stepGeneral(dut) {
       ${selectField({ id: 'f-compte', label: 'Compte', value: g.compte, options: [{ value: 'PROPRE', label: 'Compte propre' }, { value: 'AUTRUI', label: 'Compte d’autrui' }, { value: 'SOUS_TRAITANCE', label: 'Sous-traitance' }] })}
       ${selectField({ id: 'f-transportType', label: 'Type de transport', value: g.transportType, options: [{ value: 'NATIONAL', label: 'National' }, { value: 'VERS_INTERNATIONAL', label: 'Vers international' }, { value: 'VERS_NATIONAL', label: 'Vers national' }] })}
     </div>
+    <div class="field-row" id="row-donneur" ${g.compte === 'SOUS_TRAITANCE' ? '' : 'hidden'}>
+      ${field({ id: 'f-donneurOrdre', label: 'Donneur d’ordre (transporteur principal ou auxiliaire)', value: g.donneurOrdre || '', required: true, placeholder: 'Raison sociale du donneur d’ordre' })}
+    </div>
     <div class="wizard-section-label">Transporteur & véhicule</div>
     <div class="field-row">
       ${field({ id: 'f-transporterName', label: 'Transporteur (recherche)', value: g.transporterName, required: true, placeholder: 'Nom du transporteur', list: 'dl-transporters' })}
       ${field({ id: 'f-immatriculation', label: 'Véhicule (immatriculation)', value: g.immatriculation, required: true, placeholder: 'AA-0000-AA', list: 'dl-vehicles' })}
       <input type="hidden" id="f-transporterId" value="${escapeHtml(g.transporterId || '')}">
     </div>
-    <datalist id="dl-transporters">${transporters.list().map((t) => `<option value="${escapeHtml(t.name)}">`).join('')}</datalist>
-    <datalist id="dl-vehicles">${vehicles.list().map((v) => `<option value="${escapeHtml(v.immatriculation)}">`).join('')}</datalist>
+    <datalist id="dl-transporters">${transporters.selectable(owner).map((t) => `<option value="${escapeHtml(t.name)}">`).join('')}</datalist>
+    <datalist id="dl-vehicles">${vehicles.selectable(owner).map((v) => `<option value="${escapeHtml(v.immatriculation)}">`).join('')}</datalist>
+    ${locked ? '<p class="hint">Le transporteur est celui qui édite et règle ce DUT : il ne peut pas être changé.</p>' : ''}
     <div class="wizard-section-label">Conducteur</div>
     <div class="field-row">
       ${field({ id: 'f-driverNom', label: 'Nom', value: g.driverNom, required: true, list: 'dl-drivers' })}
       ${field({ id: 'f-driverPrenoms', label: 'Prénoms', value: g.driverPrenoms, required: true })}
     </div>
-    <datalist id="dl-drivers">${drivers.list().map((d) => `<option value="${escapeHtml(d.nom)}">`).join('')}</datalist>
+    <datalist id="dl-drivers">${drivers.selectable(owner).map((d) => `<option value="${escapeHtml(d.nom)}">`).join('')}</datalist>
     <div class="field-row">
       ${field({ id: 'f-driverPermis', label: 'Numéro de permis', value: g.driverPermis, required: true })}
       ${field({ id: 'f-driverPiece', label: 'Pièce d’identité', value: g.driverPiece })}
@@ -221,13 +235,26 @@ function collectGeneral(content) {
     transporterId: val(content, 'f-transporterId'), transporterName: val(content, 'f-transporterName'), immatriculation: val(content, 'f-immatriculation'),
     driverNom: val(content, 'f-driverNom'), driverPrenoms: val(content, 'f-driverPrenoms'),
     driverPermis: val(content, 'f-driverPermis'), driverPiece: val(content, 'f-driverPiece'),
+    donneurOrdre: val(content, 'f-compte') === 'SOUS_TRAITANCE' ? val(content, 'f-donneurOrdre') : '',
   } };
 }
 function wireGeneral(content, dut) {
+  const owner = ownerForDut(dut);
+  if (lockedTransporterId(dut)) content.querySelector('#f-transporterName').readOnly = true;
   content.querySelector('#f-transporterName').addEventListener('change', (e) => {
-    const t = transporters.list().find((x) => x.name === e.target.value);
+    const t = transporters.selectable(owner).find((x) => x.name === e.target.value);
     content.querySelector('#f-transporterId').value = t ? t.id : '';
-    if (t) content.querySelector('#f-immatriculation').value = vehicles.listByTransporter(t.id)[0]?.immatriculation || content.querySelector('#f-immatriculation').value;
+    if (t) content.querySelector('#f-immatriculation').value = vehicles.selectable(owner).find((v) => v.transporterId === t.id)?.immatriculation || content.querySelector('#f-immatriculation').value;
+  });
+  content.querySelector('#f-compte').addEventListener('change', (e) => {
+    content.querySelector('#row-donneur').hidden = e.target.value !== 'SOUS_TRAITANCE';
+  });
+  content.querySelector('#f-driverNom').addEventListener('change', (e) => {
+    const d = drivers.selectable(owner).find((x) => x.nom === e.target.value);
+    if (!d) return;
+    for (const [id, value] of [['f-driverPrenoms', d.prenoms], ['f-driverPermis', d.permis], ['f-driverPiece', d.piece]]) {
+      if (!content.querySelector(`#${id}`).value) content.querySelector(`#${id}`).value = value || '';
+    }
   });
   footerNav(content, dut, '1', {
     onNext: (patch) => {
@@ -235,6 +262,7 @@ function wireGeneral(content, dut) {
       if (!patch.general.transporterName) errors.push('Le transporteur est obligatoire.');
       if (!patch.general.immatriculation) errors.push('Le véhicule (immatriculation) est obligatoire.');
       if (!patch.general.driverPermis) errors.push('Le numéro de permis est obligatoire.');
+      if (patch.general.compte === 'SOUS_TRAITANCE' && !patch.general.donneurOrdre.trim()) errors.push('Sous-traitance : indiquez le donneur d’ordre.');
       return errors;
     },
   });
@@ -248,7 +276,7 @@ function partyBlock(prefix, party, title) {
       ${field({ id: `f-${prefix}-raisonSociale`, label: 'Raison sociale / nom', value: party.raisonSociale, required: true, list: `dl-third-${prefix}` })}
       ${field({ id: `f-${prefix}-registre`, label: 'Registre', value: party.registre })}
     </div>
-    <datalist id="dl-third-${prefix}">${thirdParties.list().map((t) => `<option value="${escapeHtml(t.raisonSociale)}">`).join('')}</datalist>
+    <datalist id="dl-third-${prefix}">${thirdParties.selectable().map((t) => `<option value="${escapeHtml(t.raisonSociale)}">`).join('')}</datalist>
     <div class="field-row">
       ${field({ id: `f-${prefix}-adresse`, label: 'Adresse', value: party.adresse })}
       ${field({ id: `f-${prefix}-contact`, label: 'Contact', value: party.contact })}
@@ -301,8 +329,8 @@ function stepMarchandise(dut) {
         <tbody id="marchandise-tbody"></tbody>
       </table>
     </div>
-    <datalist id="dl-marchandise">${merchandiseTypes.list().map((m) => `<option value="${escapeHtml(m.nom)}">`).join('')}</datalist>
-    <datalist id="dl-emballage">${packagingTypes.list().map((p) => `<option value="${escapeHtml(p.nom)}">`).join('')}</datalist>
+    <datalist id="dl-marchandise">${merchandiseTypes.selectable().map((m) => `<option value="${escapeHtml(m.nom)}">`).join('')}</datalist>
+    <datalist id="dl-emballage">${packagingTypes.selectable().map((p) => `<option value="${escapeHtml(p.nom)}">`).join('')}</datalist>
     <button type="button" class="btn btn-secondary btn-sm" id="btn-add-marchandise" style="margin-top:var(--s2)">${icon('plus', { size: 14 })} Ajouter une marchandise</button>
     <div class="card-flat" style="margin-top:var(--s3)">
       <div class="recap-grid" id="marchandise-totals"></div>
@@ -400,6 +428,7 @@ function stepFacturation(dut) {
       ${posteFields('dest', f.destinataire, 'Destinataire')}
     </div>
     <div class="hint" style="margin-bottom:var(--s3)">Le droit de timbre fiscal ivoirien s’applique par côté ; le total des deux timbres doit atteindre 100 FCFA minimum.</div>
+    <p class="lc-mention"><strong>${escapeHtml(ACCOUNT_LABELS[dut.general.compte] || '')}</strong> · ${escapeHtml(accountMention(dut.general, dut.expediteur))}</p>
     <div class="card-flat" id="facturation-totals"></div>
   `;
 }
@@ -411,13 +440,23 @@ function readFacturationFromDom(content) {
   };
 }
 function renderFacturationTotals(content) {
-  const totals = dutService.computeFacturationTotals(readFacturationFromDom(content));
+  const b = billingDetail(readFacturationFromDom(content));
+  const row = (label, a, c) => `<tr><td>${label}</td><td class="text-right">${formatMoney(a)}</td><td class="text-right">${formatMoney(c)}</td></tr>`;
   content.querySelector('#facturation-totals').innerHTML = `
-    <div class="recap-grid">
-      <div class="recap-item"><span>Total HT</span><strong>${formatMoney(totals.totalHT)}</strong></div>
-      <div class="recap-item"><span>TVA</span><strong>${formatMoney(totals.tva)}</strong></div>
-      <div class="recap-item"><span>Timbre fiscal</span><strong>${formatMoney(totals.timbreTotal)}</strong></div>
-      <div class="recap-item"><span>Total à percevoir</span><strong class="text-success" style="font-size:1.1rem">${formatMoney(totals.totalAPercevoir)}</strong></div>
+    <div class="table-wrap"><table class="data-table lc-billing">
+      <thead><tr><th scope="col">Détail établi</th><th scope="col" class="text-right">Expéditeur</th><th scope="col" class="text-right">Destinataire</th></tr></thead>
+      <tbody>
+        ${row('Total hors taxes', b.expediteur.totalHT, b.destinataire.totalHT)}
+        ${row(`TVA (${b.expediteur.tvaRate} % / ${b.destinataire.tvaRate} %)`, b.expediteur.tvaMontant, b.destinataire.tvaMontant)}
+        ${row('Droit de timbre', b.expediteur.timbre, b.destinataire.timbre)}
+        ${row('Total à percevoir', b.expediteur.total, b.destinataire.total)}
+      </tbody>
+    </table></div>
+    <div class="recap-grid" style="margin-top:var(--s3)">
+      <div class="recap-item"><span>Total HT</span><strong>${formatMoney(b.totalHT)}</strong></div>
+      <div class="recap-item"><span>TVA</span><strong>${formatMoney(b.tva)}</strong></div>
+      <div class="recap-item"><span>Timbre fiscal</span><strong>${formatMoney(b.timbreTotal)}</strong></div>
+      <div class="recap-item"><span>Total à percevoir</span><strong class="text-success" style="font-size:1.1rem">${formatMoney(b.totalAPercevoir)}</strong></div>
     </div>
   `;
 }
@@ -426,10 +465,7 @@ function wireFacturation(content, dut) {
   content.addEventListener('input', (e) => { if (e.target.closest('.field-row')) renderFacturationTotals(content); });
   renderFacturationTotals(content);
   footerNav(content, dut, '4', {
-    onNext: (patch) => {
-      const total = (Number(patch.facturation.expediteur.timbre) || 0) + (Number(patch.facturation.destinataire.timbre) || 0);
-      return total < 100 ? ['Facture sans timbre ou montant en dessous de 100 FCFA.'] : [];
-    },
+    onNext: (patch) => billingErrors(patch.facturation, dut.general),
   });
 }
 
@@ -439,7 +475,7 @@ function pointBlock(prefix, point, title) {
     <div class="wizard-section-label">${title}</div>
     <div class="field-row">
       ${field({ id: `f-${prefix}-lieu`, label: 'Lieu', value: point.lieu })}
-      ${field({ id: `f-${prefix}-ville`, label: 'Ville', value: point.ville, required: true })}
+      ${field({ id: `f-${prefix}-ville`, label: 'Ville', value: point.ville, required: true, list: 'dl-localites' })}
     </div>
     <div class="field-row">
       ${field({ id: `f-${prefix}-adresse`, label: 'Adresse', value: point.adresse })}
@@ -454,6 +490,7 @@ function stepTrajet(dut) {
     <h2>5. Chargement / Déchargement</h2>
     ${pointBlock('charg', t.chargement, 'Chargement')}
     ${pointBlock('dech', t.dechargement, 'Déchargement')}
+    <datalist id="dl-localites">${localities.selectable().map((l) => `<option value="${escapeHtml(l.nom)}">`).join('')}</datalist>
     <div class="wizard-section-label">Suivi</div>
     <div class="field-row">
       ${field({ id: 'f-dateDepart', label: 'Date départ', type: 'date', value: t.dateDepart })}
@@ -532,8 +569,9 @@ function wireAnnexes(content, dut) {
 /* ===================== RÉCAPITULATIF ===================== */
 function stepSummary(dut) {
   const totalsM = dutService.computeMarchandiseTotals(dut.marchandises);
-  const totalsF = dutService.computeFacturationTotals(dut.facturation);
+  const totalsF = billingDetail(dut.facturation);
   const g = dut.general;
+  const payFirst = !!lockedTransporterId(dut);
   return `
     <h2>7. Récapitulatif avant soumission</h2>
     <div id="summary-errors"></div><div id="submission-checklist"></div>
@@ -542,7 +580,7 @@ function stepSummary(dut) {
       <h3>Informations générales <button type="button" class="btn btn-ghost btn-sm" data-jump="1">${icon('edit', { size: 13 })} Modifier</button></h3>
       <div class="recap-grid">
         <div class="recap-item"><span>Date émission</span><strong>${escapeHtml(g.dateEmission)}</strong></div>
-        <div class="recap-item"><span>Compte</span><strong>${g.compte}</strong></div>
+        <div class="recap-item"><span>Compte</span><strong>${escapeHtml(ACCOUNT_LABELS[g.compte] || g.compte)}${g.compte === 'SOUS_TRAITANCE' ? ` · ${escapeHtml(g.donneurOrdre || '—')}` : ''}</strong></div>
         <div class="recap-item"><span>Type de transport</span><strong>${g.transportType.replaceAll('_', ' ')}</strong></div>
       </div>
     </div>
@@ -590,7 +628,7 @@ function stepSummary(dut) {
 
     <div class="wizard-footer">
       <button type="button" class="btn btn-secondary" id="btn-save-draft">Sauvegarder</button>
-      <button type="button" class="btn btn-primary btn-lg" id="btn-submit">${icon('arrowRight', { size: 16 })} Soumettre pour validation</button>
+      <button type="button" class="btn btn-primary btn-lg" id="btn-submit">${payFirst ? `${icon('wallet', { size: 16 })} Régler et soumettre` : `${icon('arrowRight', { size: 16 })} Soumettre pour validation`}</button>
     </div>
   `;
 }
@@ -606,6 +644,10 @@ function wireSummary(content, dut) {
       content.querySelector('#summary-errors').innerHTML = `
         <div class="alert-banner error">${icon('alertCircle', { size: 18 })}<div class="alert-text"><strong>Impossible de soumettre</strong>${errors.map((e) => escapeHtml(e)).join('<br>')}</div></div>
       `;
+      return;
+    }
+    if (lockedTransporterId(dut)) {
+      openPaymentModal(dutService.getDut(dut.id), () => { sessionStorage.removeItem('dut_wizard_draft_id'); navigate(`/dut/${dut.id}`); });
       return;
     }
     confirmAction({

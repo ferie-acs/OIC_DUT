@@ -15,6 +15,9 @@ import { dossier } from '../services/workspace.service.js';
 import { getAllControlLogs } from '../repositories/controls.repository.js';
 import { verdictOf } from '../services/supervision.service.js';
 import { transportActionsHtml, bindTransportActions, stageLabel, nextStage } from './transport-actions.js';
+// Lot d3 : cycle de vie du DUT et contrôle
+import { lifecycleActionsHtml, bindLifecycleActions, lifecycleCardsHtml, openWithdrawModal, withdrawnAlertHtml, canWithdraw } from './dut-lifecycle.view.js';
+import { billingDetail } from '../services/dut-billing.service.js';
 
 const DONE_ACTIONS = ['DUT_VALIDATED', 'DUT_UNSUSPENDED'];
 const ACCOUNT_LABELS = { PROPRE: 'Compte propre', AUTRUI: 'Pour autrui', SOUS_TRAITANCE: 'Sous-traitance' };
@@ -63,9 +66,9 @@ function paint(container, dut) {
 function renderActions(container, dut, user) {
   const box = container.querySelector('#dut-actions');
   const buttons = [];
-  if (can(user, 'dut.create')) buttons.push('<button class="btn btn-secondary" id="btn-duplicate">Dupliquer</button>');
+  if (can(user, 'dut.create') && user.role.startsWith('PARTNER_')) buttons.push('<button class="btn btn-secondary" id="btn-duplicate">Dupliquer</button>');
 
-  if (dut.status === 'EN_EDITION' && dut.createdBy === user.id) {
+  if (dut.status === 'EN_EDITION' && dutService.canEditDraft(user, dut)) {
     buttons.push(`<button type="button" class="btn btn-primary" id="btn-continue-edit">${icon('edit', { size: 15 })} Continuer l’édition</button>`);
   }
   if (dut.status === 'TERMINE' && can(user, 'dut.validate')) {
@@ -78,15 +81,17 @@ function renderActions(container, dut, user) {
   if (dut.status === 'SUSPENDU' && can(user, 'dut.unsuspend')) {
     buttons.push(`<button type="button" class="btn btn-secondary" id="btn-unsuspend">${icon('checkCircle', { size: 15 })} Lever la suspension</button>`);
   }
-  if (['VALIDE', 'SUSPENDU'].includes(dut.status) && can(user, 'dut.withdraw')) {
-    buttons.push(`<button type="button" class="btn btn-danger" id="btn-withdraw">${icon('trash', { size: 15 })} Retirer</button>`);
+  if (canWithdraw(user, dut)) {
+    buttons.push(`<button type="button" class="btn btn-danger" id="btn-withdraw">${icon('ban', { size: 15 })} Annuler le DUT</button>`);
   }
+  buttons.push(lifecycleActionsHtml(dut, user));
   if (['PARTNER_ADMIN','PARTNER_EDITOR','OIC_ADMIN','ANTENNA_AGENT','TRANSPORTEUR'].includes(user.role)) {
     buttons.push(`<button type="button" class="btn btn-secondary" id="btn-pdf">${icon('download', { size: 15 })} DUT recto / verso</button>`);
     buttons.push(`<button type="button" class="btn btn-ghost" id="btn-preview-pdf">${icon('eye', { size: 15 })} Aperçu</button>`);
   }
   box.innerHTML = transportActionsHtml(dut) + buttons.join('');
   bindTransportActions(box, (id) => dutService.getDut(id), () => paint(container, dutService.getDut(dut.id)));
+  bindLifecycleActions(box, dut, () => paint(container, dutService.getDut(dut.id)));
   box.querySelector('#btn-duplicate')?.addEventListener('click', () => {
     try {
       const copy = duplicateDut(dut.id);
@@ -101,7 +106,7 @@ function renderActions(container, dut, user) {
     navigate('/dut/new/1');
   });
   container.querySelector('#btn-correct')?.addEventListener('click', () => {
-    dutService.reopenForCorrection(dut.id);
+    try { dutService.reopenForCorrection(dut.id); } catch (err) { toast({ type: 'error', title: 'Correction impossible', desc: err.message }); return; }
     sessionStorage.setItem('dut_wizard_draft_id', dut.id);
     navigate('/dut/new/1');
   });
@@ -134,21 +139,16 @@ function renderActions(container, dut, user) {
   box.querySelector('#btn-suspend')?.addEventListener('click', () => {
     promptAction({
       title: 'Suspendre ce DUT ?', label: 'Motif', danger: true, confirmLabel: 'Suspendre',
-      onConfirm: (note) => { dutService.suspend(dut.id, note); toast({ type: 'success', title: 'DUT suspendu' }); paint(container, dutService.getDut(dut.id)); },
+      onConfirm: (note) => { try { dutService.suspend(dut.id, note); toast({ type: 'success', title: 'DUT suspendu' }); } catch (err) { toast({ type: 'error', title: 'Action impossible', desc: err.message }); } paint(container, dutService.getDut(dut.id)); },
     });
   });
   box.querySelector('#btn-unsuspend')?.addEventListener('click', () => {
     confirmAction({
       title: 'Lever la suspension ?', text: 'Le DUT redevient valide immédiatement.', confirmLabel: 'Lever la suspension', icon: 'checkCircle',
-      onConfirm: () => { dutService.unsuspend(dut.id); toast({ type: 'success', title: 'Suspension levée' }); paint(container, dutService.getDut(dut.id)); },
+      onConfirm: () => { try { dutService.unsuspend(dut.id); toast({ type: 'success', title: 'Suspension levée' }); } catch (err) { toast({ type: 'error', title: 'Action impossible', desc: err.message }); } paint(container, dutService.getDut(dut.id)); },
     });
   });
-  box.querySelector('#btn-withdraw')?.addEventListener('click', () => {
-    promptAction({
-      title: 'Retirer ce DUT ?', label: 'Motif du retrait', danger: true, confirmLabel: 'Retirer',
-      onConfirm: (note) => { dutService.withdraw(dut.id, note); toast({ type: 'success', title: 'DUT retiré' }); paint(container, dutService.getDut(dut.id)); },
-    });
-  });
+  box.querySelector('#btn-withdraw')?.addEventListener('click', () => openWithdrawModal(dut, () => paint(container, dutService.getDut(dut.id))));
   box.querySelector('#btn-pdf')?.addEventListener('click', () => {
     const rank = nextRank(dutService.getDut(dut.id));
     openModal({ title: 'Éditer le DUT recto / verso', icon: 'file', confirmLabel: 'Générer le PDF',
@@ -174,7 +174,7 @@ function renderActions(container, dut, user) {
 
 function renderDetailTab(container, dut) {
   const totalsM = dutService.computeMarchandiseTotals(dut.marchandises);
-  const totalsF = dutService.computeFacturationTotals(dut.facturation);
+  const totalsF = billingDetail(dut.facturation);
   const record = safeDossier(dut.id);
   const openIncidents = record.incidents.filter((i) => i.status === 'OPEN').length;
   const controls = getAllControlLogs().filter((c) => c.dutId === dut.id).sort((x, y) => Date.parse(y.date || 0) - Date.parse(x.date || 0));
@@ -216,6 +216,7 @@ function renderDetailTab(container, dut) {
           </div>
           ${dut.marchandises.length ? `<ul class="dd-goods">${dut.marchandises.map((m) => `<li><span>${escapeHtml(m.nature || 'Nature non précisée')}</span><b>${formatNumber(Number(m.poidsTonnes) || 0, 1)} t</b></li>`).join('')}</ul>` : '<p class="text-muted">Aucune marchandise déclarée.</p>'}
         </article>
+        ${lifecycleCardsHtml(dut)}
       </div>
 
       <aside class="dd-aside">
@@ -310,11 +311,11 @@ function statusAlertHtml(dut, user) {
 function statusAlertCore(dut, user) {
   if (dut.status === 'REJETE') {
     const who = [dut.rejectedAt ? `le ${formatDateTime(dut.rejectedAt)}` : '', dut.rejectedBy ? `par ${escapeHtml(dut.rejectedBy)}` : ''].filter(Boolean).join(' ');
-    const cta = can(user, 'dut.edit_draft') ? `<button type="button" class="btn btn-primary" id="btn-correct">${icon('edit', { size: 15 })} Corriger et resoumettre</button>` : '';
+    const cta = dutService.canEditDraft(user, dut) ? `<button type="button" class="btn btn-primary" id="btn-correct">${icon('edit', { size: 15 })} Corriger et resoumettre</button>` : '';
     return `<div class="dd-alert is-error" role="status">${icon('xCircle', { size: 20 })}<div class="dd-alert-text"><strong>Dossier rejeté${who ? ` ${who}` : ''}</strong><p>${escapeHtml(dut.rejectionReason || 'Aucun motif précisé.')}</p></div>${cta}</div>`;
   }
   if (dut.status === 'SUSPENDU') return `<div class="dd-alert is-warning" role="status">${icon('alertTriangle', { size: 20 })}<div class="dd-alert-text"><strong>DUT suspendu${dut.suspendedAt ? ` le ${formatDateTime(dut.suspendedAt)}` : ''}</strong><p>Ce DUT ne peut plus être présenté comme valide tant que la suspension n’est pas levée.</p></div></div>`;
-  if (dut.status === 'RETIRE') return `<div class="dd-alert is-error" role="status">${icon('xCircle', { size: 20 })}<div class="dd-alert-text"><strong>DUT retiré${dut.withdrawnAt ? ` le ${formatDateTime(dut.withdrawnAt)}` : ''}</strong><p>Ce document n’est plus valide.</p></div></div>`;
+  if (dut.status === 'RETIRE') return withdrawnAlertHtml(dut);
   return '';
 }
 
