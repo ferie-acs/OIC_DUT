@@ -41,9 +41,11 @@ function renderList(container) {
   const antennaFilter = manage ? `<select class="select" id="f-antenna" aria-label="Filtrer par antenne">${options([['national', 'Niveau national'], ...S.antennaOptions().map((a) => [a.id, a.name])], '', 'Toutes les antennes')}</select>` : '';
   container.innerHTML = `
     ${pageHeader({
-      overline: manage ? 'OIC · Exploitation' : 'Assistance',
+      overline: manage ? (can(user, 'incidents.manage') ? 'OIC · Exploitation' : 'Direction générale · Consultation') : 'Assistance',
       title: 'Incidents de la plateforme',
-      subtitle: manage
+      subtitle: manage && !can(user, 'incidents.manage')
+        ? 'Vue nationale en lecture seule : état, gravité, responsable et délai de chaque incident. Le traitement reste confié à l’OIC et aux antennes.'
+        : manage
         ? 'Qualifiez, attribuez et suivez chaque incident jusqu’à sa clôture. Les incidents de transport restent suivis dans le dossier de chaque DUT.'
         : 'Signalez un problème rencontré sur la plateforme et suivez son traitement. Un incident survenu pendant un transport se déclare dans le dossier du DUT.',
       actions: `${manage ? `<a class="btn btn-secondary" href="#/lenteurs">${icon('gauge', { size: 15 })} Suivi des lenteurs</a>` : ''}${can(user, 'incidents.declare') ? `<button type="button" class="btn btn-primary" id="btn-declare">${icon('plus', { size: 15 })} Déclarer un incident</button>` : ''}`,
