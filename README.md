@@ -28,8 +28,9 @@ PARTENAIRE → CRÉATION → BROUILLON → SOUMISSION → ANTENNE OIC → (REJET
 - [jsPDF](https://github.com/parallax/jsPDF) — génération du PDF officiel
 - [anime.js v4](https://animejs.com/) — micro-interactions (compteurs KPI, apparition en cascade), vendorisé localement dans `js/vendor/anime.iife.min.js`, respecte `prefers-reduced-motion`
 
-Toutes les librairies sont chargées depuis cdnjs.cloudflare.com, sauf anime.js
-(fichier local, aucune dépendance réseau pour cette partie). Aucune installation requise.
+Toutes les librairies sont chargées depuis cdnjs.cloudflare.com, sauf anime.js et jsPDF
+(fichiers locaux). Aucune installation requise. Sans accès aux CDN, l'application fonctionne :
+les graphiques Chart.js et le fond de carte ne s'affichent pas, les tableaux et indicateurs restent disponibles.
 
 ## Lancer le POC
 
@@ -99,6 +100,59 @@ Règle d'architecture stricte respectée dans tout le code :
 VUE → SERVICE → REPOSITORY → LOCALSTORAGE
 ```
 
+## Fonctionnalités ajoutées (lots d0 à d5)
+
+Chaque domaine est décrit en détail dans `docs/lots/lot-dX.md` (annexes : écrans, règles, limites).
+L'historique des versions est tenu dans `docs/CHANGELOG.md`.
+
+| Domaine | Ce que le POC permet | Annexe |
+|---|---|---|
+| Listes de choix | Recherche intégrée à toutes les listes déroulantes de l'application | `lot-d0.md` |
+| Comptes et acteurs | Activation de compte, mot de passe oublié (code envoyé à l'adresse enregistrée), profil, messagerie simulée unique, partenaires et transporteurs (création, validation par une seconde personne, suspension, résiliation), véhicules déclarés, import de l'existant, habilitations, groupements | `lot-d1.md` |
+| Réseau, numéros et caisse | Gestion des antennes et des sites, stock de numéros par antenne, vente de plages aux transporteurs au guichet, validation des ventes, reprise, tarifs, encaissements (simulés) validés par une seconde personne, rapport des ventes, rapprochement | `lot-d2.md` |
+| Cycle de vie du DUT | Transporteur éditeur qui règle son DUT avec une référence de son stock, facture détaillée, transbordement, saisie au guichet, contrôle et archivage, annulation (numéro retiré), référentiels cloisonnés, recherche par conducteur au contrôle | `lot-d3.md` |
+| Exploitation | Incidents de la plateforme (qualification, attribution, délais, clôture), suivi des lenteurs, remontées du terrain, équipements et dépannage, échanges avec les partenaires | `lot-d4.md` |
+| Pilotage de la Direction | Suivi et classement des antennes, rapport périodique (CSV, PDF), contrats d'objectifs, résultats et écarts, actions correctives, fiches agents et évaluations, documents, réunions et décisions, contrats et conventions | `lot-d5.md` |
+
+**Intégration des lots** (octobre 2026) :
+
+- **Messagerie unique** : toutes les notifications passent par `envoyer(...)` (`js/services/messaging.service.js`), via
+  `js/services/notifications.service.js`. Courriels **simulés**, visibles dans « Mes messages » du destinataire et
+  dans Administration › Messages envoyés : incident attribué ou hors délai, réponse à une remontée, message
+  d'échange partenaire, vente de plage à valider puis validée ou refusée, références disponibles pour le
+  transporteur, encaissement rejeté, demande de plage acceptée ou refusée, DUT suspendu ou annulé, contrat
+  d'objectifs à valider, validé ou renvoyé, nouveaux objectifs d'antenne, action corrective décidée, document
+  à valider puis validé ou refusé, contrat juridique à valider, en vigueur ou renvoyé, convocation de réunion.
+- **Transporteurs et partenaires suspendus** (ou en attente, résiliés) : plus proposés dans les référentiels de
+  saisie des DUT, au guichet ni dans la vente de plages ; un véhicule retiré de la flotte non plus.
+- **Stock du transporteur** : une plage vendue au guichet puis validée par l'OIC alimente « Mes références » ; la
+  plus petite référence disponible est consommée en premier ; le numéro du DUT validé est la référence réglée.
+- **Rôle Direction générale** : lecture nationale des incidents, des lenteurs, des remontées, des équipements, des
+  ventes et du rapprochement ; aucun droit de saisie ni de validation de DUT (contrôlé par les services).
+- **Tableaux de bord de synthèse** : tableau de bord d'antenne complété (performance des agents, objectifs, stock,
+  incidents, équipements, remontées) et tableau de bord de la Direction générale (page d'accueil du rôle).
+- Validation et rejet d'un DUT vérifient désormais le droit et le ressort de l'antenne dans le service.
+
+## Rôles et comptes de démonstration
+
+Mot de passe de démonstration commun : `demo123` (voir `js/seed.js`). La page de connexion propose la liste
+des comptes, avec recherche.
+
+| Rôle | Compte | Page d'accueil | Usage |
+|---|---|---|---|
+| Partenaire — Admin | `partner.admin@demo.oic.ci` | Tableau de bord partenaire | DUT, plages, référentiels, rapprochement, entreprise et agents, incidents, échanges avec l'OIC |
+| Partenaire — Éditeur | `partner.editor@demo.oic.ci` | Tableau de bord partenaire | Saisie des DUT, incidents |
+| Agent Antenne | `antenne.agent@demo.oic.ci` | Tableau de bord d'antenne | Validation, guichet, archives, stock et ventes, encaissements, terrain, objectifs |
+| Agent Antenne (second agent) | `antenne.agent2@demo.oic.ci` | Tableau de bord d'antenne | Valide ce que le premier agent a saisi |
+| Autres agents d'antenne | `agent.bouake@`, `agent.yopougon@`, `agent2.siege@demo.oic.ci` | Tableau de bord d'antenne | Antennes de Bouaké, Yopougon, siège |
+| Admin OIC | `oic.admin@demo.oic.ci` | Dashboard national | Supervision, acteurs, réseau, caisse, exploitation, administration, préparation du pilotage |
+| Admin OIC — second valideur | `oic.superviseur@demo.oic.ci` | Dashboard national | Valide ce que `oic.admin@` a saisi |
+| Agent Contrôle | `controle.agent@demo.oic.ci` | Application de contrôle | Scan, recherche par conducteur, historique |
+| Transporteur | `transporteur@demo.oic.ci` | Tableau de bord transporteur | Ses DUT, « Mes références », entreprise et véhicules, incidents |
+| Caisse et comptabilité OIC | `caisse@demo.oic.ci` | Encaissements | Encaissements, ventes de références, rapprochement |
+| Direction générale et pilotage | `direction@demo.oic.ci` | Tableau de bord de la Direction | Pilotage, validations, lecture de l'exploitation et des recettes |
+| Compte à activer | `agent.stfa@demo.oic.ci` | — | Démonstration de l'activation (boîte de réception simulée) |
+
 ## Scénario de démonstration (≈20 min)
 
 **0–3 min — Partenaire**
@@ -127,6 +181,37 @@ scan valide, puis simulation d'un QR faux.
 Connexion `oic.admin` → dashboard national (le DUT de 35 tonnes apparaît
 immédiatement dans les statistiques) → journal d'audit → section sécurité &
 contrôles.
+
+### Scénario enrichi (≈30 min de plus, données de démonstration incluses)
+
+**1. Vente de références au guichet et DUT du transporteur (8 min)**
+`antenne.agent` → Ressources › Stock de numéros → « Vendre une plage » à *ABC TRANSPORT CI*, 10 numéros, reçu
+`RC-DEMO-01` : la vente est « Transfert à valider » et l'OIC reçoit un message simulé. `oic.admin` → Ressources ›
+Stock et transferts › Transferts → « Valider le transfert ». `transporteur` → Mon compte › Mes messages (références
+disponibles) → Documents › Mes références (stock augmenté) → Nouveau DUT → « Régler et soumettre ».
+`antenne.agent2` → valide le DUT : son numéro est la référence réglée. `caisse` → Encaissements → « Valider »
+l'encaissement saisi par l'agent.
+
+**2. Suspension d'un transporteur (3 min)**
+`oic.admin` → Acteurs › Gestion des transporteurs → *IVOIRE LOGISTIQUE SA* → « Suspendre » (motif). Il n'est plus
+proposé dans la vente de plages, au guichet, ni dans les référentiels de saisie des DUT ; « Réactiver » le rétablit.
+
+**3. Exploitation et messagerie (6 min)**
+`oic.admin` → Exploitation › Incidents : qualifier puis attribuer un incident à Fatou Diabaté. `antenne.agent` →
+Mon compte › Mes messages : l'avis d'attribution ; Terrain › Incidents → proposer une résolution. Les incidents hors
+délai produisent une alerte unique au responsable et aux administrateurs.
+
+**4. Tableau de bord d'antenne (3 min)**
+`antenne.agent` → Tableau de bord → section « Synthèse de l'antenne » : performance de chaque agent (saisis,
+validés, rejetés, délai médian), objectifs et taux d'atteinte, stock de numéros, incidents ouverts et en retard,
+équipements en panne, remontées en cours ; changer la période.
+
+**5. Direction générale (10 min)**
+`oic.admin` → Pilotage de la Direction › Contrats d'objectifs → « Nouveau contrat », le soumettre. `direction` →
+le tableau de bord s'ouvre : points d'attention, indicateurs nationaux, comparaison des antennes, validations en
+attente, incidents et équipements, actions en retard, ventes et rapprochement, partenaires et transporteurs.
+Ouvrir le contrat à valider (message reçu dans Mes messages) → « Valider et attribuer ». Exploitation › Incidents :
+lecture seule, aucun bouton d'action. Recettes › Rapprochement : consultation sans justification possible.
 
 ## Anti-falsification
 
