@@ -29,7 +29,7 @@ export function render(container, params = {}) {
 // ---------------------------------------------------------------- Liste
 function renderList(container) {
   const user = getCurrentUser();
-  const manage = can(user, 'incidents.manage');
+  const manage = can(user, 'incidents.manage') || can(user, 'incidents.read'); // Intégration : vue nationale, aussi en lecture seule (Direction)
   // Incidents non clos d'abord, puis les plus récents.
   const rows = S.listIncidents().sort((a, b) => (a.status === 'CLOS') - (b.status === 'CLOS'));
   const overdue = rows.filter((i) => S.isOverdue(i));
@@ -46,7 +46,7 @@ function renderList(container) {
       subtitle: manage
         ? 'Qualifiez, attribuez et suivez chaque incident jusqu’à sa clôture. Les incidents de transport restent suivis dans le dossier de chaque DUT.'
         : 'Signalez un problème rencontré sur la plateforme et suivez son traitement. Un incident survenu pendant un transport se déclare dans le dossier du DUT.',
-      actions: `${manage ? `<a class="btn btn-secondary" href="#/lenteurs">${icon('gauge', { size: 15 })} Suivi des lenteurs</a>` : ''}<button type="button" class="btn btn-primary" id="btn-declare">${icon('plus', { size: 15 })} Déclarer un incident</button>`,
+      actions: `${manage ? `<a class="btn btn-secondary" href="#/lenteurs">${icon('gauge', { size: 15 })} Suivi des lenteurs</a>` : ''}${can(user, 'incidents.declare') ? `<button type="button" class="btn btn-primary" id="btn-declare">${icon('plus', { size: 15 })} Déclarer un incident</button>` : ''}`,
     })}
     ${overdue.length ? `<div class="alert-banner error" role="alert">${icon('alertTriangle')}<div class="alert-text"><strong>${overdue.length} incident(s) ont dépassé leur délai cible de résolution</strong>${overdue.slice(0, 4).map((i) => `<a href="#/incidents/${esc(i.id)}">${esc(i.reference)}</a> · ${esc(i.title)}`).join('<br>')}</div></div>` : ''}
     ${kpis(metrics)}
@@ -78,7 +78,7 @@ function renderList(container) {
     open: (id) => navigate(`/incidents/${id}`),
     empty: 'Aucun incident ne correspond à cette vue.',
   });
-  container.querySelector('#btn-declare').addEventListener('click', () => openDeclareModal(user));
+  container.querySelector('#btn-declare')?.addEventListener('click', () => openDeclareModal(user));
 }
 
 function openDeclareModal(user) {

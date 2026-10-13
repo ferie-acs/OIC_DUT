@@ -3,6 +3,7 @@
 import { AUDIT_ACTIONS } from '../core/constants.js';
 import * as repo from '../repositories/field-reports.repository.js';
 import { actor, canDo, text, oneOf, nextReference, antennaLabel, person, historyEntry, audit, nowIso, uuid } from './support-common.service.js';
+import { aviser } from './notifications.service.js'; // Intégration : messagerie unique du lot d1
 
 export const REPORT_CATEGORIES = {
   EQUIPEMENT: 'Matériel et équipements',
@@ -100,7 +101,12 @@ export function replyToReport(id, message) {
   const clean = text(message, { label: 'Le message', max: 1500, min: 2 });
   report.messages.push({ id: uuid(), at: nowIso(), side, byId: user.id, by: user.name, text: clean });
   if (side === 'PILOTAGE' && report.status === 'TRANSMISE') report.status = 'EN_EXAMEN';
-  // Après fusion avec le lot d1 : avertir l'autre partie par courriel simulé.
+  // Messagerie unique (lot d1) : l'autre partie est prévenue (agents de l'antenne, ou pilotage national).
+  aviser(side === 'PILOTAGE' ? { permission: 'fieldreports.submit', antennaId: report.antennaId } : { permission: 'fieldreports.manage' }, {
+    objet: `Remontée ${report.reference} : nouveau message`,
+    corps: `${side === 'PILOTAGE' ? 'Le pilotage' : `L’antenne ${report.antennaName}`} a répondu sur la remontée ${report.reference} « ${report.title} » : « ${clean.slice(0, 300)} »`,
+    origine: 'Remontées du terrain', lien: `#/remontees/${report.id}`, entite: report.id,
+  });
   return save(report, user, side === 'PILOTAGE' ? 'Réponse du pilotage' : 'Message de l’antenne', '', AUDIT_ACTIONS.FIELD_REPORT_ANSWERED);
 }
 

@@ -5,6 +5,7 @@ import { AUDIT_ACTIONS } from '../core/constants.js';
 import { findAntennaById } from '../repositories/antennas.repository.js';
 import { directionDocumentsRepo } from '../repositories/pilotage.repository.js';
 import { actor, who, journal, journalOf, text, nextReference, uuid, nowIso } from './pilotage-core.service.js';
+import { aviser } from './notifications.service.js'; // Intégration : messagerie unique du lot d1
 
 export const DOCUMENT_CATEGORIES = {
   RAPPORT: 'Rapport d’activité',
@@ -70,6 +71,7 @@ export function depositDocument(input) {
   };
   directionDocumentsRepo.upsert(doc);
   journal(AUDIT_ACTIONS.DOCUMENT_DEPOSITED, { entity: 'DOCUMENT', entityId: doc.id, reference: doc.reference, newValue: `${doc.title} (v1)` });
+  askValidation(doc, 1, user);
   return decorate(doc);
 }
 
@@ -99,7 +101,13 @@ export function addVersion(id, input) {
   const next = { ...d, versions: [...d.versions, version] };
   directionDocumentsRepo.upsert(next);
   journal(AUDIT_ACTIONS.DOCUMENT_VERSIONED, { entity: 'DOCUMENT', entityId: id, reference: d.reference, newValue: `v${version.n}`, note });
+  askValidation(next, version.n, user);
   return decorate(next);
+}
+
+/** Messagerie unique (lot d1) : les personnes habilitées à valider, autres que le déposant, sont prévenues. */
+function askValidation(doc, n, user) {
+  aviser({ permission: 'documents.validate' }, { objet: `Document ${doc.reference} à valider`, corps: `${user.name} a déposé la version ${n} du document « ${doc.title} ». Elle attend une validation par une autre personne.`, origine: 'Documents', lien: `#/direction/documents/${doc.id}`, entite: doc.id });
 }
 
 function decide(id, status, reason) {
@@ -113,6 +121,7 @@ function decide(id, status, reason) {
   const next = { ...d, versions: d.versions.map((x) => (x.n === v.n ? { ...x, status, decidedBy: user.name, decidedById: user.id, decidedAt: nowIso(), decisionNote } : x)) };
   directionDocumentsRepo.upsert(next);
   journal(status === DOCUMENT_STATUS.VALIDE ? AUDIT_ACTIONS.DOCUMENT_VALIDATED : AUDIT_ACTIONS.DOCUMENT_REJECTED, { entity: 'DOCUMENT', entityId: id, reference: d.reference, newValue: `v${v.n}`, note: decisionNote || null });
+  aviser({ ids: [v.byId] }, { objet: `Document ${d.reference} ${status === DOCUMENT_STATUS.VALIDE ? 'validé' : 'refusé'}`, corps: `La version ${v.n} du document « ${d.title} » a été ${status === DOCUMENT_STATUS.VALIDE ? 'validée' : 'refusée'} par ${user.name}.${decisionNote ? ` ${status === DOCUMENT_STATUS.VALIDE ? 'Observation' : 'Motif'} : ${decisionNote}.` : ''}`, origine: 'Documents', lien: `#/direction/documents/${id}`, entite: id });
   return decorate(next);
 }
 

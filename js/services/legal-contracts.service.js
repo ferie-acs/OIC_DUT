@@ -8,6 +8,7 @@ import { findAntennaById } from '../repositories/antennas.repository.js';
 import { legalContractsRepo } from '../repositories/pilotage.repository.js';
 import { compare } from './comparison.service.js';
 import { actor, canDo, who, journal, journalOf, today, isIsoDate, daysBetween, text, nextReference, uuid, nowIso } from './pilotage-core.service.js';
+import { aviser } from './notifications.service.js'; // Intégration : messagerie unique du lot d1
 
 export const LEGAL_TYPES = { PARTENARIAT: 'Convention de partenariat DUT', PRESTATION: 'Contrat de prestation', AUTRE: 'Autre engagement' };
 export const LEGAL_STATUS_LABELS = { BROUILLON: 'En rédaction', VISA_JURIDIQUE: 'Visa juridique', VALIDATION_DG: 'Validation Direction générale', EN_VIGUEUR: 'En vigueur', ECHU: 'Échu' };
@@ -93,7 +94,10 @@ export function giveLegalVisa(id, note = '') {
   const user = actor('legal.visa');
   const c = mustGet(id);
   if (c.status !== 'VISA_JURIDIQUE') throw new Error('Ce contrat n’attend pas de visa juridique.');
-  return step(c, user, 'VALIDATION_DG', 'Visa juridique accordé', { visaBy: who(user), visaAt: nowIso() }, text(note, 'Observation', { required: false, max: 400 }) || null);
+  const saved = step(c, user, 'VALIDATION_DG', 'Visa juridique accordé', { visaBy: who(user), visaAt: nowIso() }, text(note, 'Observation', { required: false, max: 400 }) || null);
+  // Messagerie unique (lot d1) : la Direction générale est invitée à la validation finale.
+  aviser({ permission: 'legal.validate_final' }, { objet: `Contrat ${c.reference} à valider`, corps: `Le contrat ${c.reference} (${c.counterparty} — ${c.object}) a reçu le visa juridique. Il attend la validation de la Direction générale.`, origine: 'Contrats et conventions', lien: `#/direction/contrats/${id}`, entite: id });
+  return saved;
 }
 
 export function validateLegalContract(id) {
@@ -101,7 +105,9 @@ export function validateLegalContract(id) {
   const c = mustGet(id);
   if (c.status !== 'VALIDATION_DG') throw new Error('Ce contrat n’attend pas la validation de la Direction générale.');
   if (c.createdBy?.id === user.id || c.visaBy?.id === user.id) throw new Error('La validation finale revient à une autre personne que le rédacteur et l’auteur du visa.');
-  return step(c, user, 'EN_VIGUEUR', 'Validé par la Direction générale', { validatedBy: who(user), validatedAt: nowIso() });
+  const saved = step(c, user, 'EN_VIGUEUR', 'Validé par la Direction générale', { validatedBy: who(user), validatedAt: nowIso() });
+  aviser({ ids: [c.createdBy?.id, c.visaBy?.id] }, { objet: `Contrat ${c.reference} en vigueur`, corps: `Le contrat ${c.reference} (${c.counterparty}) a été validé par ${user.name} : il est en vigueur.`, origine: 'Contrats et conventions', lien: `#/direction/contrats/${id}`, entite: id });
+  return saved;
 }
 
 export function returnLegalContract(id, reason) {
@@ -112,6 +118,7 @@ export function returnLegalContract(id, reason) {
   const motif = text(reason, 'Motif du renvoi', { max: 400 });
   const saved = step(c, user, 'BROUILLON', 'Renvoyé en rédaction', {}, motif);
   journal(AUDIT_ACTIONS.LEGAL_CONTRACT_REJECTED, { entity: 'CONTRAT_JURIDIQUE', entityId: id, reference: c.reference, note: motif });
+  aviser({ ids: [c.createdBy?.id] }, { objet: `Contrat ${c.reference} renvoyé en rédaction`, corps: `Le contrat ${c.reference} (${c.counterparty}) est renvoyé en rédaction par ${user.name}. Motif : ${motif}.`, origine: 'Contrats et conventions', lien: `#/direction/contrats/${id}`, entite: id });
   return saved;
 }
 

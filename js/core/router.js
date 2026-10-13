@@ -61,7 +61,8 @@ function resolve() {
       navigate('/login');
       return;
     }
-    if (route.permission && !can(user, route.permission)) {
+    // Intégration : une route peut accepter plusieurs droits (l'un d'eux suffit), par exemple lecture ou déclaration.
+    if (route.permission && ![].concat(route.permission).some((p) => can(user, p))) {
       notFoundHandler({ reason: 'forbidden', path });
       return;
     }

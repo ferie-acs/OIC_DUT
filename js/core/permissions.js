@@ -65,6 +65,14 @@ PERMISSIONS[ROLES.OIC_ADMIN].push(
 PERMISSIONS[ROLES.ANTENNA_AGENT].push('objectives.results', 'actions.follow');
 // Fin lot d5
 
+// Intégration des lots d1 à d5
+// - Direction générale : lecture nationale des incidents (et des lenteurs), des équipements, du rapprochement et des
+//   ventes de références, du stock de numéros ; aucun droit de saisie, de validation ni d'édition de DUT.
+// - La justification d'un écart de rapprochement devient un droit distinct de sa consultation (la Direction lit seulement).
+PERMISSIONS[ROLES.DIRECTION].push('incidents.read', 'equipment.view', 'equipment.read', 'reconciliation.view', 'sales.report', 'ranges.read');
+[ROLES.OIC_ADMIN, ROLES.CASHIER, ROLES.PARTNER_ADMIN].forEach((role) => PERMISSIONS[role].push('reconciliation.justify'));
+// Fin intégration
+
 export function can(user, permission) {
   if (!user) return false;
   return permissionsFor(user.role).includes(permission);

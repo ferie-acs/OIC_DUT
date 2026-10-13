@@ -20,6 +20,8 @@ import { getAllDuts, saveDuts } from '../repositories/dut.repository.js';
 import { amountsFor, pricing } from './range-pricing.service.js';
 import * as payments from './payments.service.js';
 import * as auditService from './audit.service.js';
+import { aviser } from './notifications.service.js'; // Intégration : messagerie unique du lot d1
+import { isSelectable } from './referentials.service.js'; // Intégration : fiche active et groupement non suspendu (lot d1)
 
 export const OPERATION_STATUS_LABELS = {
   PENDING: 'En attente', VALIDATED: 'Validée', REJECTED: 'Rejetée', CANCELLED: 'Annulée',
@@ -42,7 +44,7 @@ export const HOLDER_LABELS = { PARTENAIRE: 'Partenaire', TRANSPORTEUR: 'Transpor
 const isHeld = (op) => !!holderOf(op);
 /** Transporteurs pouvant acheter une plage (fiche active). */
 export function listTransporterClients() {
-  return transportersRepo.getAll().filter((t) => (t.etat || 'ACTIF') === 'ACTIF').map((t) => ({ id: t.id, name: t.name })).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  return transportersRepo.getAll().filter(isSelectable).map((t) => ({ id: t.id, name: t.name })).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
 }
 
 function actor(permission, message = 'Action non autorisée pour votre rôle.') {
@@ -231,7 +233,7 @@ export function transferRange({ antennaId, transporterId, start, quantity, recei
   if (antennaStatus(antenna) !== 'ACTIVE') throw new Error('Antenne désactivée ou fermée : aucune vente possible.');
   const transporter = transportersRepo.findById(transporterId);
   if (!transporter) throw new Error('Choisissez le transporteur bénéficiaire.');
-  if ((transporter.etat || 'ACTIF') !== 'ACTIF') throw new Error('Ce transporteur est désactivé ou retiré : aucune vente possible.');
+  if (!isSelectable(transporter)) throw new Error('Ce transporteur est désactivé ou retiré, ou suspendu par l’OIC : aucune vente possible.');
   const qty = Number(quantity); const first = Number(start);
   if (!Number.isSafeInteger(qty) || qty < 1 || qty > 10000) throw new Error('La quantité doit être un entier entre 1 et 10 000.');
   if (!Number.isSafeInteger(first) || first < 1) throw new Error('Le premier numéro est invalide.');
@@ -256,6 +258,9 @@ export function transferRange({ antennaId, transporterId, start, quantity, recei
   addOperation(op);
   payments.createForOperation(op, { collected: isAgent ? { method: 'GUICHET', receiptNo: receipt } : null, by: user });
   auditService.log(AUDIT_ACTIONS.RANGE_TRANSFERRED, { newValue: op.code, note: `${op.code} · ${antenna.name} → ${transporter.name} (transporteur) · ${numberLabel(op.year, first)} à ${numberLabel(op.year, last)} (${qty})${isAgent ? ' · en attente de validation OIC' : ' · validé d’office'}` });
+  // Messagerie unique (lot d1) : vente à valider par l'OIC, ou références aussitôt disponibles pour le transporteur.
+  if (isAgent) aviser({ permission: 'ranges.validate' }, { objet: `Vente de plage ${op.code} à valider`, corps: `L’antenne ${antenna.name} a vendu ${qty} référence(s) à ${transporter.name} (reçu ${receipt}). La vente attend votre validation.`, origine: 'Plages de numéros', lien: '#/oic/plages/transferts', entite: op.id });
+  else notifyTransporter(op);
   return op;
 }
 
@@ -272,7 +277,15 @@ export function decideTransfer(id, accepted, reason = '') {
   saveOperations(list);
   if (!accepted) payments.cancelForOperation(op.id, `Transfert refusé : ${motive}`);
   auditService.log(AUDIT_ACTIONS.RANGE_TRANSFER_DECIDED, { newValue: op.code, note: `${op.code} · ${accepted ? 'validé' : `refusé : ${motive}`}` });
+  // Messagerie unique (lot d1) : l'agent qui a saisi la vente est informé de la décision ; le transporteur, de ses références.
+  aviser({ ids: [op.requestedById] }, { objet: `Vente de plage ${op.code} ${accepted ? 'validée' : 'refusée'}`, corps: accepted ? `La vente de ${op.quantity} référence(s) à ${op.transporterName} a été validée par ${user.name}.` : `La vente de ${op.quantity} référence(s) à ${op.transporterName} a été refusée : ${motive}. Les numéros sont rendus au stock de l’antenne.`, origine: 'Plages de numéros', lien: '#/antenna/stock', entite: op.id });
+  if (accepted) notifyTransporter(op);
   return op;
+}
+
+/** Le transporteur est prévenu que ses références achetées sont utilisables (écran « Mes références »). */
+function notifyTransporter(op) {
+  aviser({ roles: ['TRANSPORTEUR'], transporterId: op.transporterId }, { objet: `${op.quantity} référence(s) DUT disponibles`, corps: `Votre achat ${op.code} est validé : les références ${numberLabel(op.year, op.rangeStart)} à ${numberLabel(op.year, op.rangeEnd)} sont disponibles pour régler vos DUT.`, origine: 'Plages de numéros', lien: '#/transporteur/references', entite: op.id });
 }
 
 // ------------------------------------------------------------- Reprendre

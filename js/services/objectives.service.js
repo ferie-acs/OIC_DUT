@@ -6,6 +6,7 @@ import { getAllAntennas, findAntennaById } from '../repositories/antennas.reposi
 import { indicatorsRepo, objectiveContractsRepo, correctiveActionsRepo, agentProfilesRepo } from '../repositories/pilotage.repository.js';
 import { compare, indicator as catalogIndicator } from './comparison.service.js';
 import { actor, canDo, who, journal, today, isIsoDate, text, nextReference, uuid, nowIso } from './pilotage-core.service.js';
+import { aviser } from './notifications.service.js'; // Intégration : messagerie unique du lot d1
 
 export const CONTRACT_STATUS = { BROUILLON: 'BROUILLON', SOUMIS: 'SOUMIS', VALIDE: 'VALIDE', CLOTURE: 'CLOTURE' };
 export const CONTRACT_STATUS_LABELS = { BROUILLON: 'En préparation', SOUMIS: 'À valider', VALIDE: 'En vigueur', CLOTURE: 'Clôturé' };
@@ -167,6 +168,8 @@ export function submitContract(id) {
   if (c.status !== CONTRACT_STATUS.BROUILLON) throw new Error('Seul un contrat en préparation peut être soumis.');
   const saved = transition(c, user, CONTRACT_STATUS.SOUMIS, 'Soumis à validation', { submittedBy: who(user), submittedAt: nowIso() });
   journal(AUDIT_ACTIONS.PILOT_CONTRACT_SUBMITTED, { entity: 'CONTRAT_OBJECTIFS', entityId: id, reference: c.reference });
+  // Messagerie unique (lot d1) : la Direction générale (droit de validation) est invitée à valider.
+  aviser({ permission: 'objectives.validate' }, { objet: `Contrat d’objectifs ${c.reference} à valider`, corps: `${user.name} a soumis le contrat d’objectifs ${c.reference} « ${c.title} » (${c.periodLabel}). Il attend votre validation.`, origine: 'Contrats d’objectifs', lien: `#/direction/objectifs/${id}`, entite: id });
   return saved;
 }
 
@@ -177,6 +180,9 @@ export function validateContract(id) {
   if (c.createdBy?.id === user.id || c.submittedBy?.id === user.id) throw new Error('La validation doit être faite par une autre personne que celle qui a préparé ou soumis le contrat.');
   const saved = transition(c, user, CONTRACT_STATUS.VALIDE, 'Validé et attribué', { validatedBy: who(user), validatedAt: nowIso() });
   journal(AUDIT_ACTIONS.PILOT_CONTRACT_VALIDATED, { entity: 'CONTRAT_OBJECTIFS', entityId: id, reference: c.reference });
+  aviser({ ids: [c.createdBy?.id, c.submittedBy?.id] }, { objet: `Contrat d’objectifs ${c.reference} validé`, corps: `Le contrat d’objectifs ${c.reference} « ${c.title} » a été validé par ${user.name} : il est en vigueur.`, origine: 'Contrats d’objectifs', lien: `#/direction/objectifs/${id}`, entite: id });
+  const antennaIds = [...new Set((c.lines || []).map((l) => assigneeOf(l).antennaId).filter(Boolean))];
+  antennaIds.forEach((antennaId) => aviser({ permission: 'objectives.results', antennaId, roles: ['ANTENNA_AGENT'] }, { objet: `Nouveaux objectifs pour votre antenne`, corps: `Le contrat d’objectifs ${c.reference} « ${c.title} » est en vigueur. Vous pouvez saisir les résultats de votre antenne.`, origine: 'Contrats d’objectifs', lien: `#/antenna/objectifs/${id}`, entite: id }));
   return saved;
 }
 
@@ -187,6 +193,7 @@ export function rejectContract(id, reason) {
   const motif = text(reason, 'Motif du renvoi', { max: 500 });
   const saved = transition(c, user, CONTRACT_STATUS.BROUILLON, 'Renvoyé en préparation', { rejection: { by: user.name, at: nowIso(), reason: motif }, lastNote: motif });
   journal(AUDIT_ACTIONS.PILOT_CONTRACT_REJECTED, { entity: 'CONTRAT_OBJECTIFS', entityId: id, reference: c.reference, note: motif });
+  aviser({ ids: [c.createdBy?.id, c.submittedBy?.id] }, { objet: `Contrat d’objectifs ${c.reference} renvoyé`, corps: `Le contrat d’objectifs ${c.reference} « ${c.title} » est renvoyé en préparation par ${user.name}. Motif : ${motif}.`, origine: 'Contrats d’objectifs', lien: `#/direction/objectifs/${id}`, entite: id });
   return saved;
 }
 
@@ -314,6 +321,8 @@ export function createAction(contractId, lineId, input) {
   };
   correctiveActionsRepo.upsert(action);
   journal(AUDIT_ACTIONS.PILOT_ACTION_SAVED, { entity: 'ACTION_CORRECTIVE', entityId: action.id, reference: c.reference, newValue: action.title, note: `Responsable : ${action.responsible} · échéance ${dueDate}` });
+  // Messagerie unique (lot d1) : les agents de l'antenne concernée suivent l'action.
+  if (action.antennaId) aviser({ permission: 'actions.follow', antennaId: action.antennaId }, { objet: `Action corrective à suivre`, corps: `Une action corrective est décidée pour votre antenne : « ${action.title} ». Responsable : ${action.responsible}. Échéance : ${dueDate}.`, origine: 'Actions correctives', lien: '#/antenna/actions', entite: action.id });
   return action;
 }
 

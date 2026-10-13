@@ -20,7 +20,7 @@ export function render(container, params = {}) {
 
 function renderList(container) {
   const user = getCurrentUser();
-  const national = user.role === 'OIC_ADMIN';
+  const national = user.role === 'OIC_ADMIN' || can(user, 'equipment.read'); // Intégration : lecture nationale (Direction)
   const rows = S.listEquipment();
   const live = rows.filter((e) => e.status !== 'REFORME');
   const antennaNames = [...new Set(rows.map((e) => e.antennaName))].sort((a, b) => a.localeCompare(b, 'fr'));
