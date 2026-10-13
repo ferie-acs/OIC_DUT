@@ -7,6 +7,7 @@ import { logout } from './auth.js';
 import { navigate } from './router.js';
 import { ROLE_LABELS } from './constants.js';
 import { createDraft } from '../services/dut.service.js';
+import { lotD1NavSections } from './nav-lot-d1.js'; // Lot d1
 
 let shellEvents;
 
@@ -74,6 +75,7 @@ export function renderAppShell(user, currentPath, breadcrumbItems = []) {
   if (user.role === 'OIC_ADMIN') sections.push({ label: 'Ressources', items: [{ path: '/oic/operations', label: 'Demandes de plages', icon: 'layers' }, { path: '/oic/antennas', label: 'Carte des antennes', icon: 'map' }] });
 
   if(user.role==='OIC_ADMIN') sections.push({label:'Administration',items:[{path:'/admin/users',label:'Utilisateurs',icon:'users'},{path:'/admin/roles',label:'Rôles & accès',icon:'shield'},{path:'/admin/settings',label:'Paramètres',icon:'layers'},{path:'/admin/audit',label:'Journal',icon:'file'}]});
+  lotD1NavSections(user, sections); // Lot d1 : comptes et acteurs
   const expandedSections = readExpandedSections();
   document.title=settings().platformName;
   root.innerHTML = `

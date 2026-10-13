@@ -146,3 +146,37 @@ export const CONTROL_POLICY = {
 export const DEMO_PASSWORD = 'demo123';
 
 export const APP_NAME = 'DUT-OIC';
+
+// Lot d1 : comptes et acteurs
+Object.assign(STORAGE_KEYS, {
+  MESSAGES: 'dut_messages_v1',
+  TRANSPORTER_APPLICATIONS: 'dut_transporter_applications_v1',
+  VEHICLE_DECLARATIONS: 'dut_vehicle_declarations_v1',
+  HABILITATIONS: 'dut_habilitations_v1',
+  LOT_D1_SEED: 'dut_lot_d1_seed_v1',
+});
+/** États d'un groupement (partenaire habilité, transporteur). Absent = ACTIF (données antérieures). */
+export const ORG_STATUS = { EN_ATTENTE: 'EN_ATTENTE', ACTIF: 'ACTIF', SUSPENDU: 'SUSPENDU', RESILIE: 'RESILIE', REFUSE: 'REFUSE' };
+export const ORG_STATUS_LABELS = { EN_ATTENTE: 'En attente de validation', ACTIF: 'Actif', SUSPENDU: 'Suspendu', RESILIE: 'Résilié', REFUSE: 'Refusé' };
+Object.assign(AUDIT_ACTIONS, {
+  ACCOUNT_ACTIVATION_SENT: 'ACCOUNT_ACTIVATION_SENT', ACCOUNT_ACTIVATED: 'ACCOUNT_ACTIVATED',
+  PASSWORD_RESET_REQUESTED: 'PASSWORD_RESET_REQUESTED', PASSWORD_RESET_DONE: 'PASSWORD_RESET_DONE', PASSWORD_CHANGED: 'PASSWORD_CHANGED',
+  PROFILE_UPDATED: 'PROFILE_UPDATED', COMPANY_USER_CREATED: 'COMPANY_USER_CREATED', COMPANY_USER_UPDATED: 'COMPANY_USER_UPDATED',
+  COMPANY_USER_STATUS: 'COMPANY_USER_STATUS', ORG_CREATED: 'ORG_CREATED', ORG_UPDATED: 'ORG_UPDATED', ORG_VALIDATED: 'ORG_VALIDATED',
+  ORG_REFUSED: 'ORG_REFUSED', ORG_SUSPENDED: 'ORG_SUSPENDED', ORG_REACTIVATED: 'ORG_REACTIVATED', ORG_TERMINATED: 'ORG_TERMINATED',
+  ORG_CHANGE_REQUESTED: 'ORG_CHANGE_REQUESTED', ORG_CHANGE_APPROVED: 'ORG_CHANGE_APPROVED', ORG_CHANGE_REJECTED: 'ORG_CHANGE_REJECTED',
+  ORG_DOCUMENT_ADDED: 'ORG_DOCUMENT_ADDED', ORG_DOCUMENT_REVIEWED: 'ORG_DOCUMENT_REVIEWED', TRANSPORTERS_IMPORTED: 'TRANSPORTERS_IMPORTED',
+  VEHICLE_DECLARED: 'VEHICLE_DECLARED', VEHICLE_VALIDATED: 'VEHICLE_VALIDATED', VEHICLE_REFUSED: 'VEHICLE_REFUSED',
+  HABILITATIONS_UPDATED: 'HABILITATIONS_UPDATED',
+});
+Object.assign(AUDIT_LABELS, {
+  ACCOUNT_ACTIVATION_SENT: 'Lien d’activation envoyé', ACCOUNT_ACTIVATED: 'Compte activé',
+  PASSWORD_RESET_REQUESTED: 'Réinitialisation demandée', PASSWORD_RESET_DONE: 'Mot de passe réinitialisé', PASSWORD_CHANGED: 'Mot de passe modifié',
+  PROFILE_UPDATED: 'Profil modifié', COMPANY_USER_CREATED: 'Utilisateur d’entreprise créé', COMPANY_USER_UPDATED: 'Utilisateur d’entreprise modifié',
+  COMPANY_USER_STATUS: 'Accès d’un utilisateur modifié', ORG_CREATED: 'Groupement créé', ORG_UPDATED: 'Fiche de groupement modifiée',
+  ORG_VALIDATED: 'Groupement validé', ORG_REFUSED: 'Demande refusée', ORG_SUSPENDED: 'Groupement suspendu', ORG_REACTIVATED: 'Groupement réactivé',
+  ORG_TERMINATED: 'Groupement résilié', ORG_CHANGE_REQUESTED: 'Modification demandée', ORG_CHANGE_APPROVED: 'Modification approuvée',
+  ORG_CHANGE_REJECTED: 'Modification refusée', ORG_DOCUMENT_ADDED: 'Pièce déposée', ORG_DOCUMENT_REVIEWED: 'Pièce examinée',
+  TRANSPORTERS_IMPORTED: 'Import de transporteurs', VEHICLE_DECLARED: 'Véhicule déclaré', VEHICLE_VALIDATED: 'Déclaration de véhicule validée',
+  VEHICLE_REFUSED: 'Déclaration de véhicule refusée', HABILITATIONS_UPDATED: 'Habilitations modifiées',
+});
