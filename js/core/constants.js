@@ -21,6 +21,17 @@ export const STORAGE_KEYS = {
   CONTROL_SETTINGS: 'dut_control_settings_v1',
   DEROGATIONS: 'dut_derogations_v1',
   DEMO_SEED_VERSION: 'dut_demo_seed_version',
+  // Lot d5 : pilotage de la Direction générale
+  PILOT_INDICATORS: 'dut_pilot_indicators_v1',
+  PILOT_CONTRACTS: 'dut_pilot_contracts_v1',
+  PILOT_ACTIONS: 'dut_pilot_actions_v1',
+  AGENT_PROFILES: 'dut_agent_profiles_v1',
+  AGENT_EVALUATIONS: 'dut_agent_evaluations_v1',
+  DIRECTION_DOCUMENTS: 'dut_direction_documents_v1',
+  MEETINGS: 'dut_meetings_v1',
+  LEGAL_CONTRACTS: 'dut_legal_contracts_v1',
+  LOT_D5_SEED: 'dut_lot_d5_seed_v1',
+  // Fin lot d5
 };
 
 export const ROLES = {
@@ -30,6 +41,8 @@ export const ROLES = {
   OIC_ADMIN: 'OIC_ADMIN',
   CONTROLLER: 'CONTROLLER',
   TRANSPORTEUR: 'TRANSPORTEUR',
+  // Lot d5 : pilotage de la Direction générale
+  DIRECTION: 'DIRECTION',
 };
 
 export const ROLE_LABELS = {
@@ -39,6 +52,8 @@ export const ROLE_LABELS = {
   OIC_ADMIN: 'Admin OIC',
   CONTROLLER: 'Agent Contrôle',
   TRANSPORTEUR: 'Transporteur',
+  // Lot d5 : pilotage de la Direction générale
+  DIRECTION: 'Direction générale et pilotage',
 };
 
 export const DUT_STATUS = {
@@ -79,6 +94,33 @@ export const AUDIT_ACTIONS = {
   CRL_SYNCED: 'CRL_SYNCED',
   CANARY_TRIGGERED: 'CANARY_TRIGGERED',
   DUT_DEROGATION: 'DUT_DEROGATION',
+  // Lot d5 : pilotage de la Direction générale
+  PILOT_INDICATOR_SAVED: 'PILOT_INDICATOR_SAVED',
+  PILOT_CONTRACT_SAVED: 'PILOT_CONTRACT_SAVED',
+  PILOT_CONTRACT_SUBMITTED: 'PILOT_CONTRACT_SUBMITTED',
+  PILOT_CONTRACT_VALIDATED: 'PILOT_CONTRACT_VALIDATED',
+  PILOT_CONTRACT_REJECTED: 'PILOT_CONTRACT_REJECTED',
+  PILOT_CONTRACT_CLOSED: 'PILOT_CONTRACT_CLOSED',
+  PILOT_RESULT_RECORDED: 'PILOT_RESULT_RECORDED',
+  PILOT_ACTION_SAVED: 'PILOT_ACTION_SAVED',
+  PILOT_ACTION_UPDATED: 'PILOT_ACTION_UPDATED',
+  AGENT_PROFILE_SAVED: 'AGENT_PROFILE_SAVED',
+  AGENT_EVALUATED: 'AGENT_EVALUATED',
+  DOCUMENT_DEPOSITED: 'DOCUMENT_DEPOSITED',
+  DOCUMENT_VERSIONED: 'DOCUMENT_VERSIONED',
+  DOCUMENT_CLASSIFIED: 'DOCUMENT_CLASSIFIED',
+  DOCUMENT_VALIDATED: 'DOCUMENT_VALIDATED',
+  DOCUMENT_REJECTED: 'DOCUMENT_REJECTED',
+  DOCUMENT_ARCHIVED: 'DOCUMENT_ARCHIVED',
+  MEETING_SAVED: 'MEETING_SAVED',
+  MEETING_CONVENED: 'MEETING_CONVENED',
+  MEETING_HELD: 'MEETING_HELD',
+  DECISION_SAVED: 'DECISION_SAVED',
+  LEGAL_CONTRACT_SAVED: 'LEGAL_CONTRACT_SAVED',
+  LEGAL_CONTRACT_STEP: 'LEGAL_CONTRACT_STEP',
+  LEGAL_CONTRACT_REJECTED: 'LEGAL_CONTRACT_REJECTED',
+  PARTNER_EVALUATED: 'PARTNER_EVALUATED',
+  PILOT_REPORT_EXPORTED: 'PILOT_REPORT_EXPORTED',
 };
 
 export const AUDIT_LABELS = {
@@ -101,6 +143,33 @@ export const AUDIT_LABELS = {
   CRL_SYNCED: 'Liste de révocation synchronisée',
   CANARY_TRIGGERED: 'DUT piège scanné',
   DUT_DEROGATION: 'Dérogation accordée',
+  // Lot d5 : pilotage de la Direction générale
+  PILOT_INDICATOR_SAVED: 'Indicateur enregistré',
+  PILOT_CONTRACT_SAVED: 'Contrat d’objectifs enregistré',
+  PILOT_CONTRACT_SUBMITTED: 'Contrat d’objectifs soumis à validation',
+  PILOT_CONTRACT_VALIDATED: 'Contrat d’objectifs validé',
+  PILOT_CONTRACT_REJECTED: 'Contrat d’objectifs renvoyé',
+  PILOT_CONTRACT_CLOSED: 'Contrat d’objectifs clôturé',
+  PILOT_RESULT_RECORDED: 'Résultat saisi',
+  PILOT_ACTION_SAVED: 'Action corrective enregistrée',
+  PILOT_ACTION_UPDATED: 'Suivi d’action corrective',
+  AGENT_PROFILE_SAVED: 'Fiche agent enregistrée',
+  AGENT_EVALUATED: 'Agent évalué',
+  DOCUMENT_DEPOSITED: 'Document déposé',
+  DOCUMENT_VERSIONED: 'Nouvelle version de document',
+  DOCUMENT_CLASSIFIED: 'Document reclassé',
+  DOCUMENT_VALIDATED: 'Document validé',
+  DOCUMENT_REJECTED: 'Document refusé',
+  DOCUMENT_ARCHIVED: 'Document archivé',
+  MEETING_SAVED: 'Réunion enregistrée',
+  MEETING_CONVENED: 'Convocation envoyée (simulée)',
+  MEETING_HELD: 'Compte rendu de réunion enregistré',
+  DECISION_SAVED: 'Décision enregistrée',
+  LEGAL_CONTRACT_SAVED: 'Contrat enregistré au registre',
+  LEGAL_CONTRACT_STEP: 'Étape du circuit de validation',
+  LEGAL_CONTRACT_REJECTED: 'Contrat renvoyé',
+  PARTNER_EVALUATED: 'Partenaire évalué',
+  PILOT_REPORT_EXPORTED: 'Rapport périodique exporté',
 };
 
 export const CONTROL_RESULTS = {

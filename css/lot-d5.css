@@ -1,0 +1,16 @@
+/* Lot d5 : pilotage de la Direction générale — compléments minimes, variables et rayons existants uniquement. */
+.d5-form .card-header{padding:0;margin-top:4px}
+.d5-form .card-header h3{font-size:14px}
+.d5-line{grid-template-columns:150px minmax(0,1fr) minmax(0,1.4fr) 150px;align-items:end;gap:var(--s2);padding:10px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface-2)}
+.d5-line .field{margin:0}
+.d5-line .input-group .input{min-width:0}
+.d5-text{white-space:pre-line;font-size:13.5px;line-height:1.65;color:var(--text)}
+.d5-checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;max-height:220px;overflow:auto}
+.d5-checks .checkbox-row{padding:7px 10px;font-size:12.5px}
+.sup-table-tools .checkbox-row{padding:9px 12px;font-size:12.5px;white-space:nowrap}
+a.st-alert{text-decoration:none}
+a.st-alert:hover{filter:brightness(.97)}
+@media(max-width:800px){.d5-line{grid-template-columns:1fr}.sup-table-tools{flex-wrap:wrap}.sup-table-tools .plan-pill{flex:1 1 140px}.sup-table-tools .ant-search{flex:1 1 200px;min-width:0}}
+.d5-block{margin-bottom:var(--s3)}
+.d5-actions{flex-wrap:wrap}
+@media(max-width:800px){.d5-actions>.btn{flex:1 1 auto;justify-content:center}}
