@@ -21,6 +21,13 @@ export const STORAGE_KEYS = {
   CONTROL_SETTINGS: 'dut_control_settings_v1',
   DEROGATIONS: 'dut_derogations_v1',
   DEMO_SEED_VERSION: 'dut_demo_seed_version',
+  // Lot d2 : antennes, sites, plages et caisse
+  SITES: 'dut_sites_v1',
+  RANGE_STOCK: 'dut_range_stock_v1',
+  RANGE_PRICING: 'dut_range_pricing_v1',
+  PAYMENTS: 'dut_payments_v1',
+  RECONCILIATION_NOTES: 'dut_reconciliation_notes_v1',
+  // Fin lot d2
 };
 
 export const ROLES = {
@@ -31,6 +38,9 @@ export const ROLES = {
   CONTROLLER: 'CONTROLLER',
   TRANSPORTEUR: 'TRANSPORTEUR',
 };
+// Lot d2 : rôle Caisse et comptabilité OIC
+ROLES.CASHIER = 'CASHIER';
+// Fin lot d2
 
 export const ROLE_LABELS = {
   PARTNER_ADMIN: 'Partenaire — Admin',
@@ -40,6 +50,9 @@ export const ROLE_LABELS = {
   CONTROLLER: 'Agent Contrôle',
   TRANSPORTEUR: 'Transporteur',
 };
+// Lot d2 : rôle Caisse et comptabilité OIC
+ROLE_LABELS.CASHIER = 'Caisse et comptabilité OIC';
+// Fin lot d2
 
 export const DUT_STATUS = {
   EN_EDITION: 'EN_EDITION',
@@ -79,6 +92,29 @@ export const AUDIT_ACTIONS = {
   CRL_SYNCED: 'CRL_SYNCED',
   CANARY_TRIGGERED: 'CANARY_TRIGGERED',
   DUT_DEROGATION: 'DUT_DEROGATION',
+  // Lot d2 : antennes, sites, plages et caisse
+  ANTENNA_CREATED: 'ANTENNA_CREATED',
+  ANTENNA_UPDATED: 'ANTENNA_UPDATED',
+  ANTENNA_STAFF_ASSIGNED: 'ANTENNA_STAFF_ASSIGNED',
+  ANTENNA_ACCOUNT_OPENED: 'ANTENNA_ACCOUNT_OPENED',
+  ANTENNA_DEACTIVATED: 'ANTENNA_DEACTIVATED',
+  ANTENNA_REACTIVATED: 'ANTENNA_REACTIVATED',
+  ANTENNA_CLOSED: 'ANTENNA_CLOSED',
+  SITE_SAVED: 'SITE_SAVED',
+  SITE_STATUS: 'SITE_STATUS',
+  RANGE_DECIDED: 'RANGE_DECIDED',
+  RANGE_REQUEST_UPDATED: 'RANGE_REQUEST_UPDATED',
+  RANGE_REQUEST_CANCELLED: 'RANGE_REQUEST_CANCELLED',
+  RANGE_ALLOCATED: 'RANGE_ALLOCATED',
+  RANGE_TRANSFERRED: 'RANGE_TRANSFERRED',
+  RANGE_TRANSFER_DECIDED: 'RANGE_TRANSFER_DECIDED',
+  RANGE_REVOKED: 'RANGE_REVOKED',
+  RANGE_SETTINGS_UPDATED: 'RANGE_SETTINGS_UPDATED',
+  PAYMENT_RECORDED: 'PAYMENT_RECORDED',
+  PAYMENT_VALIDATED: 'PAYMENT_VALIDATED',
+  PAYMENT_REJECTED: 'PAYMENT_REJECTED',
+  RECONCILIATION_JUSTIFIED: 'RECONCILIATION_JUSTIFIED',
+  // Fin lot d2
 };
 
 export const AUDIT_LABELS = {
@@ -101,6 +137,29 @@ export const AUDIT_LABELS = {
   CRL_SYNCED: 'Liste de révocation synchronisée',
   CANARY_TRIGGERED: 'DUT piège scanné',
   DUT_DEROGATION: 'Dérogation accordée',
+  // Lot d2 : antennes, sites, plages et caisse
+  ANTENNA_CREATED: 'Antenne créée',
+  ANTENNA_UPDATED: 'Antenne modifiée',
+  ANTENNA_STAFF_ASSIGNED: 'Encadrement d’antenne affecté',
+  ANTENNA_ACCOUNT_OPENED: 'Compte d’antenne ouvert',
+  ANTENNA_DEACTIVATED: 'Antenne désactivée',
+  ANTENNA_REACTIVATED: 'Antenne réactivée',
+  ANTENNA_CLOSED: 'Antenne fermée',
+  SITE_SAVED: 'Site enregistré',
+  SITE_STATUS: 'Statut de site modifié',
+  RANGE_DECIDED: 'Demande de plage instruite',
+  RANGE_REQUEST_UPDATED: 'Demande de plage modifiée',
+  RANGE_REQUEST_CANCELLED: 'Demande de plage annulée',
+  RANGE_ALLOCATED: 'Stock d’antenne approvisionné',
+  RANGE_TRANSFERRED: 'Plage transférée',
+  RANGE_TRANSFER_DECIDED: 'Transfert de plage instruit',
+  RANGE_REVOKED: 'Plage reprise',
+  RANGE_SETTINGS_UPDATED: 'Tarifs des plages modifiés',
+  PAYMENT_RECORDED: 'Encaissement saisi',
+  PAYMENT_VALIDATED: 'Paiement validé',
+  PAYMENT_REJECTED: 'Encaissement rejeté',
+  RECONCILIATION_JUSTIFIED: 'Écart justifié',
+  // Fin lot d2
 };
 
 export const CONTROL_RESULTS = {

@@ -1,0 +1,79 @@
+/* Lot d2 : antennes, sites, plages de numéros, caisse et rapprochement.
+   Uniquement des variables existantes ; compléments de mise en page des composants déjà en place. */
+
+.d2-actions{flex-wrap:wrap;justify-content:flex-end}
+.d2-sub{display:block;font-size:11.5px;color:var(--text-muted);font-weight:400;margin-top:2px}
+.d2-mono{font-variant-numeric:tabular-nums;font-size:12.5px;white-space:nowrap}
+.d2-line{display:block}
+.d2-line + .d2-line{margin-top:6px}
+.d2-top{margin-top:var(--s3)}
+.d2-gap{margin:4px 0 8px}
+.d2-link{background:none;border:0;padding:0;font:inherit;font-weight:600;cursor:pointer;text-align:left}
+
+/* Actions groupées dans les cartes latérales et les lignes de tableau */
+.d2-stack-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.d2-row-actions{display:inline-flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;align-items:center}
+.d2-item-actions{display:inline-flex;gap:2px;flex:none}
+.d2-checks{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+
+/* Carte de choix d'une position (même fond que la carte des antennes) */
+.d2-picker{padding:0}
+.d2-picker .d2-picker-map{min-height:320px!important;height:320px}
+.d2-picker .d2-picker-map.is-small{min-height:240px!important;height:240px}
+.d2-modal-form{display:grid;gap:12px}
+.d2-modal-form .field-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.d2-modal-form .field{margin:0}
+
+/* Sites : repère carré, distinct des antennes rondes */
+.ant-marker.d2-site-marker i{width:16px;height:16px;border-radius:var(--r-md);background:var(--success);border-color:var(--surface)}
+.ant-dot.d2-site-dot{border-radius:var(--r-sm);background:var(--success)}
+
+/* Stock d'une antenne */
+.d2-alloc{display:grid;gap:8px;padding:12px;border:1px solid var(--border);border-radius:var(--r-xl);background:var(--surface-2)}
+.d2-alloc + .d2-alloc{margin-top:10px}
+.d2-alloc .range-meta{color:var(--text-secondary);font-size:12px;margin-top:0}
+.d2-alloc .progress-track{margin:2px 0}
+
+/* Ventes à valider */
+.d2-cards{display:grid;gap:12px}
+.d2-pending{display:grid;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r-xl);background:var(--surface-2)}
+.d2-identity{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+
+/* Montants HT / TVA / timbre / TTC */
+.d2-amounts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0;padding:12px;border:1px solid var(--border);border-radius:var(--r-xl);background:var(--surface-2)}
+.d2-amounts div{display:grid;gap:2px}
+.d2-amounts dt{font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted)}
+.d2-amounts dd{margin:0;font-size:13.5px;font-weight:600;color:var(--navy);font-variant-numeric:tabular-nums}
+.d2-amounts .is-total dd{color:var(--success)}
+
+/* Encaissements */
+.d2-sim{display:flex;align-items:center;gap:8px;margin:0}
+.d2-fieldset{border:1px solid var(--border);border-radius:var(--r-xl);padding:10px 12px;margin:0}
+.d2-fieldset legend{font-size:12.5px;font-weight:600;color:var(--navy);padding:0 4px}
+.d2-checklist{display:grid;gap:6px;max-height:220px;overflow:auto}
+.d2-pay-line{margin-top:10px;align-items:center;flex-wrap:wrap}
+
+/* Écarts de rapprochement */
+.d2-gaps{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.d2-gap-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-xl);background:var(--surface)}
+.d2-gap-body{display:grid;gap:2px;min-width:0}
+.d2-gap-body strong{font-size:13px;color:var(--navy)}
+.d2-gap-body small{font-size:12px;color:var(--text-secondary);overflow-wrap:anywhere}
+.d2-gap-body .d2-just{display:inline-flex;align-items:center;gap:6px;color:var(--success)}
+.d2-two{display:grid;gap:var(--s3)}
+.d2-two .card{min-width:0}
+
+@media(max-width:700px){
+  .d2-amounts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .d2-modal-form .field-row{grid-template-columns:1fr}
+  .d2-gap-item{grid-template-columns:1fr;align-items:start}
+  .d2-picker .d2-picker-map{min-height:260px!important;height:260px}
+  .d2-actions{width:100%;justify-content:flex-start}
+}
+.sup-table-tools .sup-count{white-space:nowrap}
+.sup-table-tools .select{width:auto;min-width:150px}
+.d2-identity .d2-mono{white-space:normal;overflow-wrap:anywhere}
+.d2-table td.num,.d2-table th.num{white-space:nowrap}
+.d2-nowrap{white-space:nowrap}
+.d2-mono.d2-range{white-space:normal}
+.d2-range > span{white-space:nowrap}

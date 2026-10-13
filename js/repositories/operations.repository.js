@@ -29,6 +29,8 @@ export function addOperation(op) {
 export function peekNextNumber(operationId) {
   const op = findOperationById(operationId);
   if (!op) throw new Error('Opération introuvable.');
+  // Lot d2 : une plage reprise, refusée ou en attente de validation ne fournit aucun numéro.
+  if (op.status && op.status !== 'VALIDATED') throw new Error('Impossible de valider : la plage rattachée n’est pas active (reprise ou en attente). Resoumettez le dossier.');
   if (op.used >= op.quantity) throw new Error('Impossible de valider : aucun numéro DUT disponible.');
   return `DUT-CI-${op.year}-${String(op.rangeStart + op.used).padStart(6, '0')}`;
 }
@@ -38,6 +40,8 @@ export function consumeNextNumber(operationId) {
   const idx = list.findIndex((o) => o.id === operationId);
   if (idx === -1) throw new Error('Opération introuvable.');
   const op = list[idx];
+  // Lot d2 : une plage reprise, refusée ou en attente de validation ne fournit aucun numéro.
+  if (op.status && op.status !== 'VALIDATED') throw new Error('Impossible de valider : la plage rattachée n’est pas active (reprise ou en attente). Resoumettez le dossier.');
   if (op.used >= op.quantity) throw new Error('Impossible de valider : aucun numéro DUT disponible.');
   const numericValue = op.rangeStart + op.used;
   const dutNumber = `DUT-CI-${op.year}-${String(numericValue).padStart(6, '0')}`;
