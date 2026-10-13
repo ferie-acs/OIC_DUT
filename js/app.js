@@ -102,6 +102,9 @@ registerRoute('/control/result/:token', (params) => {
   controlView.render(el, params);
 }, { permission: 'control.scan' });
 
+// Lot d1 : comptes et acteurs (données de démonstration idempotentes, puis routes)
+await (await import('./seed-lot-d1.js')).seedLotD1(); (await import('./routes-lot-d1.js')).registerLotD1Routes({ registerRoute, withShell, renderLoginShell });
+
 setNotFoundHandler(({ reason }) => {
   const user = getCurrentUser();
   const title = reason === 'forbidden' ? 'Accès refusé' : 'Page introuvable';
