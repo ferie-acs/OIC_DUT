@@ -61,6 +61,7 @@ try {
 }
 syncAntennaDirectory();
 seedLotD2();
+await import('./seed-lot-d4.js').then((m) => m.seedLotD4()); // Lot d4 : données de démonstration (idempotent)
 
 function withShell(view, breadcrumb) {
   return (params) => {
@@ -143,6 +144,21 @@ registerRoute('/oic/archives', withShell(antennaArchivesView, ['OIC', 'Archives 
 registerRoute('/transporteur/references', withShell(transporterReferencesView, ['Transporteur', 'Mes références']), { permission: 'references.view' });
 registerRoute('/control/conducteur', () => controlDriverView.renderSearch(renderControlShell(getCurrentUser())), { permission: 'control.driver_search' });
 registerRoute('/control/historique', () => controlDriverView.renderHistory(renderControlShell(getCurrentUser())), { permission: 'control.history' });
+
+// Lot d4 : incidents, remontées du terrain, équipements, échanges partenaires
+import * as incidentsView from './views/incidents.view.js';
+import * as fieldReportsView from './views/field-reports.view.js';
+import * as equipmentView from './views/equipment.view.js';
+import * as partnerExchangesView from './views/partner-exchanges.view.js';
+registerRoute('/incidents', withShell(incidentsView, ['Assistance', 'Incidents']), { permission: 'incidents.declare' });
+registerRoute('/lenteurs', withShell({ render: (root) => incidentsView.renderPerformance(root) }, ['Exploitation', 'Suivi des lenteurs']), { permission: 'incidents.manage' });
+registerRoute('/incidents/:id', withShell(incidentsView, ['Assistance', 'Incidents', 'Fiche']), { permission: 'incidents.declare' });
+registerRoute('/remontees', withShell(fieldReportsView, ['Terrain', 'Remontées du terrain']), { permission: 'fieldreports.view' });
+registerRoute('/remontees/:id', withShell(fieldReportsView, ['Terrain', 'Remontées du terrain', 'Fiche']), { permission: 'fieldreports.view' });
+registerRoute('/equipements', withShell(equipmentView, ['Terrain', 'Équipements et mobilité']), { permission: 'equipment.view' });
+registerRoute('/equipements/:id', withShell(equipmentView, ['Terrain', 'Équipements et mobilité', 'Fiche']), { permission: 'equipment.view' });
+registerRoute('/echanges', withShell(partnerExchangesView, ['Partenaires', 'Échanges']), { permission: 'exchanges.view' });
+registerRoute('/echanges/:id', withShell(partnerExchangesView, ['Partenaires', 'Échanges', 'Fil']), { permission: 'exchanges.view' });
 
 setNotFoundHandler(({ reason }) => {
   const user = getCurrentUser();

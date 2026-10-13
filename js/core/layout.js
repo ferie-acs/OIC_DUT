@@ -120,6 +120,15 @@ export function renderAppShell(user, currentPath, breadcrumbItems = []) {
   if(user.role==='OIC_ADMIN') sections.push({label:'Administration',items:[{path:'/admin/users',label:'Utilisateurs',icon:'users'},{path:'/admin/roles',label:'Rôles & accès',icon:'shield'},{path:'/admin/settings',label:'Paramètres',icon:'layers'},{path:'/admin/audit',label:'Journal',icon:'file'}]});
   lotD1NavSections(user, sections); // Lot d1 : comptes et acteurs
   addLotD2Nav(sections, user.role); // Lot d2
+  // Lot d4 : incidents, remontées du terrain, équipements, échanges partenaires
+  const lotD4Menu = {
+    PARTNER_ADMIN: { label: 'Assistance', items: [{ path: '/incidents', label: 'Incidents', icon: 'alertTriangle' }, { path: '/echanges', label: 'Échanges avec l’OIC', icon: 'messageSquare' }] },
+    PARTNER_EDITOR: { label: 'Assistance', items: [{ path: '/incidents', label: 'Incidents', icon: 'alertTriangle' }] },
+    TRANSPORTEUR: { label: 'Assistance', items: [{ path: '/incidents', label: 'Incidents', icon: 'alertTriangle' }] },
+    ANTENNA_AGENT: { label: 'Terrain', items: [{ path: '/incidents', label: 'Incidents', icon: 'alertTriangle' }, { path: '/remontees', label: 'Remontées du terrain', icon: 'megaphone' }, { path: '/equipements', label: 'Équipements', icon: 'monitor' }] },
+    OIC_ADMIN: { label: 'Exploitation', items: [{ path: '/incidents', label: 'Incidents', icon: 'alertTriangle' }, { path: '/lenteurs', label: 'Suivi des lenteurs', icon: 'gauge' }, { path: '/remontees', label: 'Remontées du terrain', icon: 'megaphone' }, { path: '/equipements', label: 'Équipements', icon: 'monitor' }, { path: '/echanges', label: 'Échanges partenaires', icon: 'messageSquare' }] },
+  }[user.role];
+  if (lotD4Menu) sections.push(lotD4Menu);
   const expandedSections = readExpandedSections();
   document.title=settings().platformName;
   root.innerHTML = `
