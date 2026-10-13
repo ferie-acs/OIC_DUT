@@ -12,6 +12,8 @@ const HOME_BY_ROLE = {
   [ROLES.OIC_ADMIN]: '/oic/dashboard',
   [ROLES.CONTROLLER]: '/control',
   [ROLES.TRANSPORTEUR]: '/transporteur/dashboard',
+  // Lot d5 : pilotage de la Direction générale
+  [ROLES.DIRECTION]: '/direction/antennes',
 };
 
 export function render(container) {

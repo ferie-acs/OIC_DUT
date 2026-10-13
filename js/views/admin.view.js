@@ -7,6 +7,8 @@ import { openModal, toast } from '../core/ui.js';
 import { resetDemo } from '../seed.js';
 const tabs=[['users','Utilisateurs'],['roles','Rôles & accès'],['settings','Paramètres'],['audit','Journal']];
 const missions={PARTNER_ADMIN:'Crée et soumet les DUT de son partenaire, gère ses référentiels et demande des plages.',PARTNER_EDITOR:'Prépare et soumet les DUT de son partenaire et consulte ses ressources.',ANTENNA_AGENT:'Examine les dossiers de son antenne, valide ou rejette les DUT.',OIC_ADMIN:'Supervise les DUT au niveau national, traite les demandes de plages et administre la plateforme.',CONTROLLER:'Vérifie les DUT et enregistre les contrôles routiers.',TRANSPORTEUR:'Consulte ses DUT et renseigne le suivi de ses transports.'};
+// Lot d5 : pilotage de la Direction générale
+missions.DIRECTION='Suit et compare les antennes, valide les contrats d’objectifs, les documents et les contrats ; ne modifie aucun DUT.';
 const error=err=>toast({type:'error',title:err.message});
 const options=(items,value)=>items.map(([id,label])=>`<option value="${e(id)}" ${id===value?'selected':''}>${e(label)}</option>`).join('');
 function codeModal(code){openModal({title:'Nouvel accès créé',text:'Copiez ce mot de passe et transmettez-le au titulaire. Il ne sera plus affiché après fermeture. Les anciens accès réinitialisés ne fonctionnent plus.',bodyHtml:`<label class="field">Mot de passe<input class="input" readonly value="${e(code)}" onclick="this.select()"></label>`,hideCancel:true,confirmLabel:'Fermer'});}
