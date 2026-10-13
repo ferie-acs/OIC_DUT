@@ -10,6 +10,7 @@ import { loadKey, signPayload } from './signing.service.js';
 import * as auditService from './audit.service.js';
 import { can, requirePermission } from '../core/permissions.js';
 import { billingErrors } from './dut-billing.service.js';
+import { aviser } from './notifications.service.js'; // Intégration : messagerie unique du lot d1
 import { transporters as transportersRef, vehicles as vehiclesRef, drivers as driversRef, isSelectable, lockedTransporterId, ownerForDut } from './referentials.service.js';
 
 export function blankDut(user) {
@@ -218,7 +219,7 @@ export function reject(id, reason) {
   const dut = findDutById(id);
   if (!dut) throw new Error('DUT introuvable.');
   if (dut.status !== DUT_STATUS.TERMINE) throw new Error('Seul un DUT terminé peut être rejeté.');
-  const user = getCurrentUser();
+  const user = requireLifecycleRight(dut, 'dut.reject'); // Intégration : droit vérifié par le service (rôle Direction exclu)
   updateDut(id, {
     status: DUT_STATUS.REJETE,
     rejectedAt: nowIso(),
@@ -262,8 +263,9 @@ export async function validate(id) {
   const dut = findDutById(id);
   if (!dut) throw new Error('DUT introuvable.');
   if (dut.status !== DUT_STATUS.TERMINE) throw new Error('Le DUT doit être terminé avant validation.');
+  // Intégration : droit de validation et ressort de l'antenne vérifiés par le service, pas seulement par l'écran.
+  const validator = requireLifecycleRight(dut, 'dut.validate');
   // Lot d3 : la personne qui a saisi le DUT (au guichet notamment) ne le valide pas elle-même.
-  const validator = getCurrentUser();
   if (validator && validator.id === dut.createdBy) throw new Error('Vous avez saisi ce DUT : sa validation revient à un autre agent.');
   // Lot d3 : un DUT déjà réglé par une référence du stock porte ce numéro ; aucun autre numéro n'est consommé.
   const paid = dut.payment?.reference || null;
@@ -318,6 +320,7 @@ export function suspend(id, note) {
   if (dut.status !== DUT_STATUS.VALIDE) throw new Error('Seul un DUT validé peut être suspendu.');
   updateDut(id, { status: DUT_STATUS.SUSPENDU, suspendedAt: nowIso() });
   auditService.log(AUDIT_ACTIONS.DUT_SUSPENDED, { dutId: id, dutNumber: dut.dutNumber, note });
+  notifyEditor(dut, `DUT ${dut.dutNumber || ''} suspendu`, `Le DUT ${dut.dutNumber || ''} a été suspendu par l’OIC. Motif : ${String(note).trim()}. Il ne peut plus circuler tant que la suspension n’est pas levée.`);
   return findDutById(id);
 }
 
@@ -356,7 +359,15 @@ export function withdraw(id, note) {
     recordRetiredReference(dut.operationId, { reference: dut.dutNumber, dutId: id, at: withdrawnAt, by: user.name, motif });
     auditService.log(AUDIT_ACTIONS.REFERENCE_RETIRED, { dutId: id, dutNumber: dut.dutNumber, note: 'Numéro retiré définitivement : il ne sera jamais réattribué.' });
   }
+  notifyEditor(dut, `DUT ${dut.dutNumber || ''} annulé`, `Le DUT ${dut.dutNumber || ''} a été annulé par ${user.name}. Motif : ${motif}. Son numéro est retiré définitivement et le document ne peut plus circuler.`);
   return findDutById(id);
+}
+
+/** Intégration (messagerie unique du lot d1) : l'éditeur du dossier — partenaire ou transporteur — est prévenu. */
+function notifyEditor(dut, objet, corps) {
+  const transporterId = lockedTransporterId(dut);
+  const criteres = transporterId ? { roles: ['TRANSPORTEUR'], transporterId } : dut.partnerId ? { roles: ['PARTNER_ADMIN', 'PARTNER_EDITOR'], partnerId: dut.partnerId } : null;
+  if (criteres) aviser(criteres, { objet, corps, origine: 'Cycle du DUT', lien: `#/dut/${dut.id}`, entite: dut.id });
 }
 
 export function reprint(id, motif) {

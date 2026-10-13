@@ -12,6 +12,7 @@ import { getAllAntennas } from '../repositories/antennas.repository.js';
 import { transportersRepo } from '../repositories/referentials.repository.js';
 import { amountsFor, pricing } from './range-pricing.service.js';
 import * as auditService from './audit.service.js';
+import { aviser } from './notifications.service.js'; // Intégration : messagerie unique du lot d1
 
 export const PAYMENT_STATUS_LABELS = { A_ENCAISSER: 'À encaisser', ENCAISSE: 'Encaissé, à valider', VALIDE: 'Validé', ANNULE: 'Annulé' };
 export const PAYMENT_METHODS = { GUICHET: 'Guichet (reçu papier)', MOBILE_MONEY: 'Mobile money (paiement simulé)', CARTE: 'Carte bancaire (paiement simulé)' };
@@ -167,6 +168,8 @@ export function rejectPayment(id, reason) {
     if (p.recordedBy?.id === user.id) throw new Error('Le contrôle doit être fait par une autre personne que celle qui a saisi l’encaissement.');
     p.history = [...(p.history || []), { at: nowIso(), by: user.name, text: `Encaissement rejeté : ${motive} (saisi par ${p.recordedBy?.name || '—'})` }];
     p.rejections = [...(p.rejections || []), { at: nowIso(), by: user.name, reason: motive, receiptNo: p.receiptNo, method: p.method }];
+    // Messagerie unique (lot d1) : la personne qui a saisi l'encaissement est informée du rejet.
+    aviser({ ids: [p.recordedBy?.id] }, { objet: `Encaissement ${p.ref} rejeté`, corps: `L’encaissement ${p.ref} (${p.partnerName}, ${p.ttc} F) a été rejeté par ${user.name} : ${motive}. Il est de nouveau à encaisser.`, origine: 'Caisse', lien: '#/caisse/paiements', entite: p.id });
     Object.assign(p, { status: 'A_ENCAISSER', method: null, receiptNo: '', transactionRef: null, recordedAt: null, recordedBy: null });
     auditService.log(AUDIT_ACTIONS.PAYMENT_REJECTED, { newValue: p.ref, note: `${p.ref} · ${motive}` });
   });

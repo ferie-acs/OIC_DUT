@@ -42,7 +42,8 @@ export function createOwnDraft(user = getCurrentUser()) {
 export function counterUsagers() {
   const stocked = new Set(getAllTransporterStocks().map((o) => o.transporterId));
   return {
-    partenaires: getAllPartners().map((p) => ({ id: p.id, name: p.name })),
+    // Intégration lot d1 : un partenaire suspendu, résilié ou en attente de validation n'est pas proposé au guichet.
+    partenaires: getAllPartners().filter((p) => (p.status || 'ACTIF') === 'ACTIF').map((p) => ({ id: p.id, name: p.name })),
     transporteurs: transportersRepo.getAll().filter((t) => stocked.has(t.id) && isSelectable(t)).map((t) => ({ id: t.id, name: t.name })),
   };
 }
@@ -61,6 +62,7 @@ export function createCounterDraft(user, { usagerType, usagerId, deposantNom, de
   if (usagerType === 'PARTENAIRE') {
     const partner = findPartnerById(usagerId);
     if (!partner) throw new Error('Partenaire introuvable.');
+    if ((partner.status || 'ACTIF') !== 'ACTIF') throw new Error('Ce partenaire n’est pas actif (suspendu, résilié ou en attente de validation).');
     Object.assign(dut, { partnerId: partner.id, partnerName: partner.name });
     dut.guichet = { usagerType, usagerId: partner.id, usagerName: partner.name };
   } else {

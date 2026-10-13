@@ -2,6 +2,7 @@
 import { icon } from '../core/icons.js';
 import { escapeHtml as esc, formatDate, formatDateTime } from '../core/utils.js';
 import { getCurrentUser } from '../core/auth.js';
+import { can } from '../core/permissions.js';
 import { promptAction, toast } from '../core/ui.js';
 import { reconcile, justify, partnerOptions } from '../services/reconciliation.service.js';
 import { PAYMENT_KINDS } from '../services/payments.service.js';
@@ -43,7 +44,7 @@ export function render(container) {
         ${data.ecarts.length ? `<ul class="d2-gaps">${data.ecarts.map((e) => `<li class="d2-gap-item">
           <span class="st-alert is-${e.justification ? 'ok' : e.niveau}">${icon(e.justification ? 'checkCircle' : e.niveau === 'error' ? 'alertTriangle' : 'alertCircle', { size: 14 })} ${e.justification ? 'Justifié' : e.niveau === 'error' ? 'À corriger' : 'À vérifier'}</span>
           <div class="d2-gap-body"><strong>${esc(e.label)}</strong><small>${esc(e.detail)}</small>${e.justification ? `<small class="d2-just">${icon('edit', { size: 12 })} ${esc(e.justification.text)} — ${esc(e.justification.by)}, ${formatDateTime(e.justification.at)}</small>` : ''}</div>
-          <button type="button" class="btn btn-ghost btn-sm" data-justify="${esc(e.key)}">${e.justification ? 'Modifier la justification' : 'Justifier'}</button></li>`).join('')}</ul>` : `<p class="sup-empty">${icon('checkCircle', { size: 14 })} Achats, documents, préimprimés et paiements concordent sur la période.</p>`}
+          ${can(user, 'reconciliation.justify') ? `<button type="button" class="btn btn-ghost btn-sm" data-justify="${esc(e.key)}">${e.justification ? 'Modifier la justification' : 'Justifier'}</button>` : ''}</li>`).join('')}</ul>` : `<p class="sup-empty">${icon('checkCircle', { size: 14 })} Achats, documents, préimprimés et paiements concordent sur la période.</p>`}
       </div>
       <div class="card st-card"><div class="card-header"><h3>Plages du partenaire</h3><span class="text-muted">toutes périodes</span></div>
         ${table([['Plage', (r) => `<strong class="d2-nowrap">${esc(r.code)}</strong><small class="d2-sub">${esc(r.antenne)} · ${formatDate(r.acquiredAt)}</small>`], ['Numéros', (r) => `<span class="d2-mono">${esc(r.plage)}</span>`], ['Achetés', (r) => n(r.achetes), 'num'], ['Consommés', (r) => n(r.utilises), 'num'], ['DUT retrouvés', (r) => (r.utilises !== r.dutRetrouves && r.status !== 'TRANSFER_PENDING' ? `<span class="sup-neg">${n(r.dutRetrouves)}</span>` : n(r.dutRetrouves)), 'num'], ['Préimprimés', (r) => n(r.impressions), 'num'], ['Dû TTC', (r) => fcfa(r.du), 'num'], ['Paiement', (r) => (r.paiement === 'SANS_CREANCE' ? badge('error', 'Sans créance') : payBadge(r.paiement))]], data.plages, 'Aucune plage.')}

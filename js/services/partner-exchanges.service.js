@@ -4,6 +4,7 @@ import { AUDIT_ACTIONS } from '../core/constants.js';
 import * as repo from '../repositories/partner-exchanges.repository.js';
 import { getAllPartners } from '../repositories/partners.repository.js';
 import { actor, canDo, text, oneOf, nextReference, person, audit, nowIso, uuid } from './support-common.service.js';
+import { aviser } from './notifications.service.js'; // Intégration : messagerie unique du lot d1
 
 export const OIC_NATURES = { EVOLUTION: 'Évolution du DUT', DECISION: 'Décision de l’OIC', INFORMATION: 'Information' };
 export const PARTNER_NATURES = { DIFFICULTE: 'Difficulté rencontrée', PROPOSITION: 'Proposition', QUESTION: 'Question' };
@@ -91,7 +92,12 @@ export function startThread(input = {}) {
       readAt: { [side]: at },
     };
     created.push(thread);
-    // Après fusion avec le lot d1 : avertir l'autre partie par courriel simulé.
+    // Messagerie unique (lot d1) : l'autre partie est prévenue (administrateurs du partenaire, ou OIC).
+    aviser(side === 'OIC' ? { permission: 'exchanges.partner', partnerId: partner.id } : { permission: 'exchanges.manage' }, {
+      objet: `Échange ${thread.reference} : ${subject}`,
+      corps: side === 'OIC' ? `L’OIC vous a adressé un nouveau message : « ${subject} ».` : `${partner.name} a ouvert un échange avec l’OIC : « ${subject} ».`,
+      origine: 'Échanges partenaires', lien: `#/echanges/${thread.id}`, entite: thread.id,
+    });
     audit(AUDIT_ACTIONS.PARTNER_MESSAGE_SENT, thread.reference, `${partner.name} · ${subject}`);
   }
   repo.saveAll([...all, ...created]);
@@ -107,7 +113,12 @@ export function replyToThread(id, message) {
   thread.messages.push({ id: uuid(), at, side, byId: user.id, by: user.name, text: text(message, { label: 'Le message', max: 2000, min: 2 }) });
   thread.readAt = { ...(thread.readAt || {}), [side]: at };
   repo.upsert(thread);
-  // Après fusion avec le lot d1 : avertir l'autre partie par courriel simulé.
+  // Messagerie unique (lot d1) : l'autre partie est prévenue.
+  aviser(side === 'OIC' ? { permission: 'exchanges.partner', partnerId: thread.partnerId } : { permission: 'exchanges.manage' }, {
+    objet: `Échange ${thread.reference} : nouvelle réponse`,
+    corps: `${side === 'OIC' ? 'L’OIC' : thread.partnerName} a répondu dans l’échange « ${thread.subject} ».`,
+    origine: 'Échanges partenaires', lien: `#/echanges/${thread.id}`, entite: thread.id,
+  });
   audit(AUDIT_ACTIONS.PARTNER_MESSAGE_SENT, thread.reference, `Réponse ${side === 'OIC' ? 'de l’OIC' : 'du partenaire'} · ${thread.partnerName}`);
   return thread;
 }

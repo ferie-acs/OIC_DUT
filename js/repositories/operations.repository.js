@@ -58,7 +58,11 @@ export function listOperationsForTransporter(transporterId) {
 }
 
 export function findActiveOperationForTransporter(transporterId) {
-  return listOperationsForTransporter(transporterId).find((o) => o.status === 'VALIDATED' && o.used < o.quantity) || null;
+  // Intégration lots d2 / d3 : le stock combine les références d'essai et les plages achetées au guichet ;
+  // la plus petite référence disponible est consommée en premier, quel que soit l'ordre d'enregistrement.
+  return listOperationsForTransporter(transporterId)
+    .filter((o) => o.status === 'VALIDATED' && o.used < o.quantity)
+    .sort((a, b) => (a.year - b.year) || ((a.rangeStart + a.used) - (b.rangeStart + b.used)))[0] || null;
 }
 
 /** Numéro retiré définitivement après annulation d'un DUT : jamais réattribué, tracé sur l'opération. */

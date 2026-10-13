@@ -8,6 +8,7 @@ import { can } from '../core/permissions.js';
 import { nextFreeStart } from './ranges.service.js';
 import { createForOperation } from './payments.service.js';
 import { amountsFor, pricing } from './range-pricing.service.js';
+import { aviser } from './notifications.service.js'; // Intégration : messagerie unique du lot d1
 // Fin lot d2
 
 export function listForPartner(partnerId) {
@@ -68,6 +69,8 @@ export function decideRange(id, accepted, reason = '') {
   saveOperations(list);
   if (accepted) createForOperation(op, { by: user });
   auditService.log(AUDIT_ACTIONS.RANGE_DECIDED, { newValue: op.code, note: accepted ? `${op.code} · ${op.partnerName} · plage ${op.rangeStart} à ${op.rangeEnd} attribuée` : `${op.code} · refusée : ${reason.trim()}` });
+  // Messagerie unique (lot d1) : les administrateurs du partenaire sont informés de la décision.
+  if (op.partnerId) aviser({ roles: ['PARTNER_ADMIN'], partnerId: op.partnerId }, { objet: `Demande de plage ${op.code} ${accepted ? 'acceptée' : 'refusée'}`, corps: accepted ? `Votre demande de ${op.quantity} numéro(s) est acceptée : plage ${op.rangeStart} à ${op.rangeEnd}. La créance est transmise à la caisse.` : `Votre demande de ${op.quantity} numéro(s) est refusée : ${reason.trim()}.`, origine: 'Plages de numéros', lien: '#/partner/operations', entite: op.id });
   return op;
 }
 

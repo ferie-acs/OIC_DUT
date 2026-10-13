@@ -5,6 +5,8 @@ import { AUDIT_ACTIONS, AUDIT_LABELS } from '../core/constants.js';
 import { appendAuditLog } from '../repositories/audit.repository.js';
 import * as repo from '../repositories/incidents.repository.js';
 import { actor, canDo, text, oneOf, nextReference, antennaLabel, antennas, users, person, historyEntry, audit, nowIso, uuid } from './support-common.service.js';
+import { aviser, destinataires, notifier } from './notifications.service.js'; // Intégration : messagerie unique du lot d1
+import { formatDateTime } from '../core/utils.js';
 
 export const INCIDENT_CATEGORIES = {
   APPLICATIF: 'Applicatif',
@@ -80,8 +82,15 @@ export function resolvedLate(incident) {
   return Boolean(end) && new Date(end).getTime() > new Date(dueAt(incident)).getTime();
 }
 
+/** Intégration : la lecture nationale (Direction) ne donne aucun droit de déclarer ni de traiter. */
+function reader() {
+  const user = actor(null);
+  if (!canDo(user, 'incidents.declare') && !canDo(user, 'incidents.read')) throw new Error('Votre rôle ne permet pas cette action.');
+  return user;
+}
+
 function visibleTo(user, incident) {
-  if (canDo(user, 'incidents.manage')) return true;
+  if (canDo(user, 'incidents.manage') || canDo(user, 'incidents.read')) return true;
   if (incident.declaredBy?.id === user.id || incident.assignee?.id === user.id) return true;
   if (user.role === 'ANTENNA_AGENT') return Boolean(user.antennaId) && incident.antennaId === user.antennaId;
   if (user.role === 'PARTNER_ADMIN' || user.role === 'PARTNER_EDITOR') return Boolean(user.partnerId) && incident.declaredBy?.partnerId === user.partnerId;
@@ -115,8 +124,12 @@ export function scanDeadlines(now = Date.now()) {
     const note = `Délai cible de ${INCIDENT_SEVERITIES[incident.severity].hours} h dépassé de ${late < 1 ? 'moins d’une heure' : `${Math.floor(late)} h`}.`;
     incident.history.push({ ...historyEntry(null, 'Alerte : délai cible dépassé', note), by: 'Surveillance des délais' });
     appendAuditLog({ id: uuid(), action: AUDIT_ACTIONS.INCIDENT_DEADLINE_EXCEEDED, label: AUDIT_LABELS.INCIDENT_DEADLINE_EXCEEDED, dutId: null, dutNumber: null, userId: 'SYSTEM', userLabel: 'Surveillance des délais', role: 'SYSTEM', oldValue: null, newValue: incident.assignee?.name || null, note: `${incident.reference} — ${note}`, date: incident.deadlineAlertAt });
-    // Après fusion avec le lot d1 (messagerie simulée) : envoyer ici un courriel / SMS simulé
-    // au responsable attribué (incident.assignee) et aux administrateurs OIC.
+    // Messagerie unique (lot d1) : le responsable attribué et les administrateurs OIC sont prévenus.
+    notifier([...destinataires({ ids: [incident.assignee?.id], exclureAuteur: false }), ...destinataires({ permission: 'incidents.manage', exclureAuteur: false })], {
+      objet: `Incident ${incident.reference} : délai dépassé`,
+      corps: `L’incident ${incident.reference} « ${incident.title} » (${incident.antennaName}) a dépassé son délai cible. ${note}`,
+      origine: 'Incidents', lien: `#/incidents/${incident.id}`, entite: incident.id,
+    });
     alerted.push(incident);
   }
   if (alerted.length) repo.saveAll(list);
@@ -124,13 +137,13 @@ export function scanDeadlines(now = Date.now()) {
 }
 
 export function listIncidents() {
-  const user = actor('incidents.declare');
+  const user = reader();
   scanDeadlines();
   return repo.getAll().filter((i) => visibleTo(user, i)).sort((a, b) => new Date(b.declaredAt) - new Date(a.declaredAt));
 }
 
 export function getIncident(id) {
-  const user = actor('incidents.declare');
+  const user = reader();
   scanDeadlines();
   return load(user, id);
 }
@@ -142,7 +155,7 @@ export function incidentAlerts() {
 
 /** Ce que l'utilisateur connecté peut faire sur cet incident (pilote l'affichage des boutons). */
 export function allowedActions(incident) {
-  const user = actor('incidents.declare');
+  const user = reader();
   const manage = canDo(user, 'incidents.manage');
   const assignee = incident.assignee?.id === user.id && canDo(user, 'incidents.treat');
   const declarant = incident.declaredBy?.id === user.id;
@@ -237,7 +250,12 @@ export function assignIncident(id, input = {}) {
   Object.assign(incident, { assignee: person(target), team, assignedAt: nowIso() });
   if (incident.status === 'QUALIFIE') incident.status = 'ATTRIBUE';
   const note = [`${target.name} · ${RESOLUTION_TEAMS[team]}`, previous && previous !== target.name ? `auparavant : ${previous}` : '', text(input.note, { required: false, max: 500 })].filter(Boolean).join(' · ');
-  // Après fusion avec le lot d1 : prévenir le responsable par courriel / SMS simulé.
+  // Messagerie unique (lot d1) : le responsable attribué est prévenu.
+  aviser({ ids: [target.id] }, {
+    objet: `Incident ${incident.reference} attribué`,
+    corps: `L’incident ${incident.reference} « ${incident.title} » vous est attribué (équipe ${RESOLUTION_TEAMS[team]}, gravité ${INCIDENT_SEVERITIES[incident.severity].label.toLowerCase()}). Échéance : ${formatDateTime(dueAt(incident))}.`,
+    origine: 'Incidents', lien: `#/incidents/${incident.id}`, entite: incident.id,
+  });
   return record(incident, user, previous ? 'Incident réattribué' : 'Incident attribué', note, AUDIT_ACTIONS.INCIDENT_ASSIGNED);
 }
 
@@ -312,7 +330,8 @@ export function appendLinkedNote(id, user, label, note) {
 const HOUR_SLOTS = [['Avant 8 h', 0, 8], ['8 h – 10 h', 8, 10], ['10 h – 12 h', 10, 12], ['12 h – 14 h', 12, 14], ['14 h – 16 h', 14, 16], ['Après 16 h', 16, 24]];
 
 export function performanceStats({ days = 30, now = Date.now() } = {}) {
-  actor('incidents.manage');
+  const user = reader();
+  if (!canDo(user, 'incidents.manage') && !canDo(user, 'incidents.read')) throw new Error('Votre rôle ne permet pas cette action.');
   const since = now - days * 24 * HOUR;
   const items = repo.getAll().filter((i) => i.performance && new Date(i.performance.observedAt).getTime() >= since);
   const durations = items.map((i) => i.performance.durationSec);

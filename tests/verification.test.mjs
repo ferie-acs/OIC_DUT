@@ -364,6 +364,9 @@ console.log('Vue de contrôle : classe de bandeau par niveau.');
   const termine = getAllDuts().find((d) => d.status === 'TERMINE');
   const opBefore = findOp(termine.operationId) || (await import('../js/repositories/operations.repository.js')).findActiveOperationForPartner(termine.partnerId);
   const usedBefore = opBefore.used;
+  // Intégration : la validation exige désormais, côté service, le droit dut.validate dans le ressort de l'antenne.
+  const validator = JSON.parse(localStorage.getItem('dut_users')).find((u) => u.role === 'ANTENNA_AGENT' && u.antennaId === termine.antennaId);
+  localStorage.setItem('dut_current_user', JSON.stringify(validator));
   const realCrypto = globalThis.crypto;
   Object.defineProperty(globalThis, 'crypto', { value: { getRandomValues: realCrypto.getRandomValues.bind(realCrypto), randomUUID: realCrypto.randomUUID.bind(realCrypto) }, configurable: true, writable: true });
   await assert.rejects(() => validate(termine.id), /signature/i);

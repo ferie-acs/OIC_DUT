@@ -3,6 +3,7 @@
 import { AUDIT_ACTIONS } from '../core/constants.js';
 import { meetingsRepo } from '../repositories/pilotage.repository.js';
 import { actor, who, journal, journalOf, today, isIsoDate, text, nextReference, uuid, nowIso } from './pilotage-core.service.js';
+import { destinataires, notifier } from './notifications.service.js'; // Intégration : messagerie unique du lot d1
 
 export const MEETING_STATUS_LABELS = { PLANIFIEE: 'Planifiée', TENUE: 'Tenue', ANNULEE: 'Annulée' };
 export const DECISION_STATUS_LABELS = { A_FAIRE: 'À faire', EN_COURS: 'En cours', CLOTUREE: 'Clôturée' };
@@ -53,6 +54,9 @@ export function convene(id) {
   const next = { ...m, convocations: [...(m.convocations || []), { at: nowIso(), by: user.name, count: m.participants.length }] };
   meetingsRepo.upsert(next);
   journal(AUDIT_ACTIONS.MEETING_CONVENED, { entity: 'REUNION', entityId: id, reference: m.reference, note: `${m.participants.length} participant(s) — message simulé, aucun envoi réel` });
+  // Messagerie unique (lot d1) : les participants qui ont un compte reçoivent la convocation (simulée).
+  const named = (u) => m.participants.some((p) => p.toLowerCase().includes(String(u.name || '').toLowerCase()));
+  notifier(destinataires({}).filter((u) => u.name && named(u)), { objet: `Convocation : ${m.title}`, corps: `Vous êtes convoqué(e) à la réunion « ${m.title} » le ${m.date.replace('T', ' à ')}, lieu : ${m.place}.\nOrdre du jour : ${m.agenda}`, origine: 'Réunions', lien: null, entite: id });
   return decorate(next);
 }
 

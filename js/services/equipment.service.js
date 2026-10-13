@@ -30,7 +30,7 @@ export const EQUIPMENT_STATUS = {
 export const REPAIR_OUTCOMES = { REPARE: 'Réparé, remis en service', IRREPARABLE: 'Irréparable, à réformer' };
 
 function scopeOk(user, item) {
-  if (user.role === 'OIC_ADMIN') return true;
+  if (user.role === 'OIC_ADMIN' || canDo(user, 'equipment.read')) return true; // Intégration : lecture nationale (Direction)
   return user.role === 'ANTENNA_AGENT' && Boolean(user.antennaId) && item.antennaId === user.antennaId;
 }
 
@@ -81,7 +81,7 @@ export function allowedActions(item) {
   const failure = currentFailure(item);
   return {
     assign: manage && item.status !== 'REFORME',
-    declareFailure: scopeOk(user, item) && item.status === 'EN_SERVICE',
+    declareFailure: canDo(user, 'equipment.manage') && scopeOk(user, item) && item.status === 'EN_SERVICE',
     intervene: manage && Boolean(failure),
     closeRepair: manage && Boolean(failure),
     retire: canDo(user, 'equipment.retire'),

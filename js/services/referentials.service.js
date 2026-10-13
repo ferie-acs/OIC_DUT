@@ -25,8 +25,12 @@ export function stateOf(item) {
   return item?.etat || REF_STATES.ACTIF;
 }
 
+// Intégration lots d1 / d3 : un groupement suspendu, résilié ou non validé (lot d1, champ `status`) et un
+// véhicule retiré de la flotte déclarée (lot d1) ne sont plus proposés à la saisie, comme une fiche désactivée.
+const BLOCKED_STATUSES = ['EN_ATTENTE', 'SUSPENDU', 'RESILIE', 'REFUSE', 'RETIRE'];
+
 export function isSelectable(item) {
-  return !!item && stateOf(item) === REF_STATES.ACTIF;
+  return !!item && stateOf(item) === REF_STATES.ACTIF && !BLOCKED_STATUSES.includes(item.status);
 }
 
 /** Périmètre de référentiel d'un utilisateur : partenaire, transporteur, tout (OIC) ou rien. */

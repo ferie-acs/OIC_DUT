@@ -105,6 +105,7 @@ export function reconcile({ partnerId = '', from = '', to = '' } = {}) {
 /** Justification d'un écart (motif conservé et journalisé). */
 export function justify(partnerId, key, text) {
   const { user, partnerId: pid } = scope(partnerId);
+  if (!can(user, 'reconciliation.justify')) throw new Error('Votre rôle permet de consulter le rapprochement, pas de justifier un écart.');
   const motive = String(text || '').trim().slice(0, 500);
   if (motive.length < 5) throw new Error('Expliquez l’écart en quelques mots (5 caractères minimum).');
   if (!String(key).startsWith(`${pid}:`)) throw new Error('Cet écart ne concerne pas ce partenaire.');
