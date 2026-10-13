@@ -20,9 +20,9 @@ import { legalContractsAwaiting, expiringLegalContracts } from './legal-contract
 import { antennaStockSummary, stockByState } from './ranges.service.js';
 import { antennaSalesSummary, salesReport } from './payments.service.js';
 import { reconcile, partnerOptions } from './reconciliation.service.js';
-import { openIncidents, overdueIncidents, incidentsByAntenna, INCIDENT_SEVERITIES, isOverdue } from './incidents.service.js';
-import { brokenEquipment, equipmentByAntenna } from './equipment.service.js';
-import { openReports } from './field-reports.service.js';
+import { openIncidents, overdueIncidents, incidentsByAntenna, INCIDENT_SEVERITIES, INCIDENT_STATUS, isOverdue } from './incidents.service.js';
+import { brokenEquipment, equipmentByAntenna, EQUIPMENT_STATUS, EQUIPMENT_TYPES } from './equipment.service.js';
+import { openReports, REPORT_STATUS } from './field-reports.service.js';
 
 const HOUR = 3600000;
 export const SYNTHESIS_PERIODS = { '30j': '30 derniers jours', '90j': '90 derniers jours', mois: 'Ce mois', trimestre: 'Ce trimestre', annee: 'Cette année' };
@@ -91,7 +91,7 @@ export function objectiveSummary(lines) {
   };
 }
 
-const incidentRow = (i) => ({ id: i.id, reference: i.reference, title: i.title, severity: INCIDENT_SEVERITIES[i.severity]?.label || '', status: i.status, overdue: isOverdue(i), antennaName: i.antennaName, declaredAt: i.declaredAt });
+const incidentRow = (i) => ({ id: i.id, reference: i.reference, title: i.title, severity: INCIDENT_SEVERITIES[i.severity]?.label || '', status: i.status, statusLabel: INCIDENT_STATUS[i.status] || i.status, overdue: isOverdue(i), antennaName: i.antennaName, declaredAt: i.declaredAt });
 
 // ------------------------------------------------------------------ Tableau de bord d'antenne
 
@@ -131,8 +131,8 @@ export function antennaSynthesis({ periodKind = '30j' } = {}) {
     },
     stock: can(user, 'ranges.stock') ? { ...antennaStockSummary(user.antennaId), ventes: antennaSalesSummary(user.antennaId, { from: p.from, to: p.to }) } : null,
     incidents: { ouverts: incidents.length, enRetard: incidents.filter((i) => isOverdue(i)).length, liste: incidents.map(incidentRow).sort((a, b) => Number(b.overdue) - Number(a.overdue)).slice(0, 5) },
-    equipements: { enPanne: broken.length, liste: broken.slice(0, 5).map((e) => ({ id: e.id, reference: e.reference, label: e.label || e.designation || e.type, status: e.status })) },
-    remontees: { enCours: reports.length, liste: reports.slice(0, 5).map((r) => ({ id: r.id, reference: r.reference, title: r.title, status: r.status })) },
+    equipements: { enPanne: broken.length, liste: broken.slice(0, 5).map((e) => ({ id: e.id, reference: e.reference, label: e.label || EQUIPMENT_TYPES[e.type] || '', type: EQUIPMENT_TYPES[e.type] || '', status: e.status, statusLabel: EQUIPMENT_STATUS[e.status] || e.status })) },
+    remontees: { enCours: reports.length, liste: reports.slice(0, 5).map((r) => ({ id: r.id, reference: r.reference, title: r.title, status: r.status, statusLabel: REPORT_STATUS[r.status] || r.status })) },
   };
 }
 

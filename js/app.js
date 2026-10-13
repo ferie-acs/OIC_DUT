@@ -149,6 +149,9 @@ registerRoute('/antenna/objectifs/:id', withShell(d5('objectives'), ['Antenne', 
 registerRoute('/antenna/actions', withShell(d5('objectives', 'actions'), ['Antenne', 'Actions correctives']), { permission: 'actions.follow' });
 // Fin lot d5
 
+// Intégration des lots : tableau de bord de synthèse de la Direction générale (page d'accueil du rôle DIRECTION)
+registerRoute('/direction/tableau-de-bord', withShell(d5('direction-dashboard'), ['Direction générale', 'Tableau de bord']), { permission: 'pilotage.view' });
+
 registerRoute('/control', (params) => {
   const el = renderControlShell(getCurrentUser());
   controlView.render(el, params);
@@ -204,7 +207,7 @@ setNotFoundHandler(({ reason }) => {
     OIC_ADMIN: '/oic/dashboard', CONTROLLER: '/control', TRANSPORTEUR: '/transporteur/dashboard',
     CASHIER: '/caisse/paiements', // Lot d2
     // Lot d5 : pilotage de la Direction générale
-    DIRECTION: '/direction/antennes',
+    DIRECTION: '/direction/tableau-de-bord', // Intégration : tableau de bord de synthèse
   };
   main.querySelector('#btn-back-home').addEventListener('click', () => navigate(user ? (homeByRole[user.role] || '/login') : '/login'));
 });

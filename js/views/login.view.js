@@ -14,7 +14,7 @@ const HOME_BY_ROLE = {
   [ROLES.TRANSPORTEUR]: '/transporteur/dashboard',
   [ROLES.CASHIER]: '/caisse/paiements', // Lot d2
   // Lot d5 : pilotage de la Direction générale
-  [ROLES.DIRECTION]: '/direction/antennes',
+  [ROLES.DIRECTION]: '/direction/tableau-de-bord', // Intégration : tableau de bord de synthèse
 };
 
 export function render(container) {
