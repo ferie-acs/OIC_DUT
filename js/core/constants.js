@@ -33,6 +33,12 @@ export const STORAGE_KEYS = {
   ARCHIVES: 'dut_archives_v1',
   CONTROL_SEARCHES: 'dut_control_searches_v1',
   LOT_D3_SEED: 'dut_seed_lot_d3',
+  // Lot d4 : incidents, remontées du terrain, équipements, échanges partenaires
+  PLATFORM_INCIDENTS: 'dut_platform_incidents_v1',
+  FIELD_REPORTS: 'dut_field_reports_v1',
+  EQUIPMENT: 'dut_equipment_v1',
+  PARTNER_THREADS: 'dut_partner_threads_v1',
+  LOT_D4_SEEDED: 'dut_lot_d4_seeded_v1',
 };
 
 export const ROLES = {
@@ -132,6 +138,27 @@ export const AUDIT_ACTIONS = {
   REF_REACTIVATED: 'REF_REACTIVATED',
   REF_REMOVED: 'REF_REMOVED',
   CONTROL_DRIVER_SEARCH: 'CONTROL_DRIVER_SEARCH',
+  // Lot d4 : incidents, remontées du terrain, équipements, échanges partenaires
+  INCIDENT_DECLARED: 'INCIDENT_DECLARED',
+  INCIDENT_QUALIFIED: 'INCIDENT_QUALIFIED',
+  INCIDENT_ASSIGNED: 'INCIDENT_ASSIGNED',
+  INCIDENT_FOLLOWED: 'INCIDENT_FOLLOWED',
+  INCIDENT_RESOLVED: 'INCIDENT_RESOLVED',
+  INCIDENT_CLOSED: 'INCIDENT_CLOSED',
+  INCIDENT_REOPENED: 'INCIDENT_REOPENED',
+  INCIDENT_DEADLINE_EXCEEDED: 'INCIDENT_DEADLINE_EXCEEDED',
+  FIELD_REPORT_SUBMITTED: 'FIELD_REPORT_SUBMITTED',
+  FIELD_REPORT_ANSWERED: 'FIELD_REPORT_ANSWERED',
+  FIELD_REPORT_DECIDED: 'FIELD_REPORT_DECIDED',
+  FIELD_REPORT_CLOSED: 'FIELD_REPORT_CLOSED',
+  EQUIPMENT_REGISTERED: 'EQUIPMENT_REGISTERED',
+  EQUIPMENT_ASSIGNED: 'EQUIPMENT_ASSIGNED',
+  EQUIPMENT_FAILURE: 'EQUIPMENT_FAILURE',
+  EQUIPMENT_INTERVENTION: 'EQUIPMENT_INTERVENTION',
+  EQUIPMENT_REPAIRED: 'EQUIPMENT_REPAIRED',
+  EQUIPMENT_RETIRED: 'EQUIPMENT_RETIRED',
+  PARTNER_MESSAGE_SENT: 'PARTNER_MESSAGE_SENT',
+  PARTNER_THREAD_CLOSED: 'PARTNER_THREAD_CLOSED',
 };
 
 export const AUDIT_LABELS = {
@@ -189,6 +216,27 @@ export const AUDIT_LABELS = {
   REF_REACTIVATED: 'Fiche de référentiel réactivée',
   REF_REMOVED: 'Fiche de référentiel retirée',
   CONTROL_DRIVER_SEARCH: 'Recherche par conducteur',
+  // Lot d4 : incidents, remontées du terrain, équipements, échanges partenaires
+  INCIDENT_DECLARED: 'Incident déclaré',
+  INCIDENT_QUALIFIED: 'Incident qualifié',
+  INCIDENT_ASSIGNED: 'Incident attribué',
+  INCIDENT_FOLLOWED: 'Suivi d’incident ajouté',
+  INCIDENT_RESOLVED: 'Incident résolu',
+  INCIDENT_CLOSED: 'Incident clos',
+  INCIDENT_REOPENED: 'Incident rouvert',
+  INCIDENT_DEADLINE_EXCEEDED: 'Délai d’incident dépassé',
+  FIELD_REPORT_SUBMITTED: 'Remontée transmise',
+  FIELD_REPORT_ANSWERED: 'Réponse à une remontée',
+  FIELD_REPORT_DECIDED: 'Décision sur une remontée',
+  FIELD_REPORT_CLOSED: 'Remontée clôturée',
+  EQUIPMENT_REGISTERED: 'Équipement recensé',
+  EQUIPMENT_ASSIGNED: 'Affectation d’équipement',
+  EQUIPMENT_FAILURE: 'Panne d’équipement déclarée',
+  EQUIPMENT_INTERVENTION: 'Intervention sur équipement',
+  EQUIPMENT_REPAIRED: 'Dépannage clôturé',
+  EQUIPMENT_RETIRED: 'Équipement réformé',
+  PARTNER_MESSAGE_SENT: 'Message partenaire',
+  PARTNER_THREAD_CLOSED: 'Échange partenaire clos',
 };
 
 export const CONTROL_RESULTS = {

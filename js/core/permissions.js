@@ -36,6 +36,16 @@ PERMISSIONS[ROLES.ANTENNA_AGENT].push('dut.create', 'dut.edit_draft', 'dut.count
 PERMISSIONS[ROLES.OIC_ADMIN].push('archives.view');
 PERMISSIONS[ROLES.CONTROLLER].push('control.driver_search', 'control.history');
 
+// Lot d4 : incidents, remontées du terrain, équipements, échanges partenaires
+const LOT_D4_PERMISSIONS = {
+  [ROLES.PARTNER_ADMIN]: ['incidents.declare', 'exchanges.view', 'exchanges.partner'],
+  [ROLES.PARTNER_EDITOR]: ['incidents.declare'],
+  [ROLES.ANTENNA_AGENT]: ['incidents.declare', 'incidents.treat', 'fieldreports.view', 'fieldreports.submit', 'equipment.view', 'equipment.manage'],
+  [ROLES.OIC_ADMIN]: ['incidents.declare', 'incidents.treat', 'incidents.manage', 'fieldreports.view', 'fieldreports.manage', 'equipment.view', 'equipment.manage', 'equipment.retire', 'exchanges.view', 'exchanges.manage'],
+  [ROLES.TRANSPORTEUR]: ['incidents.declare'],
+};
+for (const [role, list] of Object.entries(LOT_D4_PERMISSIONS)) PERMISSIONS[role].push(...list);
+
 export function can(user, permission) {
   if (!user) return false;
   return permissionsFor(user.role).includes(permission);
