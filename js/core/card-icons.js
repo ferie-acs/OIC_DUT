@@ -21,6 +21,7 @@ const RULES = [
   [/incident|alerte|anomalie|piège|risque|attente/i, 'alertTriangle'],
   [/journal|audit|activit|historique|récent|dernier|connexion|usage|heure|jour/i, 'clock'],
   [/partenaire|plage|num[ée]ro|ressource|op[ée]ration/i, 'layers'],
+  [/équipement|mat[ée]riel|panne|d[ée]pannage/i, 'wrench'],
   [/chauffeur|utilisateur|compte|agent|équipe|chef|tiers|exp[ée]diteur|destinataire|acteur/i, 'users'],
   [/qualit|complét|validé|check|résumé|récapitulatif/i, 'checkCircle'],
   [/statist|évolution|graph|répartition|mois|recette|montant|factur|tonnage|indicateur|comparer|score|tableau/i, 'barChart'],
