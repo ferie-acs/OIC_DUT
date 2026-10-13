@@ -1,7 +1,7 @@
 import { uuid, nowIso } from '../core/utils.js';
 import { getCurrentUser } from '../core/auth.js';
 import { AUDIT_ACTIONS, DEROGATION_REASONS, VERDICT_LEVELS } from '../core/constants.js';
-import { findDutByQrToken } from '../repositories/dut.repository.js';
+import { findDutByQrToken, findDutByReplacedToken } from '../repositories/dut.repository.js';
 import { appendControlLog, getAllControlLogs, findControlLogById, appendDerogation } from '../repositories/controls.repository.js';
 import { getCrl } from '../repositories/revocations.repository.js';
 import { getControlSettings } from '../repositories/control-settings.repository.js';
@@ -28,7 +28,7 @@ export async function verifyScan(rawScanValue, { geo = null } = {}) {
   };
   const verdict = await verify(rawScanValue, context, {
     key: loadKey(),
-    findDut: findDutByQrToken,
+    findDut: (token) => findDutByQrToken(token) || findDutByReplacedToken(token), // Lot d3 : ancien QR après transbordement
     controls: getAllControlLogs(),
     crl: getCrl(),
   });

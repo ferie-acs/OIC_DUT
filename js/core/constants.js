@@ -28,6 +28,11 @@ export const STORAGE_KEYS = {
   PAYMENTS: 'dut_payments_v1',
   RECONCILIATION_NOTES: 'dut_reconciliation_notes_v1',
   // Fin lot d2
+  // Lot d3 : cycle de vie du DUT et contrôle
+  LOCALITIES: 'dut_localities_v1',
+  ARCHIVES: 'dut_archives_v1',
+  CONTROL_SEARCHES: 'dut_control_searches_v1',
+  LOT_D3_SEED: 'dut_seed_lot_d3',
 };
 
 export const ROLES = {
@@ -115,6 +120,18 @@ export const AUDIT_ACTIONS = {
   PAYMENT_REJECTED: 'PAYMENT_REJECTED',
   RECONCILIATION_JUSTIFIED: 'RECONCILIATION_JUSTIFIED',
   // Fin lot d2
+  // Lot d3 : cycle de vie du DUT et contrôle
+  DUT_REFERENCE_PAID: 'DUT_REFERENCE_PAID',
+  DUT_TRANSSHIPPED: 'DUT_TRANSSHIPPED',
+  DUT_ARCHIVED: 'DUT_ARCHIVED',
+  DUT_COUNTER_CREATED: 'DUT_COUNTER_CREATED',
+  REFERENCE_RETIRED: 'REFERENCE_RETIRED',
+  REF_ADDED: 'REF_ADDED',
+  REF_UPDATED: 'REF_UPDATED',
+  REF_DEACTIVATED: 'REF_DEACTIVATED',
+  REF_REACTIVATED: 'REF_REACTIVATED',
+  REF_REMOVED: 'REF_REMOVED',
+  CONTROL_DRIVER_SEARCH: 'CONTROL_DRIVER_SEARCH',
 };
 
 export const AUDIT_LABELS = {
@@ -160,6 +177,18 @@ export const AUDIT_LABELS = {
   PAYMENT_REJECTED: 'Encaissement rejeté',
   RECONCILIATION_JUSTIFIED: 'Écart justifié',
   // Fin lot d2
+  // Lot d3 : cycle de vie du DUT et contrôle
+  DUT_REFERENCE_PAID: 'DUT payé par référence',
+  DUT_TRANSSHIPPED: 'DUT transbordé',
+  DUT_ARCHIVED: 'DUT contrôlé et archivé',
+  DUT_COUNTER_CREATED: 'DUT saisi au guichet',
+  REFERENCE_RETIRED: 'Numéro de référence retiré',
+  REF_ADDED: 'Fiche de référentiel ajoutée',
+  REF_UPDATED: 'Fiche de référentiel modifiée',
+  REF_DEACTIVATED: 'Fiche de référentiel désactivée',
+  REF_REACTIVATED: 'Fiche de référentiel réactivée',
+  REF_REMOVED: 'Fiche de référentiel retirée',
+  CONTROL_DRIVER_SEARCH: 'Recherche par conducteur',
 };
 
 export const CONTROL_RESULTS = {

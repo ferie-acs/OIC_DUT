@@ -1,0 +1,32 @@
+/* Lot d3 : cycle de vie du DUT et contrôle. Variables, rayons et espacements de l'application uniquement. */
+.lc-two-cols{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:var(--s4);align-items:start}
+.lc-filters{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--s3);padding:var(--s3) 22px var(--s3)}
+.lc-filters .field{margin:0;min-width:150px;flex:0 1 190px}
+.lc-filters-flat{padding:0}
+.lc-filter-actions{display:flex;flex-wrap:wrap;gap:var(--s2);padding-bottom:2px}
+.lc-mention{margin:0 0 var(--s3);font-size:13px;color:var(--text-secondary)}
+.lc-note{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:13px;color:var(--warning)}
+.lc-result-count{font-size:12.5px;margin:var(--s3) 0}
+.lc-history-row{display:flex;align-items:flex-start;gap:12px;padding:14px 16px}
+.lc-history-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lc-history-body small{font-size:12px;color:var(--text-muted)}
+.lc-row-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:2px}
+.lc-toolbar-end{align-items:center;flex-wrap:wrap}
+.lc-inline-check{margin:0;font-size:13px}
+.lc-scope{display:flex;align-items:center;gap:6px;margin:0 0 var(--s3)}
+.lc-control-tabs{margin-bottom:var(--s3)}
+.lc-control-tabs .tab-btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.lc-kpi-text{font-size:18px!important;letter-spacing:0}
+.lc-modal-grid{margin:var(--s3) 0}
+.lc-billing td,.lc-billing th{white-space:nowrap}
+.lc-billing th.text-right{text-align:right}
+.lc-billing tr.fw-medium td{font-weight:600;color:var(--text)}
+.modal-body .alert-banner{margin-bottom:var(--s3);text-align:left}
+@media(max-width:960px){.lc-two-cols{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:700px){
+  .lc-filters{padding:var(--s3) 16px var(--s3)}
+  .lc-filters .field{flex:1 1 140px}
+  .lc-row-actions{justify-content:flex-start}
+  .lc-control-tabs{flex-wrap:wrap}
+  .lc-control-tabs .tab-btn{padding:10px 8px}
+}

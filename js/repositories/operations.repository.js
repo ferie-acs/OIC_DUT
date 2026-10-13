@@ -50,3 +50,26 @@ export function consumeNextNumber(operationId) {
   saveOperations(list);
   return dutNumber;
 }
+
+// Lot d3 : cycle de vie du DUT et contrôle
+/** Stocks de références d'un transporteur (opérations portant son identifiant). */
+export function listOperationsForTransporter(transporterId) {
+  return getAllOperations().filter((o) => transporterId && o.transporterId === transporterId);
+}
+
+export function findActiveOperationForTransporter(transporterId) {
+  return listOperationsForTransporter(transporterId).find((o) => o.status === 'VALIDATED' && o.used < o.quantity) || null;
+}
+
+/** Numéro retiré définitivement après annulation d'un DUT : jamais réattribué, tracé sur l'opération. */
+export function recordRetiredReference(operationId, entry) {
+  const list = getAllOperations();
+  const idx = list.findIndex((o) => o.id === operationId);
+  if (idx === -1) return null;
+  const op = list[idx];
+  if ((op.retiredReferences || []).some((r) => r.reference === entry.reference)) return op;
+  op.retiredReferences = [...(op.retiredReferences || []), entry];
+  list[idx] = op;
+  saveOperations(list);
+  return op;
+}
