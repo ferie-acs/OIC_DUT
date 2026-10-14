@@ -10,10 +10,10 @@ export function curveGeometry(values, width = 360, height = 90, inset = 8) {
   return { points, line, area: points.length ? `${line} L ${points.at(-1).x} ${height} L ${points[0].x} ${height} Z` : '' };
 }
 
-export function lineChartSvg(series, { compact = false, label = 'Évolution des DUT' } = {}) {
+export function lineChartSvg(series, { compact = false, label = 'Évolution des DUT', format = (v) => v } = {}) {
   const width = compact ? 360 : 640, height = compact ? 75 : 200;
   const g = curveGeometry(series.map(p=>p.count),width,height,compact?12:22);
-  const description = `${label} : ${series.map(p=>`${p.label} ${p.count}`).join(', ')}`;
+  const description = `${label} : ${series.map(p=>`${p.label} ${format(p.count)}`).join(', ')}`;
   return `<svg class="${compact?'sparkline':'trend-chart'}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${escapeHtml(description)}">
     ${compact?'': [0,1,2,3].map(i=>`<line class="chart-gridline" x1="0" x2="${width}" y1="${22+i*52}" y2="${22+i*52}"/>`).join('')}
     <path class="chart-area" d="${g.area}"/><path class="chart-stroke" pathLength="1" d="${g.line}"/>

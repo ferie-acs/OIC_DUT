@@ -63,6 +63,7 @@ syncAntennaDirectory();
 seedLotD2();
 await import('./seed-lot-d4.js').then((m) => m.seedLotD4()); // Lot d4 : données de démonstration (idempotent)
 (await import('./seed-lot-d5.js')).installLotD5Seed(); // Lot d5 : pilotage de la Direction générale
+await (await import('./seed-graphiques-direction.js')).seedGraphiquesDirection(); // Graphiques de la Direction générale : historique de démonstration (idempotent)
 
 function withShell(view, breadcrumb) {
   return (params) => {
