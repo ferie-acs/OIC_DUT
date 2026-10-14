@@ -29,6 +29,8 @@ export function addOperation(op) {
 export function peekNextNumber(operationId) {
   const op = findOperationById(operationId);
   if (!op) throw new Error('Opération introuvable.');
+  // Lot d2 : une plage reprise, refusée ou en attente de validation ne fournit aucun numéro.
+  if (op.status && op.status !== 'VALIDATED') throw new Error('Impossible de valider : la plage rattachée n’est pas active (reprise ou en attente). Resoumettez le dossier.');
   if (op.used >= op.quantity) throw new Error('Impossible de valider : aucun numéro DUT disponible.');
   return `DUT-CI-${op.year}-${String(op.rangeStart + op.used).padStart(6, '0')}`;
 }
@@ -38,6 +40,8 @@ export function consumeNextNumber(operationId) {
   const idx = list.findIndex((o) => o.id === operationId);
   if (idx === -1) throw new Error('Opération introuvable.');
   const op = list[idx];
+  // Lot d2 : une plage reprise, refusée ou en attente de validation ne fournit aucun numéro.
+  if (op.status && op.status !== 'VALIDATED') throw new Error('Impossible de valider : la plage rattachée n’est pas active (reprise ou en attente). Resoumettez le dossier.');
   if (op.used >= op.quantity) throw new Error('Impossible de valider : aucun numéro DUT disponible.');
   const numericValue = op.rangeStart + op.used;
   const dutNumber = `DUT-CI-${op.year}-${String(numericValue).padStart(6, '0')}`;
@@ -45,4 +49,31 @@ export function consumeNextNumber(operationId) {
   list[idx] = op;
   saveOperations(list);
   return dutNumber;
+}
+
+// Lot d3 : cycle de vie du DUT et contrôle
+/** Stocks de références d'un transporteur (opérations portant son identifiant). */
+export function listOperationsForTransporter(transporterId) {
+  return getAllOperations().filter((o) => transporterId && o.transporterId === transporterId);
+}
+
+export function findActiveOperationForTransporter(transporterId) {
+  // Intégration lots d2 / d3 : le stock combine les références d'essai et les plages achetées au guichet ;
+  // la plus petite référence disponible est consommée en premier, quel que soit l'ordre d'enregistrement.
+  return listOperationsForTransporter(transporterId)
+    .filter((o) => o.status === 'VALIDATED' && o.used < o.quantity)
+    .sort((a, b) => (a.year - b.year) || ((a.rangeStart + a.used) - (b.rangeStart + b.used)))[0] || null;
+}
+
+/** Numéro retiré définitivement après annulation d'un DUT : jamais réattribué, tracé sur l'opération. */
+export function recordRetiredReference(operationId, entry) {
+  const list = getAllOperations();
+  const idx = list.findIndex((o) => o.id === operationId);
+  if (idx === -1) return null;
+  const op = list[idx];
+  if ((op.retiredReferences || []).some((r) => r.reference === entry.reference)) return op;
+  op.retiredReferences = [...(op.retiredReferences || []), entry];
+  list[idx] = op;
+  saveOperations(list);
+  return op;
 }

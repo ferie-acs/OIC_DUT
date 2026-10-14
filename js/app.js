@@ -4,13 +4,14 @@ import * as planningView from './views/planning.view.js?v=finder2';
 import * as actionCenterView from './views/action-center.view.js?v=charte';
 import { decorateKpis } from './views/kpi-trends.view.js';
 import { registerRoute, startRouter, getCurrentPath, setNotFoundHandler, navigate } from './core/router.js';
-import { mountInsights } from './views/insights.view.js?v=oic-blue';
+import { mountInsights } from './views/insights.view.js?v=corridors';
 import { icon } from './core/icons.js';
 import { getCurrentUser } from './core/auth.js';
 import { renderAppShell, renderLoginShell, renderControlShell } from './core/layout.js?v=supervision3';
 import { isSeeded, seedDemoData, ensureSignedDemoData, refreshExpiredDemoSignatures } from './seed.js';
 import { registerServiceWorker, mountInstallButton } from './core/pwa.js';
 import { watchCards } from './core/card-icons.js';
+import './core/searchable-select.js'; // Lot d0 : recherche intégrée à toutes les listes de choix (observateur global)
 
 import * as loginView from './views/login.view.js?v=oic-blue';
 import * as partnerDashboardView from './views/partner-dashboard.view.js?v=oic-blue';
@@ -18,22 +19,38 @@ import * as operationsView from './views/operations.view.js';
 import * as referentialsView from './views/referentials.view.js';
 import * as antennasMapView from './views/antennas-map.view.js?v=fiche';
 import * as dutFormView from './views/dut-form.view.js?v=dut-v3';
-import * as dutListView from './views/dut-list.view.js';
-import * as dutDetailView from './views/dut-detail.view.js?v=dut-v2';
+import * as dutListView from './views/dut-list.view.js?v=b2f';
+import * as dutDetailView from './views/dut-detail.view.js?v=dut-v7';
 import * as antennaDashboardView from './views/antenna-dashboard.view.js';
 import * as antennaReviewView from './views/antenna-review.view.js?v=dut-v2';
 import * as controlView from './views/control.view.js?v=charte';
 import * as oicDashboardView from './views/oic-dashboard.view.js?v=charts';
-import * as transporteurDashboardView from './views/transporteur-dashboard.view.js?v=oic-blue';
+import * as transporteurDashboardView from './views/transporteur-dashboard.view.js?v=ta3';
 import * as decouvrirView from './views/decouvrir.view.js';
 import * as supervisionView from './views/supervision.view.js';
 import * as statisticsView from './views/statistics.view.js';
+// Lot d2 : antennes, sites, plages, caisse et rapprochement
+import { seedLotD2 } from './seed-lot-d2.js';
+import * as antennasAdminView from './views/antennas-admin.view.js';
+import * as sitesView from './views/sites.view.js';
+import * as rangesView from './views/ranges.view.js';
+import * as paymentsView from './views/payments.view.js';
+import * as salesReportView from './views/sales-report.view.js';
+import * as reconciliationView from './views/reconciliation.view.js';
+// Fin lot d2
+// Lot d3 : cycle de vie du DUT et contrôle
+import * as antennaCounterView from './views/antenna-counter.view.js';
+import * as antennaArchivesView from './views/antenna-archives.view.js';
+import * as transporterReferencesView from './views/transporter-references.view.js';
+import * as controlDriverView from './views/control-driver.view.js';
+import { seedLotD3 } from './seed-lot-d3.js';
 
 // Une démo ensemencée avant ce lot est régénérée (données locales uniquement).
 if (!isSeeded()) {
   Object.keys(localStorage).filter((k) => k.startsWith('dut_')).forEach((k) => localStorage.removeItem(k));
   seedDemoData();
 }
+seedLotD3();
 // Sans Web Crypto (page servie hors contexte sécurisé), l'application démarre quand même :
 // le contrôle affichera « signature non vérifiable » et la validation refusera de signer.
 try {
@@ -43,6 +60,9 @@ try {
   console.error('Signature de démonstration indisponible :', err);
 }
 syncAntennaDirectory();
+seedLotD2();
+await import('./seed-lot-d4.js').then((m) => m.seedLotD4()); // Lot d4 : données de démonstration (idempotent)
+(await import('./seed-lot-d5.js')).installLotD5Seed(); // Lot d5 : pilotage de la Direction générale
 
 function withShell(view, breadcrumb) {
   return (params) => {
@@ -93,6 +113,45 @@ registerRoute('/oic/dashboard', withShell(oicDashboardView, ['OIC', 'Dashboard n
 
 registerRoute('/transporteur/dashboard', withShell(transporteurDashboardView, ['Transporteur', 'Tableau de bord']), { permission: 'dashboard.transporteur' });
 
+// Lot d2 : antennes, sites, plages de numéros, caisse et rapprochement
+registerRoute('/oic/reseau/antennes', withShell(antennasAdminView, ['OIC', 'Réseau', 'Gestion des antennes']), { permission: 'antennas.manage' });
+registerRoute('/oic/reseau/antennes/nouvelle', withShell({ render: (root) => antennasAdminView.render(root, { id: 'nouvelle' }) }, ['OIC', 'Réseau', 'Nouvelle antenne']), { permission: 'antennas.manage' });
+registerRoute('/oic/reseau/antennes/:id', withShell(antennasAdminView, ['OIC', 'Réseau', 'Fiche antenne']), { permission: 'antennas.manage' });
+registerRoute('/reseau/sites', withShell(sitesView, ['Réseau', 'Sites']), { permission: 'sites.view' });
+registerRoute('/oic/plages', withShell(rangesView, ['OIC', 'Stock et transferts']), { permission: 'ranges.validate' });
+registerRoute('/oic/plages/:tab', withShell(rangesView, ['OIC', 'Stock et transferts']), { permission: 'ranges.validate' });
+registerRoute('/antenna/stock', withShell(rangesView, ['Antenne', 'Stock de numéros']), { permission: 'ranges.stock' });
+registerRoute('/caisse/paiements', withShell(paymentsView, ['Caisse', 'Encaissements']), { permission: 'payments.desk' });
+registerRoute('/caisse/ventes', withShell(salesReportView, ['Caisse', 'Ventes de références']), { permission: 'sales.report' });
+registerRoute('/rapprochement', withShell(reconciliationView, ['Contrôle', 'Rapprochement']), { permission: 'reconciliation.view' });
+// Fin lot d2
+
+// Lot d5 : pilotage de la Direction générale
+const d5View = async (name) => import(`./views/${name}.view.js`);
+const d5 = (name, section) => ({ render: async (root, p) => (await d5View(name)).render(root, { ...p, section }) });
+registerRoute('/direction/antennes', withShell(d5('direction-antennas'), ['Direction générale', 'Suivi des antennes']), { permission: 'pilotage.view' });
+registerRoute('/direction/statistiques', withShell(statisticsView, ['Direction générale', 'Statistiques']), { permission: 'pilotage.view' });
+registerRoute('/direction/statistiques/:tab', withShell(statisticsView, ['Direction générale', 'Statistiques']), { permission: 'pilotage.view' });
+registerRoute('/direction/objectifs', withShell(d5('objectives'), ['Direction générale', 'Contrats d’objectifs']), { permission: 'pilotage.view' });
+registerRoute('/direction/objectifs/:id', withShell(d5('objectives'), ['Direction générale', 'Contrats d’objectifs', 'Contrat']), { permission: 'pilotage.view' });
+registerRoute('/direction/actions', withShell(d5('objectives', 'actions'), ['Direction générale', 'Actions correctives']), { permission: 'pilotage.view' });
+registerRoute('/direction/indicateurs', withShell(d5('objectives', 'indicators'), ['Direction générale', 'Indicateurs']), { permission: 'pilotage.view' });
+registerRoute('/direction/agents', withShell(d5('agents'), ['Direction générale', 'Agents']), { permission: 'pilotage.view' });
+registerRoute('/direction/agents/:id', withShell(d5('agents'), ['Direction générale', 'Agents', 'Fiche']), { permission: 'pilotage.view' });
+registerRoute('/direction/documents', withShell(d5('direction-documents'), ['Direction générale', 'Documents']), { permission: 'documents.view' });
+registerRoute('/direction/documents/:id', withShell(d5('direction-documents'), ['Direction générale', 'Documents', 'Document']), { permission: 'documents.view' });
+registerRoute('/direction/reunions', withShell(d5('meetings'), ['Direction générale', 'Réunions et décisions']), { permission: 'pilotage.view' });
+registerRoute('/direction/reunions/:id', withShell(d5('meetings'), ['Direction générale', 'Réunions', 'Réunion']), { permission: 'pilotage.view' });
+registerRoute('/direction/contrats', withShell(d5('legal-contracts'), ['Direction générale', 'Contrats et conventions']), { permission: 'legal.view' });
+registerRoute('/direction/contrats/:id', withShell(d5('legal-contracts'), ['Direction générale', 'Contrats', 'Contrat']), { permission: 'legal.view' });
+registerRoute('/antenna/objectifs', withShell(d5('objectives'), ['Antenne', 'Objectifs']), { permission: 'objectives.results' });
+registerRoute('/antenna/objectifs/:id', withShell(d5('objectives'), ['Antenne', 'Objectifs', 'Contrat']), { permission: 'objectives.results' });
+registerRoute('/antenna/actions', withShell(d5('objectives', 'actions'), ['Antenne', 'Actions correctives']), { permission: 'actions.follow' });
+// Fin lot d5
+
+// Intégration des lots : tableau de bord de synthèse de la Direction générale (page d'accueil du rôle DIRECTION)
+registerRoute('/direction/tableau-de-bord', withShell(d5('direction-dashboard'), ['Direction générale', 'Tableau de bord']), { permission: 'pilotage.view' });
+
 registerRoute('/control', (params) => {
   const el = renderControlShell(getCurrentUser());
   controlView.render(el, params);
@@ -101,6 +160,32 @@ registerRoute('/control/result/:token', (params) => {
   const el = renderControlShell(getCurrentUser());
   controlView.render(el, params);
 }, { permission: 'control.scan' });
+
+// Lot d1 : comptes et acteurs (données de démonstration idempotentes, puis routes)
+await (await import('./seed-lot-d1.js')).seedLotD1(); (await import('./routes-lot-d1.js')).registerLotD1Routes({ registerRoute, withShell, renderLoginShell });
+
+// Lot d3 : cycle de vie du DUT et contrôle
+registerRoute('/antenna/guichet', withShell(antennaCounterView, ['Antenne', 'Saisie au guichet']), { permission: 'dut.counter' });
+registerRoute('/antenna/archives', withShell(antennaArchivesView, ['Antenne', 'Contrôle et archives']), { permission: 'dut.archive' });
+registerRoute('/oic/archives', withShell(antennaArchivesView, ['OIC', 'Archives des antennes']), { permission: 'archives.view' });
+registerRoute('/transporteur/references', withShell(transporterReferencesView, ['Transporteur', 'Mes références']), { permission: 'references.view' });
+registerRoute('/control/conducteur', () => controlDriverView.renderSearch(renderControlShell(getCurrentUser())), { permission: 'control.driver_search' });
+registerRoute('/control/historique', () => controlDriverView.renderHistory(renderControlShell(getCurrentUser())), { permission: 'control.history' });
+
+// Lot d4 : incidents, remontées du terrain, équipements, échanges partenaires
+import * as incidentsView from './views/incidents.view.js';
+import * as fieldReportsView from './views/field-reports.view.js';
+import * as equipmentView from './views/equipment.view.js';
+import * as partnerExchangesView from './views/partner-exchanges.view.js';
+registerRoute('/incidents', withShell(incidentsView, ['Assistance', 'Incidents']), { permission: ['incidents.declare', 'incidents.read'] });
+registerRoute('/lenteurs', withShell({ render: (root) => incidentsView.renderPerformance(root) }, ['Exploitation', 'Suivi des lenteurs']), { permission: ['incidents.manage', 'incidents.read'] });
+registerRoute('/incidents/:id', withShell(incidentsView, ['Assistance', 'Incidents', 'Fiche']), { permission: ['incidents.declare', 'incidents.read'] });
+registerRoute('/remontees', withShell(fieldReportsView, ['Terrain', 'Remontées du terrain']), { permission: 'fieldreports.view' });
+registerRoute('/remontees/:id', withShell(fieldReportsView, ['Terrain', 'Remontées du terrain', 'Fiche']), { permission: 'fieldreports.view' });
+registerRoute('/equipements', withShell(equipmentView, ['Terrain', 'Équipements et mobilité']), { permission: 'equipment.view' });
+registerRoute('/equipements/:id', withShell(equipmentView, ['Terrain', 'Équipements et mobilité', 'Fiche']), { permission: 'equipment.view' });
+registerRoute('/echanges', withShell(partnerExchangesView, ['Partenaires', 'Échanges']), { permission: 'exchanges.view' });
+registerRoute('/echanges/:id', withShell(partnerExchangesView, ['Partenaires', 'Échanges', 'Fil']), { permission: 'exchanges.view' });
 
 setNotFoundHandler(({ reason }) => {
   const user = getCurrentUser();
@@ -120,6 +205,9 @@ setNotFoundHandler(({ reason }) => {
   const homeByRole = {
     PARTNER_ADMIN: '/partner/dashboard', PARTNER_EDITOR: '/partner/dashboard', ANTENNA_AGENT: '/antenna/dashboard',
     OIC_ADMIN: '/oic/dashboard', CONTROLLER: '/control', TRANSPORTEUR: '/transporteur/dashboard',
+    CASHIER: '/caisse/paiements', // Lot d2
+    // Lot d5 : pilotage de la Direction générale
+    DIRECTION: '/direction/tableau-de-bord', // Intégration : tableau de bord de synthèse
   };
   main.querySelector('#btn-back-home').addEventListener('click', () => navigate(user ? (homeByRole[user.role] || '/login') : '/login'));
 });

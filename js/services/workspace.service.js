@@ -8,7 +8,7 @@ import { uuid, nowIso } from '../core/utils.js';
 
 export const LOCAL_KEY = 'dut_workspace_v1';
 export const STAGES = { PLANNED: 'À préparer', LOADED: 'Chargé', DEPARTED: 'En route', ARRIVED: 'Arrivé', DELIVERED: 'Livré' };
-export const INCIDENT_TYPES = ['Retard', 'Panne', 'Marchandise endommagée', 'Écart de quantité', 'Autre'];
+export const INCIDENT_TYPES = ['Retard', 'Panne', 'Barrage', 'Litige au chargement', 'Marchandise endommagée', 'Écart de quantité', 'Autre'];
 export function accessibleDut(id) {
   const dut = visibleDuts(getCurrentUser()).find(d => d.id === id);
   if (!dut) throw new Error('Ce dossier ne fait pas partie de votre périmètre.');

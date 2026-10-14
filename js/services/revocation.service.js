@@ -27,6 +27,8 @@ export function sync() {
   const entries = getAllDuts()
     .filter((d) => d.qrToken && [DUT_STATUS.SUSPENDU, DUT_STATUS.RETIRE].includes(d.status))
     .map((d) => ({ uid: d.qrToken, status: d.status, at: d.withdrawnAt || d.suspendedAt || d.validatedAt || nowIso() }));
+  // Lot d3 : l'ancien QR d'un DUT transbordé est révoqué (un nouveau document a été émis).
+  getAllDuts().forEach((d) => (d.replacedTokens || []).forEach((r) => entries.push({ uid: r.token, status: 'REMPLACE', at: r.at })));
   const crl = saveCrl({ syncedAt: nowIso(), entries });
   auditService.log(AUDIT_ACTIONS.CRL_SYNCED, { note: `${entries.length} entrée(s)` });
   return crl;

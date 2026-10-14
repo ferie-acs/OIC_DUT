@@ -7,6 +7,8 @@ import { logout } from './auth.js';
 import { navigate } from './router.js';
 import { ROLE_LABELS } from './constants.js';
 import { createDraft } from '../services/dut.service.js';
+import { lotD1NavSections } from './nav-lot-d1.js'; // Lot d1
+import { can } from './permissions.js';
 
 let shellEvents;
 
@@ -41,7 +43,64 @@ const NAV_SECTIONS_BY_ROLE = {
   TRANSPORTEUR: [
     { label: 'Pilotage', items: [{ path: '/transporteur/dashboard', label: 'Tableau de bord', icon: 'dashboard' }] },
   ],
+  // Lot d2 : menu propre du rôle Caisse et comptabilité OIC
+  CASHIER: [
+    { label: 'Caisse', items: [
+      { path: '/caisse/paiements', label: 'Encaissements', icon: 'wallet' },
+      { path: '/caisse/ventes', label: 'Ventes de références', icon: 'receipt' },
+      { path: '/rapprochement', label: 'Rapprochement', icon: 'scale' },
+    ] },
+  ],
+  // Fin lot d2
+  // Lot d5 : pilotage de la Direction générale
+  DIRECTION: [
+    { label: 'Pilotage', items: [{ path: '/direction/tableau-de-bord', label: 'Tableau de bord', icon: 'dashboard' }, { path: '/direction/antennes', label: 'Suivi des antennes', icon: 'trendingUp' }, { path: '/direction/statistiques', label: 'Statistiques', icon: 'barChart' }] },
+    { label: 'Objectifs', items: [{ path: '/direction/objectifs', label: 'Contrats d’objectifs', icon: 'target' }, { path: '/direction/actions', label: 'Actions correctives', icon: 'clipboardList' }, { path: '/direction/indicateurs', label: 'Indicateurs', icon: 'barChart' }] },
+    { label: 'Ressources humaines', items: [{ path: '/direction/agents', label: 'Agents', icon: 'users' }] },
+    { label: 'Gouvernance', items: [{ path: '/direction/documents', label: 'Documents', icon: 'file' }, { path: '/direction/reunions', label: 'Réunions et décisions', icon: 'calendar' }, { path: '/direction/contrats', label: 'Contrats et conventions', icon: 'handshake' }] },
+  ],
 };
+
+// Lot d2 : entrées ajoutées aux menus existants (section existante complétée, sinon créée en fin de menu)
+const LOT_D2_NAV = {
+  OIC_ADMIN: [
+    { label: 'Réseau', items: [{ path: '/oic/reseau/antennes', label: 'Gestion des antennes', icon: 'building' }, { path: '/reseau/sites', label: 'Sites', icon: 'mapPin' }] },
+    { label: 'Ressources', items: [{ path: '/oic/plages', label: 'Stock et transferts', icon: 'arrowLeftRight' }] },
+    { label: 'Caisse', items: [{ path: '/caisse/paiements', label: 'Encaissements', icon: 'wallet' }, { path: '/caisse/ventes', label: 'Ventes de références', icon: 'receipt' }, { path: '/rapprochement', label: 'Rapprochement', icon: 'scale' }] },
+  ],
+  ANTENNA_AGENT: [
+    { label: 'Ressources', items: [{ path: '/antenna/stock', label: 'Stock de numéros', icon: 'layers' }, { path: '/caisse/paiements', label: 'Encaissements', icon: 'wallet' }, { path: '/reseau/sites', label: 'Sites de l’antenne', icon: 'mapPin' }] },
+  ],
+  PARTNER_ADMIN: [
+    { label: 'Ressources', items: [{ path: '/rapprochement', label: 'Rapprochement', icon: 'scale' }] },
+  ],
+};
+function addLotD2Nav(sections, role) {
+  (LOT_D2_NAV[role] || []).forEach((extra) => {
+    const existing = sections.find((s) => s.label === extra.label);
+    if (existing) existing.items.push(...extra.items); else sections.push({ label: extra.label, items: [...extra.items] });
+  });
+}
+// Fin lot d2
+
+// Lot d3 : cycle de vie du DUT et contrôle
+NAV_SECTIONS_BY_ROLE.TRANSPORTEUR.push({ label: 'Documents', items: [
+  { action: 'new-dut', label: 'Nouveau DUT', icon: 'plus' },
+  { path: '/transporteur/references', label: 'Mes références', icon: 'wallet' },
+] });
+NAV_SECTIONS_BY_ROLE.ANTENNA_AGENT.push({ label: 'Guichet', items: [
+  { path: '/antenna/guichet', label: 'Saisie au guichet', icon: 'plus' },
+  { path: '/antenna/archives', label: 'Contrôle et archives', icon: 'archive' },
+] });
+NAV_SECTIONS_BY_ROLE.OIC_ADMIN.push({ label: 'Archives', items: [{ path: '/oic/archives', label: 'Archives des antennes', icon: 'archive' }] });
+
+const EXPANDED_SECTIONS_KEY = 'dut_nav_expanded';
+
+/** Sections du menu dépliées par l'utilisateur (libellés). Par défaut tout est replié, sauf la section de la page ouverte. */
+function readExpandedSections() {
+  const value = readObject(EXPANDED_SECTIONS_KEY, []);
+  return Array.isArray(value) ? value.filter(name => typeof name === 'string') : [];
+}
 
 function appRoot() {
   return document.getElementById('app');
@@ -59,13 +118,37 @@ export function renderAppShell(user, currentPath, breadcrumbItems = []) {
   const root = appRoot();
   document.documentElement.dataset.theme = readObject('dut_theme', 'light');
   const sections = (NAV_SECTIONS_BY_ROLE[user.role] || []).map(section => ({ ...section, items: [...section.items] }));
-  if (sections.length) sections[0].items.push({ path: '/planning', label: 'Planning des trajets', icon: 'truck' });
-  if (sections.length) sections[0].items.push({ path: '/actions', label: 'Centre d’actions', icon: 'checkCircle' });
+  if (sections.length && can(user, 'dut.view')) sections[0].items.push({ path: '/planning', label: 'Planning des trajets', icon: 'truck' });
+  if (sections.length && can(user, 'dut.view')) sections[0].items.push({ path: '/actions', label: 'Centre d’actions', icon: 'checkCircle' });
   sections.push({ label: 'Découvrir', items: [{ path: '/decouvrir', label: 'Comment fonctionne le DUT', icon: 'file' }] });
   if (user.role === 'OIC_ADMIN') sections.push({ label: 'Supervision', items: [{ path: '/oic/supervision/antennes', label: 'Antennes', icon: 'map' }, { path: '/oic/supervision/partenaires', label: 'Partenaires', icon: 'layers' }, { path: '/oic/supervision/controleurs', label: 'Agents de contrôle', icon: 'shield' }, { path: '/oic/supervision/transporteurs', label: 'Transporteurs', icon: 'truck' }] });
   if (user.role === 'OIC_ADMIN') sections.push({ label: 'Ressources', items: [{ path: '/oic/operations', label: 'Demandes de plages', icon: 'layers' }, { path: '/oic/antennas', label: 'Carte des antennes', icon: 'map' }] });
 
   if(user.role==='OIC_ADMIN') sections.push({label:'Administration',items:[{path:'/admin/users',label:'Utilisateurs',icon:'users'},{path:'/admin/roles',label:'Rôles & accès',icon:'shield'},{path:'/admin/settings',label:'Paramètres',icon:'layers'},{path:'/admin/audit',label:'Journal',icon:'file'}]});
+  lotD1NavSections(user, sections); // Lot d1 : comptes et acteurs
+  addLotD2Nav(sections, user.role); // Lot d2
+  // Lot d4 : incidents, remontées du terrain, équipements, échanges partenaires
+  const lotD4Menu = {
+    PARTNER_ADMIN: { label: 'Assistance', items: [{ path: '/incidents', label: 'Incidents', icon: 'alertTriangle' }, { path: '/echanges', label: 'Échanges avec l’OIC', icon: 'messageSquare' }] },
+    PARTNER_EDITOR: { label: 'Assistance', items: [{ path: '/incidents', label: 'Incidents', icon: 'alertTriangle' }] },
+    TRANSPORTEUR: { label: 'Assistance', items: [{ path: '/incidents', label: 'Incidents', icon: 'alertTriangle' }] },
+    ANTENNA_AGENT: { label: 'Terrain', items: [{ path: '/incidents', label: 'Incidents', icon: 'alertTriangle' }, { path: '/remontees', label: 'Remontées du terrain', icon: 'megaphone' }, { path: '/equipements', label: 'Équipements', icon: 'monitor' }] },
+    OIC_ADMIN: { label: 'Exploitation', items: [{ path: '/incidents', label: 'Incidents', icon: 'alertTriangle' }, { path: '/lenteurs', label: 'Suivi des lenteurs', icon: 'gauge' }, { path: '/remontees', label: 'Remontées du terrain', icon: 'megaphone' }, { path: '/equipements', label: 'Équipements', icon: 'monitor' }, { path: '/echanges', label: 'Échanges partenaires', icon: 'messageSquare' }] },
+  }[user.role];
+  if (lotD4Menu) sections.push(lotD4Menu);
+  // Lot d5 : pilotage de la Direction générale
+  if (user.role === 'DIRECTION') sections[0].items = sections[0].items.filter(item => !['/planning', '/actions'].includes(item.path)); // aucun DUT à éditer ni à traiter
+  if (user.role === 'OIC_ADMIN') sections.push({ label: 'Pilotage de la Direction', items: [{ path: '/direction/tableau-de-bord', label: 'Synthèse de la Direction', icon: 'dashboard' }, { path: '/direction/antennes', label: 'Suivi des antennes', icon: 'trendingUp' }, { path: '/direction/objectifs', label: 'Contrats d’objectifs', icon: 'target' }, { path: '/direction/actions', label: 'Actions correctives', icon: 'clipboardList' }, { path: '/direction/indicateurs', label: 'Indicateurs', icon: 'barChart' }, { path: '/direction/agents', label: 'Agents', icon: 'users' }, { path: '/direction/documents', label: 'Documents', icon: 'file' }, { path: '/direction/reunions', label: 'Réunions et décisions', icon: 'calendar' }, { path: '/direction/contrats', label: 'Contrats et conventions', icon: 'handshake' }] });
+  if (user.role === 'ANTENNA_AGENT') sections.push({ label: 'Objectifs', items: [{ path: '/antenna/objectifs', label: 'Objectifs de l’antenne', icon: 'target' }, { path: '/antenna/actions', label: 'Actions correctives', icon: 'clipboardList' }] });
+  // Fin lot d5
+  // Intégration des lots : consultation nationale de la Direction (lecture seule), puis « Découvrir » et
+  // « Mon compte » toujours en fin de menu, quel que soit l'ordre d'ajout des lots.
+  if (user.role === 'DIRECTION') sections.push(
+    { label: 'Exploitation', items: [{ path: '/incidents', label: 'Incidents', icon: 'alertTriangle' }, { path: '/lenteurs', label: 'Suivi des lenteurs', icon: 'gauge' }, { path: '/remontees', label: 'Remontées du terrain', icon: 'megaphone' }, { path: '/equipements', label: 'Équipements', icon: 'monitor' }] },
+    { label: 'Recettes', items: [{ path: '/caisse/ventes', label: 'Ventes de références', icon: 'receipt' }, { path: '/rapprochement', label: 'Rapprochement', icon: 'scale' }] },
+  );
+  for (const label of ['Découvrir', 'Mon compte']) { const i = sections.findIndex((x) => x.label === label); if (i >= 0) sections.push(...sections.splice(i, 1)); }
+  const expandedSections = readExpandedSections();
   document.title=settings().platformName;
   root.innerHTML = `
     <div class="app-shell">
@@ -85,16 +168,24 @@ export function renderAppShell(user, currentPath, breadcrumbItems = []) {
           </div>
         </div>
         <nav class="sidebar-nav">
-          ${sections.map((section) => `
-            <div class="sidebar-section">
-              <div class="sidebar-section-label">${section.label}</div>
+          ${sections.map((section, index) => {
+            const hasActive = section.items.some(item => item.path && isActive(item.path, currentPath));
+            const collapsed = !hasActive && !expandedSections.includes(section.label);
+            return `
+            <div class="sidebar-section ${collapsed ? 'is-collapsed' : ''}">
+              <button type="button" class="sidebar-section-label" data-section="${escapeHtml(section.label)}" aria-expanded="${String(!collapsed)}" aria-controls="nav-section-${index}">
+                <span>${section.label}</span>${icon('chevronDown', { size: 14 })}
+              </button>
+              <div class="sidebar-section-items" id="nav-section-${index}">
               ${section.items.map((item) => (
                 item.action
                   ? `<a class="nav-link" href="#" data-nav-action="${item.action}">${icon(item.icon, { size: 16 })}<span>${item.label}</span></a>`
                   : `<a class="nav-link ${isActive(item.path, currentPath) ? 'active' : ''}" href="#${item.path}">${icon(item.icon, { size: 16 })}<span>${item.label}</span></a>`
               )).join('')}
+              </div>
             </div>
-          `).join('')}
+          `;
+          }).join('')}
         </nav>
         <div class="sidebar-note">${icon('shield', {size:22})}<strong>Un transport traçable</strong><p>Du document à la route, chaque étape de votre DUT est enregistrée.</p><span class="badge badge-accent" style="margin-top:12px">Espace de démonstration</span></div>
         <div class="sidebar-footer">
@@ -163,6 +254,18 @@ export function renderAppShell(user, currentPath, breadcrumbItems = []) {
     const dut = createDraft(user);
     sessionStorage.setItem('dut_wizard_draft_id', dut.id);
     navigate('/dut/new/1');
+  });
+
+  root.querySelectorAll('.sidebar-section-label[data-section]').forEach(button => {
+    button.addEventListener('click', () => {
+      const section = button.closest('.sidebar-section');
+      const collapsed = section.classList.toggle('is-collapsed');
+      button.setAttribute('aria-expanded', String(!collapsed));
+      const label = button.dataset.section;
+      const next = readExpandedSections().filter(name => name !== label);
+      if (!collapsed) next.push(label);
+      try { writeObject(EXPANDED_SECTIONS_KEY, next); } catch { /* préférence d'affichage seulement : on garde l'état à l'écran */ }
+    });
   });
 
   root.querySelector('#btn-logout').addEventListener('click', () => {

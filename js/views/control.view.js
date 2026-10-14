@@ -10,6 +10,7 @@ import { getControlSettings, saveControlSettings } from '../repositories/control
 import { listAntennas } from '../services/directory.service.js';
 import { getAllDuts } from '../repositories/dut.repository.js';
 import { buildSignedUri } from '../services/qr.service.js';
+import { controlTabsHtml, bindControlTabs } from './control-driver.view.js'; // Lot d3 : recherche par conducteur, historique
 
 let html5QrInstance = null;
 let lastGeo = null;
@@ -100,6 +101,7 @@ function renderScan(container) {
       <h1>Contrôle DUT</h1>
       <p>Scannez le tampon du document ou saisissez-le manuellement. Le téléphone répond en trois secondes.</p>
     </div>
+    ${controlTabsHtml('/control')}
     ${headerHtml()}
     <div class="card control-scan-card">
       <div class="scan-box" id="scan-box">${icon('camera', { size: 40 })}<span class="scan-hint">Cadrez le QR du DUT</span></div>
@@ -126,6 +128,7 @@ function renderScan(container) {
     </div>
   `;
   bindHeader(container);
+  bindControlTabs(container);
 
   container.querySelector('#btn-manual-verify').addEventListener('click', () => {
     const value = container.querySelector('#manual-token').value.trim();

@@ -6,6 +6,7 @@ import { can } from '../core/permissions.js';
 import { DUT_STATUS, DUT_STATUS_LABELS } from '../core/constants.js';
 import * as dutService from '../services/dut.service.js';
 import { staggerIn } from '../core/motion.js?v=oic-blue';
+import { pendingMissions, createDutFromMission } from '../services/b2f-link.service.js';
 
 const FILTERS = [
   { key: 'ALL', label: 'Tous' },
@@ -36,6 +37,7 @@ export function render(container) {
       ${can(user, 'dut.create') ? `<button type="button" class="btn btn-primary" id="btn-new-dut">${icon('plus', { size: 16 })} Nouveau DUT</button>` : ''}
     </div>
     <div class="page-header-rule"></div>
+    ${can(user, 'dut.create') ? missionsInboxHtml() : ''}
     <div class="table-toolbar">
       <div class="tabs-underline" id="dut-filters">
         ${FILTERS.map((f) => `<button type="button" class="tab-count-btn ${f.key === activeFilter ? 'active' : ''}" data-filter="${f.key}">${f.label} <span class="count">${countFor(f.key)}</span></button>`).join('')}
@@ -52,6 +54,13 @@ export function render(container) {
     render(container);
   });
   container.querySelector('#dut-search').addEventListener('input', (e) => { searchTerm = e.target.value.toLowerCase(); renderTable(container, user); });
+  container.querySelectorAll('[data-mission]').forEach((button) => button.addEventListener('click', () => {
+    try {
+      const dut = createDutFromMission(user, button.dataset.mission);
+      sessionStorage.setItem('dut_wizard_draft_id', dut.id);
+      navigate('/dut/new/1');
+    } catch (err) { button.closest('.b2f-inbox-row')?.insertAdjacentHTML('beforeend', `<p class="ta-error" role="alert">${escapeHtml(err.message)}</p>`); }
+  }));
   container.querySelector('#btn-new-dut')?.addEventListener('click', () => {
     const dut = dutService.createDraft(user);
     sessionStorage.setItem('dut_wizard_draft_id', dut.id);
@@ -102,4 +111,19 @@ function renderTable(container, user) {
     if (tr) navigate(`/dut/${tr.dataset.id}`);
   });
   staggerIn(table.querySelectorAll('tbody tr'));
+}
+
+/** Missions validées dans la Bourse de fret, en attente d'un DUT (passerelle B2F → DUT). */
+function missionsInboxHtml() {
+  const list = pendingMissions();
+  if (!list.length) return '';
+  return `<section class="card b2f-inbox" aria-label="Missions de la Bourse de fret">
+    <header class="dd-card-head">${icon('truck', { size: 18 })}<h3>Missions de la Bourse de fret</h3><span class="badge badge-accent">${list.length}</span></header>
+    <p class="b2f-inbox-sub">Ces transports ont été conclus dans la Bourse de fret. Créez leur DUT : il sera prérempli, et le suivi du transport y arrivera automatiquement.</p>
+    ${list.map((m) => `<div class="b2f-inbox-row">
+      <div><strong>${escapeHtml(m.reference)} · ${escapeHtml(m.donnees.corridor || 'Trajet à préciser')}</strong>
+        <small>${escapeHtml(m.donnees.transporteurRaisonSociale || 'Transporteur')} · ${escapeHtml(m.donnees.immatriculation || 'véhicule à préciser')} · ${escapeHtml(m.donnees.marchandise || 'marchandise à préciser')}${m.donnees.poidsTotalT ? ` · ${m.donnees.poidsTotalT} t` : ''}${m.donnees.departPrevu ? ` · départ ${formatDate(m.donnees.departPrevu)}` : ''}</small></div>
+      <button type="button" class="btn btn-primary btn-sm" data-mission="${escapeHtml(m.appariementId)}">${icon('plus', { size: 14 })} Créer le DUT</button>
+    </div>`).join('')}
+  </section>`;
 }

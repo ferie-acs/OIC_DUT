@@ -1,4 +1,5 @@
-import { ROLES } from './constants.js';
+import { ROLES, STORAGE_KEYS } from './constants.js';
+import { readObject } from './storage.js';
 
 const PERMISSIONS = {
   [ROLES.PARTNER_ADMIN]: [
@@ -20,10 +21,67 @@ const PERMISSIONS = {
   [ROLES.TRANSPORTEUR]: ['dashboard.transporteur', 'dut.view'],
 };
 
+// Lot d2 : antennes, sites, plages de numéros, rapprochement et caisse
+PERMISSIONS[ROLES.OIC_ADMIN].push('antennas.manage', 'sites.view', 'sites.manage', 'ranges.stock', 'ranges.allocate', 'ranges.transfer', 'ranges.validate', 'ranges.revoke', 'ranges.settings', 'reconciliation.view', 'payments.view', 'payments.validate', 'payments.desk', 'sales.report');
+PERMISSIONS[ROLES.ANTENNA_AGENT].push('sites.view', 'ranges.stock', 'ranges.transfer', 'payments.record', 'payments.desk');
+PERMISSIONS[ROLES.PARTNER_ADMIN].push('reconciliation.view', 'payments.pay');
+PERMISSIONS[ROLES.CASHIER] = ['payments.view', 'payments.record', 'payments.validate', 'payments.desk', 'sales.report', 'reconciliation.view'];
+// Fin lot d2
+
+// Lot d3 : cycle de vie du DUT et contrôle
+PERMISSIONS[ROLES.PARTNER_ADMIN].push('dut.transship');
+PERMISSIONS[ROLES.PARTNER_EDITOR].push('dut.transship');
+PERMISSIONS[ROLES.TRANSPORTEUR].push('dut.create', 'dut.edit_draft', 'dut.pay_reference', 'dut.transship', 'references.view', 'dut.print');
+PERMISSIONS[ROLES.ANTENNA_AGENT].push('dut.create', 'dut.edit_draft', 'dut.counter', 'dut.pay_reference', 'dut.withdraw', 'dut.archive', 'archives.view', 'dut.print');
+PERMISSIONS[ROLES.OIC_ADMIN].push('archives.view');
+PERMISSIONS[ROLES.CONTROLLER].push('control.driver_search', 'control.history');
+
+// Lot d4 : incidents, remontées du terrain, équipements, échanges partenaires
+const LOT_D4_PERMISSIONS = {
+  [ROLES.PARTNER_ADMIN]: ['incidents.declare', 'exchanges.view', 'exchanges.partner'],
+  [ROLES.PARTNER_EDITOR]: ['incidents.declare'],
+  [ROLES.ANTENNA_AGENT]: ['incidents.declare', 'incidents.treat', 'fieldreports.view', 'fieldreports.submit', 'equipment.view', 'equipment.manage'],
+  [ROLES.OIC_ADMIN]: ['incidents.declare', 'incidents.treat', 'incidents.manage', 'fieldreports.view', 'fieldreports.manage', 'equipment.view', 'equipment.manage', 'equipment.retire', 'exchanges.view', 'exchanges.manage'],
+  [ROLES.TRANSPORTEUR]: ['incidents.declare'],
+};
+for (const [role, list] of Object.entries(LOT_D4_PERMISSIONS)) PERMISSIONS[role].push(...list);
+
+// Lot d5 : pilotage de la Direction générale
+// La Direction lit tout au niveau national et valide (objectifs, documents, contrats) ; elle n'édite aucun DUT.
+// L'Admin OIC prépare (contrats d'objectifs, documents, visa juridique) ; l'agent d'antenne saisit les résultats
+// et suit les actions correctives de sa seule antenne.
+PERMISSIONS[ROLES.DIRECTION] = [
+  'pilotage.view', 'pilotage.report', 'objectives.manage', 'objectives.validate', 'objectives.results', 'actions.manage',
+  'agents.manage', 'agents.evaluate', 'documents.view', 'documents.manage', 'documents.validate',
+  'meetings.manage', 'legal.view', 'legal.validate_final', 'partners.evaluate',
+  // Droits proposés par le lot d4 (remontées terrain), déclarés ici pour le rôle Direction
+  'fieldreports.view', 'fieldreports.manage',
+];
+PERMISSIONS[ROLES.OIC_ADMIN].push(
+  'pilotage.view', 'pilotage.report', 'objectives.manage', 'objectives.results', 'actions.manage',
+  'agents.manage', 'agents.evaluate', 'documents.view', 'documents.manage', 'documents.validate',
+  'meetings.manage', 'legal.view', 'legal.manage', 'legal.visa', 'partners.evaluate',
+);
+PERMISSIONS[ROLES.ANTENNA_AGENT].push('objectives.results', 'actions.follow');
+// Fin lot d5
+
+// Intégration des lots d1 à d5
+// - Direction générale : lecture nationale des incidents (et des lenteurs), des équipements, du rapprochement et des
+//   ventes de références, du stock de numéros ; aucun droit de saisie, de validation ni d'édition de DUT.
+// - La justification d'un écart de rapprochement devient un droit distinct de sa consultation (la Direction lit seulement).
+PERMISSIONS[ROLES.DIRECTION].push('incidents.read', 'equipment.view', 'equipment.read', 'reconciliation.view', 'sales.report', 'ranges.read');
+[ROLES.OIC_ADMIN, ROLES.CASHIER, ROLES.PARTNER_ADMIN].forEach((role) => PERMISSIONS[role].push('reconciliation.justify'));
+// Les décisions et paramétrages ajoutés par les lots suivent les mêmes garde-fous que ceux du lot d1 :
+// jamais confiés à un rôle externe, ni cumulés avec la saisie des DUT.
+const PERMISSION_CLASSES_EXTRA = {
+  validation: ['ranges.validate', 'ranges.revoke', 'payments.validate', 'objectives.validate', 'documents.validate', 'legal.visa', 'legal.validate_final'],
+  administration: ['antennas.manage', 'ranges.allocate', 'ranges.settings'],
+};
+// Fin intégration
+
 export function can(user, permission) {
   if (!user) return false;
-  const list = PERMISSIONS[user.role] || [];
-  return list.includes(permission);
+  return permissionsFor(user.role).includes(permission);
 }
 
 export function requirePermission(user, permission) {
@@ -33,5 +91,53 @@ export function requirePermission(user, permission) {
 }
 
 export function permissionsFor(role) {
-  return PERMISSIONS[role] || [];
+  return effectivePermissions(role);
 }
+
+// Lot d1 : comptes et acteurs — droits ajoutés et habilitations paramétrables dans une limite sûre.
+const LOT_D1_PERMISSIONS = {
+  [ROLES.PARTNER_ADMIN]: ['company.profile', 'company.users', 'company.activity'],
+  [ROLES.TRANSPORTEUR]: ['company.profile', 'company.users', 'fleet.declare'],
+  [ROLES.OIC_ADMIN]: ['partners.manage', 'transporters.manage', 'actors.validate', 'messages.journal', 'habilitations.manage'],
+};
+for (const [role, list] of Object.entries(LOT_D1_PERMISSIONS)) PERMISSIONS[role].push(...list.filter((p) => !PERMISSIONS[role].includes(p)));
+
+/** Rôles externes à l'OIC : ne reçoivent jamais un droit de validation, de contrôle ou d'administration. */
+export const EXTERNAL_ROLES = [ROLES.PARTNER_ADMIN, ROLES.PARTNER_EDITOR, ROLES.TRANSPORTEUR];
+export const PERMISSION_CLASSES = {
+  validation: ['dut.validate', 'dut.reject', 'dut.suspend', 'dut.unsuspend', 'dut.withdraw', 'actors.validate'],
+  controle: ['control.scan', 'control.verify', 'control.log'],
+  administration: ['admin.manage', 'habilitations.manage', 'partners.manage', 'transporters.manage', 'messages.journal'],
+  saisie: ['dut.create', 'dut.edit_draft', 'dut.submit'],
+};
+/** Droits que l'on ne peut jamais retirer à l'administrateur OIC (sinon plus personne ne peut administrer). */
+export const LOCKED_ADMIN_PERMISSIONS = ['admin.manage', 'habilitations.manage'];
+
+export function basePermissions(role) { return [...(PERMISSIONS[role] || [])]; }
+
+/** Motif de refus d'un ajout de droit à un rôle, ou null si l'ajout est sûr. */
+export function grantRefusal(role, permission, current = basePermissions(role)) {
+  const { validation, controle, administration, saisie } = PERMISSION_CLASSES;
+  if (administration.includes(permission) && role !== ROLES.OIC_ADMIN) return 'Droit d’administration réservé à l’administrateur OIC.';
+  if (EXTERNAL_ROLES.includes(role) && (validation.includes(permission) || controle.includes(permission))) return 'Un droit de validation ou de contrôle ne peut pas être donné à un rôle externe à l’OIC.';
+  if (validation.includes(permission) && current.some((p) => saisie.includes(p))) return 'Séparation des tâches : ce rôle saisit déjà des DUT, il ne peut pas aussi les valider.';
+  if (saisie.includes(permission) && current.some((p) => validation.includes(p))) return 'Séparation des tâches : ce rôle valide déjà des DUT, il ne peut pas aussi les saisir.';
+  return null;
+}
+export function removalRefusal(role, permission) {
+  if (role === ROLES.OIC_ADMIN && LOCKED_ADMIN_PERMISSIONS.includes(permission)) return 'Ce droit ne peut pas être retiré : l’administration deviendrait impossible.';
+  return null;
+}
+
+/** Droits effectifs = droits de base + ajouts sûrs − retraits autorisés. Un ajout non sûr est ignoré même s'il est présent en stockage. */
+export function effectivePermissions(role) {
+  const base = basePermissions(role);
+  const override = (readObject(STORAGE_KEYS.HABILITATIONS, {}) || {})[role] || {};
+  let list = base.filter((p) => !(override.remove || []).includes(p) || removalRefusal(role, p));
+  for (const p of override.add || []) if (!list.includes(p) && !grantRefusal(role, p, list)) list.push(p);
+  return list;
+}
+
+// Intégration : classes de droits étendues (voir le bloc « Intégration des lots d1 à d5 »).
+PERMISSION_CLASSES.validation.push(...PERMISSION_CLASSES_EXTRA.validation);
+PERMISSION_CLASSES.administration.push(...PERMISSION_CLASSES_EXTRA.administration);
