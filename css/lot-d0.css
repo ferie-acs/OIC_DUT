@@ -1,0 +1,84 @@
+/* Lot d0 : recherche intégrée à toutes les listes de choix (js/core/searchable-select.js).
+   Le déclencheur reprend les classes du <select> d'origine (.select, .input, .plan-pill-select) :
+   il hérite donc des bordures, rayons, typographie et anneau de focus de chaque contexte existant. */
+
+/* Le select natif reste dans la même cellule, invisible : la mise en page ne bouge pas. */
+.ss{display:grid;min-width:0;position:relative}
+.ss>select{grid-area:1/1;opacity:0;pointer-events:none;min-width:0}
+.ss>.ss-trigger{
+  grid-area:1/1;position:relative;display:flex;align-items:center;width:100%;min-width:0;
+  text-align:left;cursor:pointer;-webkit-appearance:none;appearance:none;
+}
+.ss>.ss-trigger:not(.plan-pill-select){padding-right:36px}
+.ss>.ss-trigger:disabled{cursor:not-allowed}
+/* Un select « .input » gardait l'apparence native du navigateur : même retrait du texte. */
+.ss>.ss-trigger.input{padding-left:16px}
+.ss-value{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ss .ss-chevron{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);width:14px;height:14px;
+  color:var(--text-muted);pointer-events:none;transition:transform .15s;
+}
+.ss-trigger[aria-expanded="true"] .ss-chevron{transform:translateY(-50%) rotate(180deg)}
+/* Contextes existants : la flèche d'origine (pilule de filtre, .select-wrap) n'est pas doublée. */
+.plan-pill .ss .ss-chevron{display:none}
+.select-wrap>.ss~svg{display:none}
+.ss>.ss-trigger.plan-pill-select:focus-visible{outline:none}
+/* Liste ouverte : même anneau que le focus des champs de la charte. */
+.ss>.ss-trigger[aria-expanded="true"]:not(.plan-pill-select){
+  border-color:var(--navy-2);box-shadow:0 0 0 3px color-mix(in srgb,var(--navy-2) 14%,transparent);
+}
+.plan-pill:has(.ss-trigger[aria-expanded="true"]){
+  border-color:var(--navy-2);box-shadow:0 0 0 3px color-mix(in srgb,var(--navy-2) 14%,transparent);
+}
+/* Sélecteur de période des indicateurs (tableau de bord) : reprend le style de .ops-tools select. */
+.ops-tools .ss .ss-trigger{
+  font:12px var(--font);min-height:0;padding:9px 34px 9px 16px;border-radius:7px;
+  color:var(--text);border:1px solid var(--border);background:var(--surface);
+}
+@media(max-width:700px){.ops-tools .ss{flex:1}}
+
+/* ===== Panneau : recherche en tête, puis liste filtrée ===== */
+.ss-panel{
+  position:fixed;z-index:150;display:flex;flex-direction:column;gap:6px;padding:6px;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--sh-3);
+  font-family:var(--font);color:var(--text);max-width:calc(100vw - 16px);box-sizing:border-box;
+}
+.ss-search{
+  display:flex;align-items:center;gap:8px;flex:none;min-height:40px;padding:0 12px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:10px;color:var(--text-muted);
+  transition:border-color .15s,box-shadow .15s,background .15s;
+}
+.ss-search:focus-within{
+  border-color:var(--navy-2);background:var(--surface);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--navy-2) 14%,transparent);
+}
+.ss-search svg{flex:none;color:var(--navy-2)}
+.ss-search-input{
+  flex:1;min-width:0;border:0;background:none;outline:none;padding:9px 0;
+  font:inherit;font-size:13.5px;font-weight:400;color:var(--text);
+}
+.ss-search-input::placeholder{color:var(--text-muted)}
+.ss-list,.ss-list ul{list-style:none;margin:0;padding:0}
+.ss-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.ss-option{
+  display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;cursor:pointer;
+  font-size:13.5px;font-weight:400;line-height:1.35;color:var(--text);
+}
+.ss-option .ss-check{flex:none;width:16px;height:16px;color:var(--navy-2);visibility:hidden}
+.ss-option-text{flex:1;min-width:0;overflow-wrap:anywhere}
+.ss-option.is-active{background:var(--surface-2)}
+.ss-option[aria-selected="true"]{color:var(--navy);font-weight:600}
+.ss-option[aria-selected="true"] .ss-check{visibility:visible}
+.ss-option[aria-disabled="true"]{color:var(--text-muted);cursor:not-allowed;opacity:.55}
+.ss-group+.ss-group,.ss-option+.ss-group,.ss-group+.ss-option{margin-top:4px}
+.ss-group-label{
+  padding:8px 10px 4px;font-size:10.5px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;color:var(--text-muted);
+}
+.ss-empty{margin:0;padding:14px 10px;font-size:13px;color:var(--text-muted);text-align:center}
+
+/* Liste de comptes de démonstration (connexion) : même champ, intégré dans la liste. */
+.ss-search-inline{margin:0 0 8px}
+.auth-demo-accounts .ss-empty{padding:10px}
+.auth-demo-accounts .demo-account-btn[hidden]{display:none}
+
+@media(prefers-reduced-motion:reduce){.ss .ss-chevron,.ss-search{transition:none}}

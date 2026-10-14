@@ -4,6 +4,8 @@ import { listAntennas } from '../services/directory.service.js';
 import { haversineKm } from '../services/verification.service.js';
 import { zoneOf } from '../data/antennas.js';
 import { getCurrentUser } from '../core/auth.js';
+// Lot d2 : couche des sites sur la carte
+import { listSites, SITE_TYPES } from '../services/sites.service.js';
 
 export { zoneOf };
 const ZONES = ['Toutes', 'Sud', 'Centre', 'Nord', 'Ouest', 'Est'];
@@ -28,13 +30,14 @@ export function render(container) {
     <div class="antennas-layout ant-layout">
       <section class="card ant-map-card" aria-label="Localisation des antennes">
         <div id="antennas-map" class="map-container ant-map"></div>
-        <div class="ant-map-legend"><span><i class="ant-dot"></i>Antenne</span><span><i class="ant-dot is-hq"></i>Siège</span><span><i class="ant-dot is-active"></i>Sélection</span></div>
+        <div class="ant-map-legend"><span><i class="ant-dot"></i>Antenne</span><span><i class="ant-dot is-hq"></i>Siège</span><span><i class="ant-dot is-active"></i>Sélection</span><span class="d2-legend-site" hidden><i class="ant-dot d2-site-dot"></i>Site</span></div>
       </section>
       <section class="card ant-list-card" aria-label="Liste des antennes">
         <label class="ant-search">${icon('search', { size: 16 })}<input type="search" id="ant-query" placeholder="Rechercher une antenne ou une ville…" autocomplete="off"></label>
         <div class="ant-filters">
           <div class="plan-seg ant-zones" role="group" aria-label="Zone">${ZONES.map((z) => `<button type="button" class="plan-seg-btn" data-zone="${z}" aria-pressed="${z === 'Toutes'}">${z}</button>`).join('')}</div>
           <button type="button" class="ant-near" id="ant-near" aria-pressed="false">${icon('target', { size: 14 })} Près de moi</button>
+          <button type="button" class="ant-near" id="ant-sites" aria-pressed="false">${icon('mapPin', { size: 14 })} Afficher les sites</button>
         </div>
         <div class="ant-count" id="ant-count"></div>
         <div class="ant-list" id="ant-list" role="list"></div>
@@ -56,7 +59,7 @@ export function render(container) {
         <span class="ant-pin">${icon('pin', { size: 15 })}</span>
         <span class="ant-body">
           <strong>${escapeHtml(a.name)}</strong>
-          <small>${escapeHtml(a.city)}${isHq(a) ? ' · Siège' : ''} · ${zoneOf(a)}${filters.near ? ` · <b>${km(a).toFixed(0)} km</b>` : ''}</small>
+          <small>${escapeHtml(a.city)}${isHq(a) ? ' · Siège' : ''} · ${zoneOf(a)}${a.status === 'INACTIVE' ? ' · Désactivée' : ''}${filters.near ? ` · <b>${km(a).toFixed(0)} km</b>` : ''}</small>
           <span class="ant-meta"><span>${icon('users', { size: 12 })} ${escapeHtml(a.chef?.name || 'Chef non renseigné')}</span><span>${icon('phone', { size: 12 })} ${escapeHtml(a.phone)}</span>${a.hours && a.hours !== 'Non renseignés' ? `<span>${icon('clock', { size: 12 })} ${escapeHtml(a.hours)}</span>` : ''}</span>
         </span>
         ${getCurrentUser()?.role === 'OIC_ADMIN' ? `<a class="ant-zone" href="#/oic/antennas/${a.id}" title="Ouvrir la fiche de l’antenne">${icon('chevronRight', { size: 15 })}</a>` : `<a class="ant-zone" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${a.lat}&mlon=${a.lng}#map=15/${a.lat}/${a.lng}" title="Ouvrir la zone dans OpenStreetMap">${icon('map', { size: 14 })}</a>`}
@@ -111,6 +114,20 @@ export function render(container) {
     marker.on('click', () => { highlight(a.id); });
     markers.set(a.id, marker);
   });
+  // Lot d2 : sites (ports, frontières, gares, zones industrielles, parcs) affichables sur la carte.
+  let sitesLayer = null;
+  const sitesBtn = container.querySelector('#ant-sites');
+  sitesBtn.addEventListener('click', () => {
+    const on = sitesBtn.getAttribute('aria-pressed') !== 'true';
+    sitesBtn.setAttribute('aria-pressed', String(on));
+    container.querySelector('.d2-legend-site').hidden = !on;
+    sitesLayer?.remove(); sitesLayer = null;
+    if (!on) return;
+    sitesLayer = window.L.layerGroup().addTo(mapInstance);
+    listSites({ publicMap: true }).forEach((site) => window.L.marker([site.lat, site.lng], { icon: window.L.divIcon({ className: 'ant-marker d2-site-marker', html: '<i></i>', iconSize: [14, 14], iconAnchor: [7, 7] }), title: site.name })
+      .bindTooltip(`<strong>${escapeHtml(site.name)}</strong><br><span>${escapeHtml(SITE_TYPES[site.type]?.label || '')} · ${escapeHtml(site.antennaName)}</span>`, { direction: 'top', offset: [0, -8], className: 'antenna-phone-tooltip', opacity: 1 }).addTo(sitesLayer));
+  });
+  // Fin lot d2
   listEl.addEventListener('click', (e) => {
     if (e.target.closest('.ant-zone')) return;
     const item = e.target.closest('.ant-item'); if (!item) return;

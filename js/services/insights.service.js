@@ -8,7 +8,8 @@ export function visibleDuts(user) {
   return getAllDuts().filter(d => {
     if (['PARTNER_ADMIN', 'PARTNER_EDITOR'].includes(user.role)) return d.partnerId === user.partnerId;
     if (user.role === 'ANTENNA_AGENT') return d.antennaId === user.antennaId;
-    if (user.role === 'TRANSPORTEUR') return d.general?.transporterId === user.transporterId;
+    // Lot d3 : un transporteur remplacé lors d'un transbordement garde la trace du DUT.
+    if (user.role === 'TRANSPORTEUR') return d.general?.transporterId === user.transporterId || (d.transbordements || []).some((t) => t.avant?.transporterId === user.transporterId);
     return user.role === 'OIC_ADMIN';
   });
 }

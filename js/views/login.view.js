@@ -12,6 +12,9 @@ const HOME_BY_ROLE = {
   [ROLES.OIC_ADMIN]: '/oic/dashboard',
   [ROLES.CONTROLLER]: '/control',
   [ROLES.TRANSPORTEUR]: '/transporteur/dashboard',
+  [ROLES.CASHIER]: '/caisse/paiements', // Lot d2
+  // Lot d5 : pilotage de la Direction générale
+  [ROLES.DIRECTION]: '/direction/tableau-de-bord', // Intégration : tableau de bord de synthèse
 };
 
 export function render(container) {
@@ -36,6 +39,8 @@ export function render(container) {
       <div class="error-msg hidden" id="login-error" role="alert">${icon('alertCircle', { size: 13 })} <span></span></div>
       <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:var(--s2)">Se connecter ${icon('arrowRight',{size:18})}</button>
     </form>
+    <div class="d1-auth-links"><a href="#/mot-de-passe-oublie">Mot de passe oublié ?</a><a href="#/activation">Activer mon compte</a></div>
+    <a class="d1-signup" href="#/inscription-transporteur">${icon('truck',{size:16})}<span>Transporteur : inscrire mon entreprise</span>${icon('chevronRight',{size:14})}</a>
     <div class="auth-demo-divider"><span>Explorer la plateforme</span></div>
     <details class="auth-demo-accounts"><summary>Choisir un compte de démonstration ${icon('chevronDown',{size:16})}</summary>
       <p class="demo-hint">Sélectionnez votre rôle pour préremplir la connexion. Mot de passe initial : <strong>${DEMO_PASSWORD}</strong>. Après réinitialisation, utilisez le nouvel accès fourni par votre administrateur.</p>

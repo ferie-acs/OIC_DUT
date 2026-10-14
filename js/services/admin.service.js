@@ -43,6 +43,9 @@ export async function saveUser(id,values){
  if(old?.role==='OIC_ADMIN' && old.active!==false && value.role!=='OIC_ADMIN' && !list.some(u=>u.id!==id&&u.role==='OIC_ADMIN'&&u.active!==false))throw new Error('Conservez au moins un administrateur OIC actif.');
  const fresh={id:id||uuid(),...value,active:old?.active!==false,createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString(),accessVersion:old?.accessVersion||0};
  if(old?.credential)fresh.credential=old.credential;if(credential)fresh.credential=credential;
+ // Lot d1 : les champs de compte (activation en attente, téléphone, administrateur d'entreprise) ne sont pas perdus à la modification.
+ if(old)for(const k of ['activationPending','activation','reset','phone','activatedAt','passwordChangedAt'])if(k in old)fresh[k]=old[k];
+ if(old?.companyAdmin&&old.role===value.role&&old.transporterId===value.transporterId)fresh.companyAdmin=true;
  if(old&&(old.role!==value.role||old.partnerId!==value.partnerId||old.antennaId!==value.antennaId||old.transporterId!==value.transporterId))fresh.accessVersion++;
  if(old)list[list.findIndex(u=>u.id===id)]=fresh;else list.push(fresh);
  commit('dut_users',list,old?'Compte modifié':'Compte créé',value.email,actor);return {user:fresh,code};

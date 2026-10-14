@@ -52,6 +52,9 @@ export function checkValidity(ctx) {
 export function checkStatus(ctx) {
   if (!ctx.online) return f('statut', 'info', 'STATUT_HORS_LIGNE', 'Statut non consultable hors ligne.');
   if (!ctx.dut) return f('statut', 'block', 'INCONNU_DU_SYSTEME', 'Ce DUT n’existe pas dans le système.');
+  // Lot d3 : QR d'un document remplacé lors d'un transbordement.
+  const replaced = (ctx.dut.replacedTokens || []).find((r) => r.token === ctx.parsed?.token);
+  if (replaced) return f('statut', 'block', 'DOCUMENT_REMPLACE', `Document remplacé le ${String(replaced.at || '').slice(0, 10)} après transbordement : seul le nouveau document est valable.`);
   if (ctx.dut.status === DUT_STATUS.SUSPENDU) return f('statut', 'block', 'SUSPENDU', 'DUT suspendu.');
   if (ctx.dut.status === DUT_STATUS.RETIRE) return f('statut', 'block', 'RETIRE', 'DUT retiré.');
   if (ctx.dut.status === DUT_STATUS.VALIDE) return f('statut', 'ok', 'STATUT_OK', 'Statut : validé.');

@@ -29,3 +29,6 @@ export const driversRepo = makeCrud(STORAGE_KEYS.DRIVERS);
 export const thirdPartiesRepo = makeCrud(STORAGE_KEYS.THIRD_PARTIES);
 export const merchandiseTypesRepo = makeCrud(STORAGE_KEYS.MERCHANDISE_TYPES);
 export const packagingTypesRepo = makeCrud(STORAGE_KEYS.PACKAGING_TYPES);
+
+// Lot d3 : cycle de vie du DUT et contrôle
+export const localitiesRepo = makeCrud(STORAGE_KEYS.LOCALITIES);
